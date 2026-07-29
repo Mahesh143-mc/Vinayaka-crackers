@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, SlidersHorizontal, Eye, ShoppingCart, Filter, X } from 'lucide-react';
+import { ShoppingCart, Filter, Search, X, ArrowUp, SlidersHorizontal, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Products = () => {
@@ -7,19 +7,6 @@ const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showFilters, setShowFilters] = useState(false);
   const [showCart, setShowCart] = useState(false);
-  const [isSticky, setIsSticky] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 280) {
-        setIsSticky(true);
-      } else {
-        setIsSticky(false);
-      }
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const categories = ["All", "Gift Hampers", "Sparklers", "Rockets", "Chakkars", "Sky Shots"];
 
@@ -69,7 +56,7 @@ const Products = () => {
   const filteredProducts = selectedCategory === "All" ? products : products.filter(p => p.category === selectedCategory);
 
   return (
-    <div className="bg-[#FFF8E7] min-h-screen pb-32 relative overflow-hidden">
+    <div className="bg-[#FFF8E7] min-h-screen pb-32 relative">
       {/* Floating golden sparkle particles (simulated with absolute divs) */}
       <div className="absolute top-20 left-10 w-2 h-2 bg-gold rounded-full animate-ping opacity-70"></div>
       <div className="absolute top-40 right-20 w-3 h-3 bg-gold rounded-full animate-pulse opacity-50"></div>
@@ -97,22 +84,20 @@ const Products = () => {
         </div>
       )}
 
-      {/* 1. Page Header */}
-      <section className="bg-gradient-hero pt-32 pb-16 px-4 text-center relative z-10">
-        <h1 className="text-5xl md:text-6xl font-serif font-bold text-white drop-shadow-md mb-4">Our Collection</h1>
-        <p className="text-xl text-cream-light font-medium max-w-2xl mx-auto">
-          Handpicked fireworks for a legendary celebration.
-        </p>
+      {/* 1. Page Header (Banner Image) */}
+      <section
+        className="w-full h-[300px] sm:h-[400px] lg:h-[500px] relative z-10 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url('https://res.cloudinary.com/vf0fqhwo/image/upload/v1785330064/Banner_Product_eo1ceg.png')` }}
+      >
       </section>
 
       {/* Full-width Cart Summary Bar */}
-      {isSticky && <div style={{ height: '74px' }} className="w-full"></div>}
-      <section className={`w-full bg-[#8B1E1E] shadow-sm z-50 transition-all duration-300 ${isSticky ? 'fixed top-0 left-0 border-b border-gold/30 shadow-md' : 'relative border-b border-gold/20'}`}>
+      <section className="w-full bg-[#8B1E1E] shadow-md z-[60] sticky top-0 border-b border-gold/30 transition-shadow duration-300">
         <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-8 md:px-16 py-3 sm:py-4 flex justify-between items-center gap-4">
-          
+
           {/* Left Section (100% Mobile / 80% Desktop) */}
           <div className="flex-1 flex justify-between sm:justify-evenly items-center w-full">
-            
+
             {/* Quantity */}
             <div className="flex items-center gap-2 sm:gap-3 flex-col sm:flex-row">
               <span className="text-gold font-bold text-[10px] sm:text-base uppercase tracking-widest leading-tight">Quantity</span>
@@ -120,7 +105,7 @@ const Products = () => {
                 0
               </div>
             </div>
-            
+
             {/* Items */}
             <div className="flex items-center gap-2 sm:gap-3 flex-col sm:flex-row">
               <span className="text-gold font-bold text-[10px] sm:text-base uppercase tracking-widest leading-tight">Item</span>
@@ -128,7 +113,7 @@ const Products = () => {
                 0
               </div>
             </div>
-            
+
             {/* Total */}
             <div className="flex items-center gap-2 sm:gap-3 flex-col sm:flex-row">
               <span className="text-gold font-bold text-[10px] sm:text-base uppercase tracking-widest leading-tight">Total</span>
@@ -140,7 +125,7 @@ const Products = () => {
 
           {/* Right Section (Hidden Mobile / 20% Desktop) */}
           <div className="hidden sm:flex justify-end items-center">
-            <button 
+            <button
               onClick={() => setShowCart(true)}
               className="bg-gradient-to-tr from-gold to-yellow-500 hover:from-yellow-400 hover:to-yellow-300 text-[#B71C1C] px-8 py-2 rounded-full font-black shadow-lg border border-yellow-200 transition-all flex items-center justify-center gap-2 transform hover:scale-105 whitespace-nowrap"
             >
@@ -248,7 +233,7 @@ const Products = () => {
       {/* Floating Filter Button (Left) */}
       <button
         onClick={() => setShowFilters(true)}
-        className="group fixed left-6 bottom-[70%] translate-y-1/2 z-40 flex items-center h-14 bg-gradient-to-tr from-gold to-yellow-500 rounded-full shadow-md text-white transition-all duration-300 hover:shadow-lg"
+        className="group fixed -left-4 sm:left-0 bottom-[30%] translate-y-1/2 z-[60] flex items-center h-14 bg-gradient-to-tr from-gold to-yellow-500 rounded-r-full shadow-md text-white transition-all duration-300 hover:shadow-lg hover:-left-0"
       >
         <div className="flex items-center justify-center w-14 h-14 shrink-0">
           <Filter size={24} className="group-hover:scale-110 transition-transform" />
@@ -256,6 +241,15 @@ const Products = () => {
         <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs group-hover:pr-5 font-bold transition-all duration-300 ease-in-out">
           Filters
         </span>
+      </button>
+
+      {/* Scroll to Top Button (Left Bottom) */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className="fixed left-6 bottom-10 z-40 flex items-center justify-center w-12 h-12 bg-white text-[#B71C1C] border-2 border-gold/40 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-110 hover:border-gold hover:bg-[#f9f5eb] group"
+        aria-label="Scroll to top"
+      >
+        <ArrowUp size={24} className="group-hover:-translate-y-1 transition-transform duration-300" />
       </button>
 
       {/* Floating Cart Button (Right Bottom) */}
@@ -287,13 +281,13 @@ const Products = () => {
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className="space-y-8 flex-1">
               {/* Category Filter */}
               <div>
                 <label className="block text-sm font-bold text-charcoal mb-3">Category</label>
                 <div className="relative">
-                  <select 
+                  <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
                     className="w-full appearance-none bg-[#f9f5eb] border border-gold/30 rounded-xl px-4 py-3 text-charcoal focus:outline-none focus:border-gold font-medium cursor-pointer"
@@ -317,7 +311,7 @@ const Products = () => {
                   </select>
                 </div>
               </div>
-              
+
               {/* Filter 2 */}
               <div>
                 <label className="block text-sm font-bold text-charcoal mb-3">Sort By</label>
@@ -330,7 +324,7 @@ const Products = () => {
                   </select>
                 </div>
               </div>
-              
+
               {/* Filter 3 */}
               <div>
                 <label className="block text-sm font-bold text-charcoal mb-3">Availability</label>
@@ -344,7 +338,7 @@ const Products = () => {
             </div>
 
             <div className="mt-8 pt-6 border-t border-gold/20">
-              <button 
+              <button
                 onClick={() => setShowFilters(false)}
                 className="w-full bg-[#B71C1C] hover:bg-red-800 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-colors"
               >
@@ -367,7 +361,7 @@ const Products = () => {
           >
             <div className="flex justify-between items-center mb-8 border-b border-gold/20 pb-4">
               <h2 className="text-2xl font-serif font-black text-[#B71C1C] uppercase tracking-wider">Your Cart</h2>
-              <button 
+              <button
                 onClick={() => setShowCart(false)}
                 className="p-2 hover:bg-[#f9f5eb] rounded-full transition-colors text-charcoal hover:text-[#B71C1C]"
               >
@@ -382,7 +376,7 @@ const Products = () => {
             </div>
 
             <div className="mt-8 pt-6 border-t border-gold/20">
-              <button 
+              <button
                 onClick={() => setShowCart(false)}
                 className="w-full bg-[#B71C1C] hover:bg-red-800 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-colors"
               >

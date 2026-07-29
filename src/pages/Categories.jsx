@@ -1,55 +1,86 @@
 import { motion } from 'framer-motion';
+import { Sparkles } from 'lucide-react';
 
 const Categories = () => {
   const tiles = [
-    { name: "Gift Boxes", img: "https://placehold.co/300x300/D32F2F/FFFFFF?text=Gift+Boxes", color: "border-red" },
-    { name: "Fancy Crackers", img: "https://placehold.co/300x300/00BCD4/FFFFFF?text=Fancy", color: "border-turquoise" },
-    { name: "Lakshmi Crackers", img: "https://placehold.co/300x300/FFB300/FFFFFF?text=Lakshmi", color: "border-gold" },
-    { name: "Bombs", img: "https://placehold.co/300x300/1E1E1E/FFFFFF?text=Bombs", color: "border-charcoal" },
-    { name: "Sparklers", img: "https://placehold.co/300x300/FF8F00/FFFFFF?text=Sparklers", color: "border-saffron" },
-    { name: "Rockets", img: "https://placehold.co/300x300/FFD54F/D32F2F?text=Rockets", color: "border-gold" },
-    { name: "Kids Collection", img: "https://placehold.co/300x300/2E7D32/FFFFFF?text=Kids", color: "border-green" },
-    { name: "Flower Pots", img: "https://placehold.co/300x300/D32F2F/FFFFFF?text=Pots", color: "border-red" },
-    { name: "Sky Shots", img: "https://placehold.co/300x300/00BCD4/FFFFFF?text=Sky+Shots", color: "border-turquoise" },
-    { name: "New Arrivals", img: "https://placehold.co/300x300/FFEAA7/D32F2F?text=New", color: "border-gold" },
+    { name: "Gift Boxes", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", color: "from-red to-[#8B1E1E]" },
+    { name: "Fancy Crackers", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", color: "from-blue-600 to-blue-900" },
+    { name: "Lakshmi Crackers", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", color: "from-gold to-yellow-600" },
+    { name: "Bombs", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", color: "from-charcoal to-black" },
+    { name: "Sparklers", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", color: "from-saffron to-orange-700" },
+    { name: "Rockets", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", color: "from-red to-pink-700" },
+    { name: "Kids Collection", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", color: "from-green to-emerald-900" },
+    { name: "Flower Pots", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", color: "from-purple-600 to-purple-900" },
+    { name: "Sky Shots", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", color: "from-cyan-500 to-blue-700" },
+    { name: "New Arrivals", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", color: "from-gold to-yellow-700" },
   ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gold/30 via-cream-light to-gold/20 flex flex-col items-center pt-32 pb-20">
-      {/* Sunburst Background */}
-      <div className="absolute inset-0 z-0 pointer-events-none opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48ZyBmaWxsPSIjRkZCMzAwIj48cGF0aCBkPSJNNTAgMEg1MHYxMDBoLTF6Ii8+PHBhdGggZD0iTTAgNTB2LTFoMTAwdjF6Ii8+PC9nPjwvc3ZnPg==')] bg-center bg-no-repeat bg-cover"></div>
+    <div className="min-h-screen relative overflow-hidden bg-[#8B1E1E] flex flex-col items-center pt-32 pb-24">
+      
+      {/* Premium Background Textures */}
+      <div className="absolute inset-0 z-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+      <div className="absolute top-0 inset-x-0 h-64 bg-gradient-to-b from-black/40 to-transparent z-0"></div>
 
-      <div className="relative z-10 text-center mb-16">
-        <h1 className="text-5xl md:text-6xl font-serif font-bold text-charcoal mb-4">Explore the World</h1>
-        <p className="text-xl text-brown font-medium">Find exactly what you need to make your celebration magical.</p>
+      {/* Header Section */}
+      <div className="relative z-10 text-center mb-16 px-4">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/20 border border-gold/30 text-gold text-sm font-bold tracking-widest uppercase mb-6 backdrop-blur-sm"
+        >
+          <Sparkles className="w-4 h-4" />
+          <span>Our Collections</span>
+          <Sparkles className="w-4 h-4" />
+        </motion.div>
+        
+        <h1 className="text-5xl md:text-7xl font-serif font-black text-white mb-6 drop-shadow-lg">
+          Explore the <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-yellow-300 to-gold">Magic</span>
+        </h1>
+        <p className="text-xl text-cream-light font-medium max-w-2xl mx-auto drop-shadow-md">
+          Discover a spectacular array of fireworks designed to make every celebration truly legendary.
+        </p>
       </div>
 
-      <div className="relative z-10 w-full max-w-7xl px-4 flex justify-center">
-        <div className="flex flex-wrap justify-center gap-10 lg:gap-16">
+      {/* Grid Layout */}
+      <div className="relative z-10 w-full max-w-[1400px] px-6 lg:px-12 flex justify-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 xl:gap-12 w-full">
           {tiles.map((tile, index) => (
             <motion.div
               key={index}
-              whileHover={{ scale: 1.1, rotate: index % 2 === 0 ? 5 : -5 }}
-              className="relative group cursor-pointer"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.05 }}
+              className="group relative rounded-3xl overflow-hidden cursor-pointer shadow-2xl bg-[#5D1414] border-2 border-gold/20 hover:border-gold/60 transition-all duration-500 h-80"
             >
-              <div className={`w-40 h-40 md:w-48 md:h-48 rounded-full overflow-hidden border-8 ${tile.color} shadow-warm relative z-20 bg-white`}>
-                <img src={tile.img} alt={tile.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-white/40 group-hover:bg-transparent transition-colors duration-300"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="bg-white/90 backdrop-blur px-4 py-2 rounded-full font-bold text-brown text-sm md:text-base shadow-sm opacity-100 group-hover:opacity-0 transition-opacity">
+              {/* Image */}
+              <img 
+                src={tile.img} 
+                alt={tile.name} 
+                className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ease-out" 
+              />
+              
+              {/* Dark Overlay Gradient for text readability */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent transition-opacity duration-300"></div>
+              
+              {/* Category Color Accent Glow */}
+              <div className={`absolute bottom-0 inset-x-0 h-1/2 bg-gradient-to-t ${tile.color} opacity-30 mix-blend-color-dodge group-hover:opacity-60 transition-opacity duration-500`}></div>
+
+              {/* Content Box */}
+              <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-8">
+                <div className="transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                  <h3 className="font-serif font-bold text-white text-2xl md:text-3xl mb-2 drop-shadow-lg leading-tight">
                     {tile.name}
-                  </span>
+                  </h3>
+                  <div className="h-1 w-12 bg-gold rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out"></div>
                 </div>
               </div>
-              
-              {/* Confetti simulation on hover */}
-              <div className="absolute -inset-4 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCI+PGNpcmNsZSBjeD0iNSIgY3k9IjUiIHI9IjIiIGZpbGw9IiNGRkIzMDAiLz48L3N2Zz4=')] opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-spin-slow z-10 rounded-full"></div>
-              
-              <h3 className="mt-4 text-center font-bold text-charcoal text-lg opacity-0 group-hover:opacity-100 transition-opacity">{tile.name}</h3>
             </motion.div>
           ))}
         </div>
       </div>
+      
     </div>
   );
 };
