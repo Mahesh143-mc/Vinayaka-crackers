@@ -195,7 +195,7 @@ const Home = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="text-[#2C2C2C] text-xs sm:text-base md:text-lg font-sans leading-relaxed mb-6 sm:mb-8 text-center max-w-xl px-2 opacity-90"
             >
-              Shree Bangaru Pyrotech is one of the top leading Firework Crackers & Fireworks Manufacturers, Wholesaler, Retailers, and Dealers for various price in Sivakasi, Tamil Nadu India successfully delivering the right products.
+              Vinayaka Crackers is your trusted destination for premium-quality fireworks from Sivakasi. We offer a wide range of safe, vibrant, and high-quality crackers at competitive prices. Celebrate every occasion with confidence, backed by reliable service and customer satisfaction.
             </motion.p>
 
             <motion.div

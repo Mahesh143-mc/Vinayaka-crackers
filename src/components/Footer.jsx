@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Share2, Camera, Video, MapPin, Phone, Mail } from 'lucide-react';
+import { Share2, Camera, Video, MapPin, Phone, Mail, BookOpen, ShoppingBag, Grid, Image as ImageIcon, Headphones, Truck, ShieldCheck, HelpCircle } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -42,14 +42,14 @@ const Footer = () => {
               Spreading joy and light since 1995. India’s most trusted and vibrant fireworks brand for all your celebrations.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-                <Share2 className="w-5 h-5 text-white" />
+              <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-gold hover:text-saffron-dark transition-all duration-300 transform hover:-translate-y-1 shadow-lg">
+                <Share2 className="w-5 h-5" />
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-                <Camera className="w-5 h-5 text-white" />
+              <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-gold hover:text-saffron-dark transition-all duration-300 transform hover:-translate-y-1 shadow-lg">
+                <Camera className="w-5 h-5" />
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-                <Video className="w-5 h-5 text-white" />
+              <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-gold hover:text-saffron-dark transition-all duration-300 transform hover:-translate-y-1 shadow-lg">
+                <Video className="w-5 h-5" />
               </a>
             </div>
           </div>
@@ -58,10 +58,30 @@ const Footer = () => {
           <div>
             <h4 className="text-xl font-serif font-bold text-gold-light mb-6">Explore</h4>
             <ul className="space-y-3">
-              <li><Link to="/about" className="hover:text-gold transition-colors">Our Story</Link></li>
-              <li><Link to="/products" className="hover:text-gold transition-colors">All Products</Link></li>
-              <li><Link to="/categories" className="hover:text-gold transition-colors">Categories</Link></li>
-              <li><Link to="/gallery" className="hover:text-gold transition-colors">Gallery</Link></li>
+              <li>
+                <Link to="/about" className="group flex items-center text-cream-light hover:text-gold transition-colors">
+                  <BookOpen className="w-4 h-4 mr-2 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all" />
+                  Our Story
+                </Link>
+              </li>
+              <li>
+                <Link to="/products" className="group flex items-center text-cream-light hover:text-gold transition-colors">
+                  <ShoppingBag className="w-4 h-4 mr-2 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all" />
+                  All Products
+                </Link>
+              </li>
+              <li>
+                <Link to="/categories" className="group flex items-center text-cream-light hover:text-gold transition-colors">
+                  <Grid className="w-4 h-4 mr-2 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all" />
+                  Categories
+                </Link>
+              </li>
+              <li>
+                <Link to="/gallery" className="group flex items-center text-cream-light hover:text-gold transition-colors">
+                  <ImageIcon className="w-4 h-4 mr-2 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all" />
+                  Gallery
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -69,10 +89,30 @@ const Footer = () => {
           <div>
             <h4 className="text-xl font-serif font-bold text-gold-light mb-6">Customer Care</h4>
             <ul className="space-y-3">
-              <li><Link to="/contact" className="hover:text-gold transition-colors">Contact Us</Link></li>
-              <li><Link to="#" className="hover:text-gold transition-colors">Shipping Policy</Link></li>
-              <li><Link to="#" className="hover:text-gold transition-colors">Safety Guidelines</Link></li>
-              <li><Link to="#" className="hover:text-gold transition-colors">FAQs</Link></li>
+              <li>
+                <Link to="/contact" className="group flex items-center text-cream-light hover:text-gold transition-colors">
+                  <Headphones className="w-4 h-4 mr-2 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all" />
+                  Contact Us
+                </Link>
+              </li>
+              <li>
+                <Link to="#" className="group flex items-center text-cream-light hover:text-gold transition-colors">
+                  <Truck className="w-4 h-4 mr-2 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all" />
+                  Shipping Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="#" className="group flex items-center text-cream-light hover:text-gold transition-colors">
+                  <ShieldCheck className="w-4 h-4 mr-2 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all" />
+                  Safety Guidelines
+                </Link>
+              </li>
+              <li>
+                <Link to="#" className="group flex items-center text-cream-light hover:text-gold transition-colors">
+                  <HelpCircle className="w-4 h-4 mr-2 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all" />
+                  FAQs
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -80,17 +120,23 @@ const Footer = () => {
           <div>
             <h4 className="text-xl font-serif font-bold text-gold-light mb-6">Reach Us</h4>
             <ul className="space-y-4">
-              <li className="flex items-start">
-                <MapPin className="w-5 h-5 text-gold mr-3 mt-1 flex-shrink-0" />
-                <span>No. 45, GST Road, Chromepet, Chennai, 600044</span>
+              <li className="flex items-start group">
+                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mr-3 flex-shrink-0 group-hover:bg-gold transition-colors duration-300">
+                  <MapPin className="w-4 h-4 text-gold group-hover:text-saffron-dark transition-colors duration-300" />
+                </div>
+                <span className="mt-1 group-hover:text-white transition-colors duration-300 text-sm">No. 45, GST Road, Chromepet, Chennai, 600044</span>
               </li>
-              <li className="flex items-center">
-                <Phone className="w-5 h-5 text-gold mr-3 flex-shrink-0" />
-                <span>+91 98765 43210</span>
+              <li className="flex items-center group">
+                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mr-3 flex-shrink-0 group-hover:bg-gold transition-colors duration-300">
+                  <Phone className="w-4 h-4 text-gold group-hover:text-saffron-dark transition-colors duration-300" />
+                </div>
+                <span className="group-hover:text-white transition-colors duration-300 text-sm">+91 98765 43210</span>
               </li>
-              <li className="flex items-center">
-                <Mail className="w-5 h-5 text-gold mr-3 flex-shrink-0" />
-                <span>vinayakacrackers@gmail.com</span>
+              <li className="flex items-center group">
+                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mr-3 flex-shrink-0 group-hover:bg-gold transition-colors duration-300">
+                  <Mail className="w-4 h-4 text-gold group-hover:text-saffron-dark transition-colors duration-300" />
+                </div>
+                <span className="group-hover:text-white transition-colors duration-300 text-sm">vinayakacrackers@gmail.com</span>
               </li>
             </ul>
           </div>

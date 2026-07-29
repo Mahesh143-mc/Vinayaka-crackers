@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingCart, Menu, X } from 'lucide-react';
+import { FileText, Menu, X, ShoppingCart } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Navbar = () => {
@@ -78,14 +78,22 @@ const Navbar = () => {
             })}
           </div>
 
-          {/* Right Side: Shop Now Button */}
-          <div className="hidden md:flex items-center">
+          {/* Right Side: Cart & Price List Button */}
+          <div className="hidden md:flex items-center space-x-4">
+            <Link
+              to="/cart"
+              className="p-2 rounded-full transition-colors relative text-gray-800 hover:text-[#c00000] hover:bg-gray-100"
+            >
+              <ShoppingCart className="w-6 h-6" />
+              {/* Optional Cart Badge */}
+              <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-[#c00000] rounded-full border border-white">0</span>
+            </Link>
             <Link 
               to="/products" 
               className="flex items-center gap-2 bg-[#c00000] hover:bg-[#a00000] text-white font-bold py-2 px-6 rounded-full shadow-lg transition-transform hover:-translate-y-1 hover:shadow-[0_5px_15px_rgba(192,0,0,0.4)]"
             >
-              Shop Now
-              <ShoppingCart className="w-4 h-4 text-white" />
+              Price List
+              <FileText className="w-4 h-4 text-white" />
             </Link>
           </div>
 
@@ -123,14 +131,22 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
-            <div className="pt-4 px-3">
+            <div className="pt-4 px-3 flex items-center justify-between gap-4">
+              <Link
+                to="/cart"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-center p-3 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 relative transition-colors"
+              >
+                <ShoppingCart className="w-6 h-6" />
+                <span className="absolute top-1 right-1 inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-[#c00000] rounded-full border border-white">0</span>
+              </Link>
               <Link 
                 to="/products" 
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-center gap-2 w-full bg-[#c00000] text-white font-bold py-3 px-6 rounded-full shadow-md"
+                className="flex-1 flex items-center justify-center gap-2 bg-[#c00000] text-white font-bold py-3 px-6 rounded-full shadow-md hover:bg-[#a00000] transition-colors"
               >
-                Shop Now
-                <ShoppingCart className="w-5 h-5 text-white" />
+                Price List
+                <FileText className="w-5 h-5 text-white" />
               </Link>
             </div>
           </div>
