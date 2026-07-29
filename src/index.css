@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cream-light text-brown font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif text-charcoal;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-md border border-gold/30 shadow-glass rounded-2xl;
+  }
+  
+  .glass-card-bright {
+    @apply bg-white/85 backdrop-blur-lg border border-gold/40 shadow-warm rounded-2xl;
+  }
+
+  .pill-btn {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-full font-medium transition-all duration-300 shadow-warm hover:-translate-y-1 hover:shadow-lg;
+  }
+  
+  .pill-btn-primary {
+    @apply bg-gold text-white hover:bg-gold-dark;
+  }
+  
+  .pill-btn-gradient {
+    @apply bg-gradient-hero text-white;
+  }
+}
+
+/* Custom Scrollbar for a polished look */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FFFBF0; 
+}
+
+::-webkit-scrollbar-thumb {
+  background: #FFD54F; 
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #FFB300; 
+}
