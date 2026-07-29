@@ -172,11 +172,11 @@ const Home = () => {
 
   return (
     <div className="overflow-hidden">
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-white">
+      <section className="relative flex items-center justify-center overflow-hidden bg-white pt-24 pb-12 md:pt-32 md:pb-20 md:min-h-[85vh]">
         {/* User Provided Texture Background */}
         <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/vf0fqhwo/image/upload/v1785301158/texture_njj3db.webp')] bg-repeat bg-center opacity-100"></div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center mt-10">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 w-full grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-16 items-center mt-2 sm:mt-8">
 
           {/* Text Content Column (First on mobile order-1, Right on desktop md:order-2) */}
           <div className="order-1 md:order-2 text-center flex flex-col justify-center items-center w-full mx-auto md:ml-4 px-2">
@@ -184,20 +184,16 @@ const Home = () => {
               initial={{ x: 30, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.8 }}
-              className="text-2xl sm:text-4xl md:text-5xl lg:text-[3.8rem] font-sans font-extrabold text-[#c00000] mb-4 sm:mb-6 leading-tight"
-              style={{ fontFamily: 'Arial, sans-serif' }}
+              className="text-[1.4rem] sm:text-4xl md:text-5xl lg:text-[4rem] font-serif font-bold text-[#B71C1C] mb-4 sm:mb-6 leading-tight drop-shadow-sm tracking-tight"
             >
-              <span>Bring the best </span>
-              <span className="sm:whitespace-nowrap">quality fireworks </span>
-              <span>with us</span>
+              Bring the best quality <br className="block sm:hidden" /> fireworks with us
             </motion.h1>
 
             <motion.p
               initial={{ x: 30, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-gray-800 text-xs sm:text-sm md:text-[15px] font-sans leading-relaxed mb-6 sm:mb-8 text-center max-w-xl"
-              style={{ fontFamily: 'Arial, sans-serif' }}
+              className="text-[#2C2C2C] text-xs sm:text-base md:text-lg font-sans leading-relaxed mb-6 sm:mb-8 text-center max-w-xl px-2 opacity-90"
             >
               Shree Bangaru Pyrotech is one of the top leading Firework Crackers & Fireworks Manufacturers, Wholesaler, Retailers, and Dealers for various price in Sivakasi, Tamil Nadu India successfully delivering the right products.
             </motion.p>
@@ -207,7 +203,7 @@ const Home = () => {
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.4 }}
             >
-              <a href="#collection" className="bg-[#fb923c] hover:bg-[#f97316] text-black font-extrabold font-sans text-sm sm:text-base md:text-lg px-6 sm:px-8 py-2.5 sm:py-3 rounded-full shadow-md transition-transform hover:-translate-y-1 inline-block">
+              <a href="#collection" className="bg-[#fb923c] hover:bg-[#f97316] text-white font-extrabold font-sans text-sm sm:text-base md:text-lg px-8 py-3 sm:py-3.5 rounded-full shadow-lg transition-all hover:-translate-y-1 hover:shadow-xl inline-block tracking-wide">
                 Explore Our Products
               </a>
             </motion.div>
@@ -218,12 +214,12 @@ const Home = () => {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.8 }}
-            className="order-2 md:order-1 flex justify-center md:justify-end mt-4 md:mt-0"
+            className="order-2 md:order-1 flex justify-center md:justify-end mt-2 md:mt-0"
           >
             <img
               src="https://res.cloudinary.com/vf0fqhwo/image/upload/v1785301007/banner_inner_k8nudd.webp"
               alt="Diwali Dhamaka Banner"
-              className="w-full max-w-[500px] object-contain drop-shadow-2xl"
+              className="w-[85%] sm:w-full max-w-[500px] object-contain drop-shadow-2xl"
             />
           </motion.div>
         </div>
@@ -255,8 +251,8 @@ const Home = () => {
             <p className="text-[#2C2C2C] text-base sm:text-xl font-normal mb-5 font-sans">
               Explore our magical collection of crackers.
             </p>
-            {/* Golden Pulsing Divider (80px wide) */}
-            <div className="w-[80px] h-1 bg-[#FFB300] mx-auto rounded-full shadow-[0_0_10px_#FFB300] animate-pulse"></div>
+            {/* Golden Divider (80px wide) */}
+            <div className="w-[80px] h-1 bg-[#FFB300] mx-auto rounded-full shadow-sm shadow-amber-400/50"></div>
           </div>
 
           {/* Category Banners - 6 items with Alternating Alignment & Custom Tints */}
@@ -272,9 +268,8 @@ const Home = () => {
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   whileHover={{ y: -8, boxShadow: '0 12px 30px rgba(255, 179, 0, 0.25)' }}
                   style={{ backgroundColor: cat.tint }}
-                  className={`rounded-2xl p-5 sm:px-8 sm:py-6 border border-amber-300/40 shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all duration-300 flex items-center justify-between gap-4 ${
-                    isRight ? 'md:translate-y-4' : ''
-                  }`}
+                  className={`rounded-2xl p-5 sm:px-8 sm:py-6 border border-amber-300/40 shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all duration-300 flex items-center justify-between gap-4 ${isRight ? 'md:translate-y-4' : ''
+                    }`}
                 >
                   <div className="flex items-center gap-4">
                     <span className="text-4xl sm:text-[2.5rem] filter drop-shadow-md flex-shrink-0">
@@ -307,16 +302,16 @@ const Home = () => {
         {/* Animated Rangoli Watermark SVG Background */}
         <div className="absolute top-10 -right-20 opacity-10 animate-[spin_60s_linear_infinite] pointer-events-none">
           <svg className="w-[500px] h-[500px] text-amber-600 fill-current" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2,2"/>
-            <polygon points="50,5 63,35 95,50 63,65 50,95 37,65 5,50 37,35" fill="none" stroke="currentColor" strokeWidth="1"/>
-            <circle cx="50" cy="50" r="25" fill="none" stroke="currentColor" strokeWidth="0.8"/>
-            <polygon points="50,20 58,40 80,50 58,60 50,80 42,60 20,50 42,40" fill="currentColor"/>
+            <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2,2" />
+            <polygon points="50,5 63,35 95,50 63,65 50,95 37,65 5,50 37,35" fill="none" stroke="currentColor" strokeWidth="1" />
+            <circle cx="50" cy="50" r="25" fill="none" stroke="currentColor" strokeWidth="0.8" />
+            <polygon points="50,20 58,40 80,50 58,60 50,80 42,60 20,50 42,40" fill="currentColor" />
           </svg>
         </div>
         <div className="absolute -bottom-20 -left-20 opacity-10 animate-[spin_80s_linear_infinite_reverse] pointer-events-none">
           <svg className="w-[600px] h-[600px] text-amber-700 fill-current" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="0.5"/>
-            <polygon points="50,5 63,35 95,50 63,65 50,95 37,65 5,50 37,35" fill="none" stroke="currentColor" strokeWidth="1"/>
+            <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="0.5" />
+            <polygon points="50,5 63,35 95,50 63,65 50,95 37,65 5,50 37,35" fill="none" stroke="currentColor" strokeWidth="1" />
           </svg>
         </div>
 
@@ -405,7 +400,7 @@ const Home = () => {
           {/* Explore Our Products Common Button */}
           <div className="mt-12 text-center flex justify-center">
             <Link to="/products">
-              <button className="bg-[#ff8427] hover:bg-[#ff720a] text-gray-950 font-extrabold text-lg md:text-xl px-12 py-3.5 rounded-full shadow-lg hover:shadow-orange-500/30 hover:-translate-y-1 transition-all duration-300">
+              <button className="bg-[#fb923c] hover:bg-[#f97316] text-white font-extrabold font-sans text-sm sm:text-base md:text-lg px-8 py-3 sm:py-3.5 rounded-full shadow-lg transition-all hover:-translate-y-1 hover:shadow-xl inline-block tracking-wide">
                 Explore Our Products
               </button>
             </Link>
@@ -452,10 +447,11 @@ const Home = () => {
       >
         <div className="relative z-10 max-w-7xl mx-auto px-4">
           <div className="text-center mb-10 sm:mb-16 px-2">
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-serif font-extrabold text-[#78350f] leading-snug drop-shadow-sm">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-extrabold text-[#B71C1C] mb-4 leading-snug drop-shadow-sm">
               Festival celebration with <br className="hidden sm:block" />
               <span>Vinayaka Crackers</span>
             </h2>
+            <div className="w-[80px] h-1 bg-[#FFB300] mx-auto rounded-full shadow-sm shadow-amber-400/50"></div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
@@ -638,34 +634,39 @@ const Home = () => {
       </section>
 
       {/* 6. FAQ Accordion */}
-      <section className="py-20 px-4 max-w-3xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-serif font-bold text-charcoal mb-4">Common Questions</h2>
-        </div>
+      <section className="py-20 px-4 bg-[#FFF8E7] relative z-20 border-t border-amber-100">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-[#B71C1C] mb-4 drop-shadow-sm">
+              Common Questions
+            </h2>
+            <div className="w-[80px] h-1 bg-[#FFB300] mx-auto rounded-full shadow-sm shadow-amber-400/50"></div>
+          </div>
 
-        <div className="space-y-4">
-          {[
-            { q: "Are your crackers eco-friendly?", a: "We offer a wide range of green and eco-friendly crackers that produce 30% less smoke and are well within the permissible decibel limits." },
-            { q: "Do you deliver Pan-India?", a: "Currently, we deliver across 15+ states in India. Please enter your pincode on the checkout page to verify delivery availability." },
-            { q: "Are there any bulk discounts?", a: "Yes, we offer special wholesale pricing for corporate orders and bulk purchases above ₹20,000. Contact our team for details." }
-          ].map((faq, index) => (
-            <div key={index} className="glass-card-bright p-2">
-              <button
-                className="w-full flex justify-between items-center p-4 text-left font-bold text-lg text-charcoal hover:text-saffron transition-colors"
-                onClick={() => setActiveFaq(activeFaq === index ? null : index)}
-              >
-                {faq.q}
-                <div className={`w-8 h-8 rounded-full bg-cream-light flex items-center justify-center text-gold transition-transform duration-300 ${activeFaq === index ? 'rotate-45' : ''}`}>
-                  <Plus className="w-5 h-5" />
-                </div>
-              </button>
-              {activeFaq === index && (
-                <div className="px-4 pb-4 text-brown leading-relaxed border-t border-cream-dark pt-4">
-                  {faq.a}
-                </div>
-              )}
-            </div>
-          ))}
+          <div className="space-y-4">
+            {[
+              { q: "Are your crackers eco-friendly?", a: "We offer a wide range of green and eco-friendly crackers that produce 30% less smoke and are well within the permissible decibel limits." },
+              { q: "Do you deliver Pan-India?", a: "Currently, we deliver across 15+ states in India. Please enter your pincode on the checkout page to verify delivery availability." },
+              { q: "Are there any bulk discounts?", a: "Yes, we offer special wholesale pricing for corporate orders and bulk purchases above ₹20,000. Contact our team for details." }
+            ].map((faq, index) => (
+              <div key={index} className="bg-white/80 rounded-2xl shadow-sm border border-amber-200/60 overflow-hidden transition-all duration-300 hover:shadow-md">
+                <button
+                  className="w-full flex justify-between items-center p-5 sm:p-6 text-left font-bold text-base sm:text-lg text-[#78350f] hover:text-[#B71C1C] transition-colors"
+                  onClick={() => setActiveFaq(activeFaq === index ? null : index)}
+                >
+                  <span className="font-sans pr-4">{faq.q}</span>
+                  <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center transition-all duration-300 shadow-sm ${activeFaq === index ? 'bg-[#B71C1C] text-white rotate-45' : 'bg-[#FFB300] text-[#B71C1C]'}`}>
+                    <Plus className="w-5 h-5" />
+                  </div>
+                </button>
+                {activeFaq === index && (
+                  <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-[#78350f]/80 font-medium leading-relaxed border-t border-amber-100 pt-4 font-sans text-sm sm:text-base">
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     </div>
