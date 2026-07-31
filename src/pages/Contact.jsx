@@ -92,50 +92,29 @@ const Contact = () => {
             
             {/* Quick Contact Buttons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <a href="tel:+919876543210" className="bg-white border border-gray-100 hover:border-blue-200 p-6 rounded-[2rem] flex flex-col items-center justify-center gap-4 shadow-sm hover:shadow-xl transition-all group">
+              <a href="tel:+919943852902" className="bg-white border border-gray-100 hover:border-blue-200 p-6 rounded-[2rem] flex flex-col items-center justify-center gap-4 shadow-sm hover:shadow-xl transition-all group">
                 <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                   <PhoneCall className="w-8 h-8" />
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">Call Us Directly</p>
-                  <p className="text-xl font-black text-charcoal">+91 98765 43210</p>
+                  <p className="text-xl font-black text-charcoal">+91 99438 52902</p>
                 </div>
               </a>
 
-              <a href="https://wa.me/919876543210" className="bg-white border border-gray-100 hover:border-green-200 p-6 rounded-[2rem] flex flex-col items-center justify-center gap-4 shadow-sm hover:shadow-xl transition-all group">
+              <a href="https://wa.me/919943852902" className="bg-white border border-gray-100 hover:border-green-200 p-6 rounded-[2rem] flex flex-col items-center justify-center gap-4 shadow-sm hover:shadow-xl transition-all group">
                 <div className="w-16 h-16 bg-green-50 text-[#25D366] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform relative">
                   <div className="absolute inset-0 rounded-full border-2 border-[#25D366] animate-ping opacity-20"></div>
                   <MessageCircle className="w-8 h-8" />
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">Chat on WhatsApp</p>
-                  <p className="text-xl font-black text-charcoal">+91 98765 43210</p>
+                  <p className="text-xl font-black text-charcoal">+91 99438 52902</p>
                 </div>
               </a>
             </div>
 
-            {/* Email & Timing Cards */}
-            <div className="bg-[#8B1E1E] p-8 rounded-[2rem] flex flex-col sm:flex-row items-center sm:items-start gap-6 shadow-lg text-white relative overflow-hidden">
-              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
-              
-              <div className="flex-1 flex flex-col items-center sm:items-start text-center sm:text-left z-10">
-                <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-4 text-gold">
-                  <Mail className="w-6 h-6" />
-                </div>
-                <p className="text-gold font-bold uppercase tracking-wider text-sm mb-1">Email Support</p>
-                <p className="text-lg md:text-xl font-bold">vinayakacrackers@gmail.com</p>
-              </div>
 
-              <div className="w-full sm:w-px h-px sm:h-24 bg-white/20 z-10 my-4 sm:my-0"></div>
-
-              <div className="flex-1 flex flex-col items-center sm:items-start text-center sm:text-left z-10">
-                <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-4 text-gold">
-                  <Clock className="w-6 h-6" />
-                </div>
-                <p className="text-gold font-bold uppercase tracking-wider text-sm mb-1">Showroom Timing</p>
-                <p className="text-lg md:text-xl font-bold">Mon-Sun: 10 AM – 9 PM</p>
-              </div>
-            </div>
 
             {/* Map Frame */}
             <div className="relative h-64 md:h-full min-h-[250px] rounded-[2rem] overflow-hidden shadow-warm border-8 border-white group">
@@ -147,7 +126,7 @@ const Contact = () => {
                   <MapPin className="text-red w-5 h-5" />
                 </div>
                 <p className="font-bold text-charcoal text-sm md:text-base leading-snug">
-                  No. 45, GST Road, Chromepet, Chennai, Tamil Nadu 600044
+                  Sivakasi, Tamil Nadu
                 </p>
               </div>
             </div>

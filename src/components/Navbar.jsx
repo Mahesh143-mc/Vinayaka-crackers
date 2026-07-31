@@ -34,7 +34,7 @@ const Navbar = () => {
   return (
     <nav
       className={`fixed w-full z-50 transition-all duration-300 ${
-        scrolled
+        scrolled || location.pathname === '/categories'
           ? 'bg-white shadow-[0_4px_15px_rgba(255,215,0,0.15)]' // Pure White with soft golden shadow
           : 'bg-transparent'
       }`}
@@ -49,7 +49,7 @@ const Navbar = () => {
                 🪔
               </span>
               <span className="text-2xl font-serif font-extrabold text-[#c00000] tracking-tight">
-                Vinayaka Crackers
+                Chimera Crackers
               </span>
             </Link>
           </div>
@@ -83,7 +83,7 @@ const Navbar = () => {
           {/* Right Side: Cart & Price List Button */}
           <div className="hidden md:flex items-center space-x-4">
             <Link
-              to="/cart"
+              to="/products"
               className="p-2 rounded-full transition-colors relative text-gray-800 hover:text-[#c00000] hover:bg-gray-100"
             >
               <ShoppingCart className="w-6 h-6" />
@@ -139,7 +139,7 @@ const Navbar = () => {
             ))}
             <div className="pt-4 px-3 flex items-center justify-between gap-4">
               <Link
-                to="/cart"
+                to="/products"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center justify-center p-3 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 relative transition-colors"
               >

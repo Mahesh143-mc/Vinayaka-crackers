@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ShoppingCart, Filter, Search, X, ArrowUp, SlidersHorizontal, Eye } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
@@ -10,6 +10,7 @@ const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showFilters, setShowFilters] = useState(false);
   const [showCart, setShowCart] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const { cartItems, cartTotals, addToCart, decrementQuantity } = useCart();
   const navigate = useNavigate();
 
@@ -227,18 +228,26 @@ const Products = () => {
                             style={{ clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%)' }}
                           >
                             {/* Image taking upper portion */}
-                            <div className="aspect-[4/3] relative overflow-hidden bg-[#f9f5eb]">
+                            <div 
+                              className="aspect-[4/3] relative overflow-hidden bg-[#f9f5eb] cursor-pointer"
+                              onClick={() => setSelectedProduct(product)}
+                            >
                               <img
                                 src={product.img}
                                 alt={product.name}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                               />
                             </div>
 
                             {/* Practical E-commerce Text Block */}
                             <div className="flex-1 bg-white p-3 sm:p-4 flex flex-col justify-between z-20 border-t border-cream">
                               <div className="text-center mb-3">
-                                <h3 className="text-sm sm:text-lg md:text-xl font-serif font-black text-[#B71C1C] leading-tight line-clamp-2">{product.name}</h3>
+                                <h3 
+                                  className="text-sm sm:text-lg md:text-xl font-serif font-black text-[#B71C1C] leading-tight line-clamp-2 cursor-pointer hover:text-[#FFB300] transition-colors"
+                                  onClick={() => setSelectedProduct(product)}
+                                >
+                                  {product.name}
+                                </h3>
                                 <div className="text-[#FFB300] font-black text-sm sm:text-lg mt-1">{product.price}</div>
                               </div>
 
@@ -457,12 +466,20 @@ const Products = () => {
                 </div>
               )}
               {cartItems.length > 0 ? (
-                <button
-                  onClick={() => navigate('/checkout')}
-                  className="w-full bg-[#B71C1C] hover:bg-red-800 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-colors flex justify-center items-center gap-2"
-                >
-                  Proceed to Checkout
-                </button>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => navigate('/checkout')}
+                    className="w-full bg-[#B71C1C] hover:bg-red-800 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-colors flex justify-center items-center gap-2"
+                  >
+                    Proceed to Checkout
+                  </button>
+                  <button
+                    onClick={() => setShowCart(false)}
+                    className="w-full bg-[#f9f5eb] border-2 border-[#FFB300] text-[#FFB300] hover:bg-[#FFB300] hover:text-white font-bold py-3 px-4 rounded-full transition-all flex justify-center items-center gap-2"
+                  >
+                    Continue Shopping
+                  </button>
+                </div>
               ) : (
                 <button
                   onClick={() => setShowCart(false)}
@@ -475,6 +492,88 @@ const Products = () => {
           </motion.div>
         </div>
       )}
+
+      {/* Product Details Modal */}
+      <AnimatePresence>
+        {selectedProduct && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedProduct(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer"
+            ></motion.div>
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl overflow-hidden shadow-2xl relative z-10 max-w-4xl w-full flex flex-col md:flex-row max-h-[90vh]"
+            >
+              <button 
+                onClick={() => setSelectedProduct(null)}
+                className="absolute top-4 right-4 bg-white/80 backdrop-blur text-charcoal hover:text-red-600 rounded-full p-2 z-20 shadow-sm transition-colors"
+              >
+                <X size={24} />
+              </button>
+
+              <div className="md:w-1/2 bg-[#f9f5eb] relative">
+                <img src={selectedProduct.img} alt={selectedProduct.name} className="w-full h-full object-cover aspect-square md:aspect-auto" />
+                {selectedProduct.tag && (
+                  <div className="absolute top-6 left-6 bg-[#B71C1C] text-white px-4 py-1 rounded-full text-sm font-bold shadow-md">
+                    {selectedProduct.tag}
+                  </div>
+                )}
+              </div>
+              
+              <div className="md:w-1/2 p-6 md:p-10 flex flex-col overflow-y-auto">
+                <span className="text-gold font-bold uppercase tracking-wider text-sm mb-2">{selectedProduct.category}</span>
+                <h2 className="text-3xl md:text-4xl font-serif font-black text-[#B71C1C] mb-4 leading-tight">{selectedProduct.name}</h2>
+                <div className="text-3xl font-black text-[#FFB300] mb-6">{selectedProduct.price}</div>
+                
+                <p className="text-[#666666] text-base md:text-lg mb-8 leading-relaxed">
+                  Experience the ultimate festive joy with our premium {selectedProduct.name}. Perfectly curated for your celebrations, this item guarantees a spectacular display of light and sound. 
+                </p>
+
+                <div className="mt-auto pt-6 border-t border-cream">
+                  {(() => {
+                    const cartItem = cartItems.find(item => item.id === selectedProduct.id);
+                    if (cartItem) {
+                      return (
+                        <div className="flex items-center justify-between bg-[#f9f5eb] rounded-full p-2 border border-gold/20 w-full max-w-xs mx-auto md:mx-0">
+                          <button 
+                            onClick={(e) => handleDecrementAction(e, selectedProduct.id)} 
+                            className="w-12 h-12 flex items-center justify-center bg-white text-[#B71C1C] hover:bg-red-50 rounded-full shadow-sm text-xl font-bold transition-colors"
+                          >
+                            -
+                          </button>
+                          <span className="font-black text-[#B71C1C] text-xl px-4">{cartItem.quantity}</span>
+                          <button 
+                            onClick={(e) => handleAddToCart(e, selectedProduct)} 
+                            className="w-12 h-12 flex items-center justify-center bg-[#FFB300] text-white hover:bg-[#FF8F00] rounded-full shadow-sm text-xl font-bold transition-colors"
+                          >
+                            +
+                          </button>
+                        </div>
+                      );
+                    }
+                    return (
+                      <button 
+                        onClick={(e) => handleAddToCart(e, selectedProduct)}
+                        className="w-full bg-[#B71C1C] hover:bg-red-800 text-white font-bold py-4 px-8 rounded-full shadow-lg transition-transform hover:-translate-y-1 flex items-center justify-center gap-3 text-lg"
+                      >
+                        <ShoppingCart size={24} /> Add to Cart
+                      </button>
+                    );
+                  })()}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 };

@@ -36,7 +36,7 @@ const Footer = () => {
           {/* Brand Col */}
           <div className="col-span-1 md:col-span-1">
             <Link to="/" className="text-3xl font-serif font-bold text-white mb-4 block">
-              Vinayaka<span className="text-gold">.</span>
+              Chimera<span className="text-gold">.</span>
             </Link>
             <p className="text-cream-light/80 mb-6 font-sans">
               Spreading joy and light since 1995. India’s most trusted and vibrant fireworks brand for all your celebrations.
@@ -124,26 +124,26 @@ const Footer = () => {
                 <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mr-3 flex-shrink-0 group-hover:bg-gold transition-colors duration-300">
                   <MapPin className="w-4 h-4 text-gold group-hover:text-saffron-dark transition-colors duration-300" />
                 </div>
-                <span className="mt-1 group-hover:text-white transition-colors duration-300 text-sm">No. 45, GST Road, Chromepet, Chennai, 600044</span>
+                <span className="mt-1 group-hover:text-white transition-colors duration-300 text-sm">Sivakasi, Tamil Nadu</span>
               </li>
               <li className="flex items-center group">
                 <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mr-3 flex-shrink-0 group-hover:bg-gold transition-colors duration-300">
                   <Phone className="w-4 h-4 text-gold group-hover:text-saffron-dark transition-colors duration-300" />
                 </div>
-                <span className="group-hover:text-white transition-colors duration-300 text-sm">+91 98765 43210</span>
+                <span className="group-hover:text-white transition-colors duration-300 text-sm">+91 99438 52902</span>
               </li>
               <li className="flex items-center group">
                 <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mr-3 flex-shrink-0 group-hover:bg-gold transition-colors duration-300">
                   <Mail className="w-4 h-4 text-gold group-hover:text-saffron-dark transition-colors duration-300" />
                 </div>
-                <span className="group-hover:text-white transition-colors duration-300 text-sm">vinayakacrackers@gmail.com</span>
+                <span className="group-hover:text-white transition-colors duration-300 text-sm">chimeratechweb@gmail.com</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="mt-16 pt-8 border-t border-white/20 text-center text-sm text-cream-light/60">
-          <p>&copy; {new Date().getFullYear()} Vinayaka Crackers. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Chimera Crackers. All rights reserved.</p>
         </div>
       </div>
     </footer>

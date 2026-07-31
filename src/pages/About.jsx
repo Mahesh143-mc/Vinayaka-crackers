@@ -85,7 +85,7 @@ const About = () => {
               {/* Decorative quote mark */}
               <div className="absolute -top-8 -left-4 text-7xl text-gold/20 font-serif leading-none pointer-events-none">"</div>
               <p className="text-lg text-brown leading-relaxed mb-6 relative z-10 pl-5 border-l-2 border-gold/40">
-                Vinayaka Crackers was born from a dream to make every festival brighter. From a small stall in Chromepet to a trusted name across India, we source directly from Sivakasi’s finest.
+                Chimera Crackers was born from a dream to make every festival brighter. From a small stall in Sivakasi to a trusted name across India, we source directly from Sivakasi’s finest.
               </p>
             </div>
             <p className="text-lg text-brown leading-relaxed pl-5">
@@ -155,7 +155,7 @@ const About = () => {
       {/* 4. Why Choose Us (Constellation Nodes) */}
       <section className="py-24 px-4 bg-cream-light relative overflow-hidden">
         <div className="max-w-5xl mx-auto text-center relative z-10">
-          <h2 className="text-4xl font-serif font-bold text-charcoal mb-16">Why Vinayaka?</h2>
+          <h2 className="text-4xl font-serif font-bold text-charcoal mb-16">Why Chimera?</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {[
@@ -243,7 +243,7 @@ const About = () => {
               <div className="hidden md:block w-px bg-gold/30"></div>
               <div>
                 <h4 className="text-xl font-bold text-red mb-2">Address</h4>
-                <p className="text-2xl text-brown font-medium">Chromepet, Chennai</p>
+                <p className="text-2xl text-brown font-medium">Sivakasi</p>
                 <p className="text-brown">No. 45, GST Road, 600044</p>
               </div>
             </div>

@@ -8,7 +8,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const Checkout = () => {
-  const { cartItems, cartTotals, addToCart, decrementQuantity, removeFromCart } = useCart();
+  const { cartItems, cartTotals, addToCart, decrementQuantity, removeFromCart, clearCart } = useCart();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -70,7 +70,7 @@ const Checkout = () => {
 
     setTimeout(() => {
       // Format the WhatsApp message
-      let message = `🛒 *Vinayaka Crackers - Order Confirmation*\n\n`;
+      let message = `🛒 *Chimera Crackers - Order Confirmation*\n\n`;
       message += `👤 *Customer Details:*\n`;
       message += `Name: ${formData.name}\n`;
       message += `Phone: ${formData.phone}\n`;
@@ -95,7 +95,7 @@ const Checkout = () => {
         message += `📝 *Notes:*\n${formData.notes}\n\n`;
       }
 
-      message += `Thank you for choosing Vinayaka Crackers! 🎆`;
+      message += `Thank you for choosing Chimera Crackers! 🎆`;
 
       // Encode and redirect
       const whatsappNumber = "919943852902";
@@ -106,6 +106,7 @@ const Checkout = () => {
       
       setIsSubmitting(false);
       setIsSuccess(true);
+      clearCart();
     }, 1500);
   };
 
@@ -115,7 +116,7 @@ const Checkout = () => {
     // Header
     doc.setFontSize(22);
     doc.setTextColor(183, 28, 28); // Deep Crimson
-    doc.text('VINAYAKA CRACKERS', 105, 20, { align: 'center' });
+    doc.text('CHIMERA CRACKERS', 105, 20, { align: 'center' });
     
     doc.setFontSize(12);
     doc.setTextColor(44, 44, 44);
@@ -175,9 +176,9 @@ const Checkout = () => {
     doc.setFont(undefined, 'normal');
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
-    doc.text('Thank you for shopping with Vinayaka Crackers!', 105, finalY + 45, { align: 'center' });
+    doc.text('Thank you for shopping with Chimera Crackers!', 105, finalY + 45, { align: 'center' });
 
-    doc.save(`Vinayaka_Crackers_Invoice_${Date.now()}.pdf`);
+    doc.save(`Chimera_Crackers_Invoice_${Date.now()}.pdf`);
   };
 
   // SUCCESS STATE VIEW
@@ -253,18 +254,18 @@ const Checkout = () => {
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center mb-8 gap-4"
+          className="relative flex items-center justify-center sm:justify-between mb-8"
         >
           <button 
-            onClick={() => navigate('/cart')}
-            className="group flex items-center gap-2 text-[#B71C1C] font-bold hover:text-[#FFB300] transition-colors"
+            onClick={() => navigate('/products')}
+            className="absolute left-0 sm:relative group flex items-center gap-2 text-[#B71C1C] font-bold hover:text-[#FFB300] transition-colors z-10"
           >
-            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> 
+            <ArrowLeft className="w-6 h-6 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" /> 
             <span className="hidden sm:inline">Back to Shopping</span>
           </button>
-          <div className="ml-auto text-right">
-            <h1 className="text-2xl md:text-3xl font-serif font-black text-[#B71C1C]">🛒 Your Festive Basket</h1>
-            <p className="text-[#2C2C2C] text-sm md:text-base">Review your order and confirm details.</p>
+          <div className="text-center sm:text-right w-full px-10 sm:px-0">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-serif font-black text-[#B71C1C]">🛒 Your Festive Basket</h1>
+            <p className="text-[#2C2C2C] text-xs sm:text-sm md:text-base mt-1">Review your order and confirm details.</p>
           </div>
         </motion.div>
 
@@ -494,7 +495,7 @@ const Checkout = () => {
                   <button 
                     type="submit"
                     disabled={isSubmitting}
-                    className={`w-full bg-[#25D366] text-white font-bold py-4 px-6 rounded-full shadow-[0_8px_30px_rgba(37,211,102,0.3)] transition-all flex items-center justify-center gap-3 text-lg
+                    className={`w-full bg-[#25D366] text-white font-bold py-3 sm:py-4 px-2 sm:px-6 rounded-full shadow-[0_8px_30px_rgba(37,211,102,0.3)] transition-all flex items-center justify-center gap-2 sm:gap-3 text-base sm:text-lg
                       ${isSubmitting ? 'opacity-90 scale-95' : 'hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(37,211,102,0.4)]'}
                     `}
                   >

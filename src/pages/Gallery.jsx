@@ -46,12 +46,12 @@ const Gallery = () => {
           </h1>
           
           {/* Filter Tabs */}
-          <div className="flex flex-wrap justify-center gap-3 md:gap-5 mt-10">
+          <div className="flex gap-3 md:gap-5 mt-10 pb-4 overflow-x-auto hide-scrollbar md:justify-center px-2 sm:px-0">
             {tabs.map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-8 py-3 rounded-full font-bold text-sm md:text-base transition-all duration-300 shadow-md ${
+                className={`px-8 py-3 rounded-full font-bold text-sm md:text-base transition-all duration-300 shadow-md whitespace-nowrap shrink-0 ${
                   activeTab === tab 
                     ? 'bg-gradient-to-tr from-[#D32F2F] to-[#8B1E1E] text-white shadow-[0_4px_20px_rgba(211,47,47,0.4)] scale-105' 
                     : 'bg-white text-brown hover:bg-gold/10 hover:text-charcoal hover:scale-105'
