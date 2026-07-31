@@ -1,12 +1,51 @@
 import { useState, useEffect } from 'react';
 import { ShoppingCart, Filter, Search, X, ArrowUp, SlidersHorizontal, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useCart } from '../context/CartContext';
+import { useNavigate } from 'react-router-dom';
+import confetti from 'canvas-confetti';
 
 const Products = () => {
   const [searchFocused, setSearchFocused] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showFilters, setShowFilters] = useState(false);
   const [showCart, setShowCart] = useState(false);
+  const { cartItems, cartTotals, addToCart, decrementQuantity } = useCart();
+  const navigate = useNavigate();
+
+  const shootConfetti = () => {
+    const colors = ['#FFD700', '#D32F2F', '#4CAF50', '#FF9800', '#ffffff'];
+    confetti({
+      particleCount: 60,
+      angle: 60,
+      spread: 70,
+      origin: { x: 0, y: 1 },
+      colors: colors,
+      zIndex: 150,
+      disableForReducedMotion: true
+    });
+    confetti({
+      particleCount: 60,
+      angle: 120,
+      spread: 70,
+      origin: { x: 1, y: 1 },
+      colors: colors,
+      zIndex: 150,
+      disableForReducedMotion: true
+    });
+  };
+
+  const handleAddToCart = (e, product) => {
+    e?.preventDefault();
+    addToCart(product);
+    shootConfetti();
+  };
+
+  const handleDecrementAction = (e, productId) => {
+    e?.preventDefault();
+    decrementQuantity(productId);
+    shootConfetti();
+  };
 
   const categories = ["All", "Gift Hampers", "Sparklers", "Rockets", "Chakkars", "Sky Shots"];
 
@@ -102,7 +141,7 @@ const Products = () => {
             <div className="flex items-center gap-2 sm:gap-3 flex-col sm:flex-row">
               <span className="text-gold font-bold text-[10px] sm:text-base uppercase tracking-widest leading-tight">Quantity</span>
               <div className="bg-[#f9f5eb] border border-gold/30 rounded-full px-3 sm:px-5 py-0.5 sm:py-1 text-[#B71C1C] font-bold shadow-sm text-xs sm:text-base">
-                0
+                {cartTotals.totalQuantity}
               </div>
             </div>
 
@@ -110,7 +149,7 @@ const Products = () => {
             <div className="flex items-center gap-2 sm:gap-3 flex-col sm:flex-row">
               <span className="text-gold font-bold text-[10px] sm:text-base uppercase tracking-widest leading-tight">Item</span>
               <div className="bg-[#f9f5eb] border border-gold/30 rounded-full px-3 sm:px-5 py-0.5 sm:py-1 text-[#B71C1C] font-bold shadow-sm text-xs sm:text-base">
-                0
+                {cartTotals.totalItems}
               </div>
             </div>
 
@@ -118,7 +157,7 @@ const Products = () => {
             <div className="flex items-center gap-2 sm:gap-3 flex-col sm:flex-row">
               <span className="text-gold font-bold text-[10px] sm:text-base uppercase tracking-widest leading-tight">Total</span>
               <div className="bg-[#f9f5eb] border border-gold/30 rounded-full px-3 sm:px-5 py-0.5 sm:py-1 text-[#B71C1C] font-bold shadow-sm flex items-center gap-0.5 sm:gap-1 text-xs sm:text-base">
-                <span>₹</span>0
+                <span>₹</span>{cartTotals.totalAmount.toLocaleString('en-IN')}
               </div>
             </div>
           </div>
@@ -203,21 +242,28 @@ const Products = () => {
                                 <div className="text-[#FFB300] font-black text-sm sm:text-lg mt-1">{product.price}</div>
                               </div>
 
-                              {/* Quantity & Add to Cart Controls */}
-                              <div className="flex flex-col xl:flex-row items-center justify-between mt-auto gap-2 w-full">
-                                {/* Quantity Selector */}
-                                <div className="flex items-center justify-between bg-[#f9f5eb] rounded-full border border-gold/30 p-1 w-full xl:w-auto">
-                                  <button className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-[#B71C1C] hover:bg-white rounded-full transition-colors font-bold shadow-sm">-</button>
-                                  <span className="flex-1 xl:w-8 text-center font-bold text-charcoal text-xs sm:text-sm">1</span>
-                                  <button className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-[#B71C1C] hover:bg-white rounded-full transition-colors font-bold shadow-sm">+</button>
-                                </div>
-
-                                {/* Add Button */}
-                                <button className="w-full xl:flex-1 bg-[#D32F2F] hover:bg-[#B71C1C] text-white font-bold py-1.5 px-3 rounded-full shadow-md transition-colors flex items-center justify-center gap-1 text-xs sm:text-sm">
-                                  <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" /> Add
-                                </button>
-                              </div>
+                            {/* Quantity & Add to Cart Controls */}
+                            <div className="flex items-center justify-center mt-auto w-full pt-2">
+                              {(() => {
+                                const cartItem = cartItems.find(item => item.id === product.id);
+                                if (cartItem) {
+                                  return (
+                                    <div className="flex items-center justify-between bg-[#f9f5eb] rounded-full border border-gold/30 p-1 w-full max-w-[140px]">
+                                      <button onClick={(e) => handleDecrementAction(e, product.id)} className="w-8 h-8 flex items-center justify-center text-[#B71C1C] hover:bg-white rounded-full transition-colors font-bold shadow-sm text-lg">-</button>
+                                      <span className="flex-1 text-center font-bold text-charcoal text-sm">{cartItem.quantity}</span>
+                                      <button onClick={(e) => handleAddToCart(e, product)} className="w-8 h-8 flex items-center justify-center text-[#B71C1C] hover:bg-white rounded-full transition-colors font-bold shadow-sm text-lg">+</button>
+                                    </div>
+                                  );
+                                } else {
+                                  return (
+                                    <button onClick={(e) => handleAddToCart(e, product)} className="w-full bg-[#D32F2F] hover:bg-[#B71C1C] text-white font-bold py-2 px-4 rounded-full shadow-md transition-colors flex items-center justify-center gap-2 text-sm">
+                                      <ShoppingCart className="w-4 h-4" /> Add
+                                    </button>
+                                  );
+                                }
+                              })()}
                             </div>
+                          </div>
                           </div>
                         </motion.div>
                       );
@@ -235,10 +281,10 @@ const Products = () => {
         onClick={() => setShowFilters(true)}
         className="group fixed -left-4 sm:left-0 bottom-[30%] translate-y-1/2 z-[60] flex items-center h-14 bg-gradient-to-tr from-gold to-yellow-500 rounded-r-full shadow-md text-white transition-all duration-300 hover:shadow-lg hover:-left-0"
       >
-        <div className="flex items-center justify-center w-14 h-14 shrink-0">
-          <Filter size={24} className="group-hover:scale-110 transition-transform" />
+        <div className="flex items-center justify-center w-14 h-14 md:w-16 md:h-16 shrink-0">
+          <Filter size={24} className="group-hover:scale-110 transition-transform md:w-7 md:h-7" />
         </div>
-        <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs group-hover:pr-5 font-bold transition-all duration-300 ease-in-out">
+        <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs group-hover:pr-6 font-bold md:text-lg transition-all duration-300 ease-in-out">
           Filters
         </span>
       </button>
@@ -246,10 +292,10 @@ const Products = () => {
       {/* Scroll to Top Button (Left Bottom) */}
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        className="fixed left-6 bottom-10 z-40 flex items-center justify-center w-12 h-12 bg-white text-[#B71C1C] border-2 border-gold/40 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-110 hover:border-gold hover:bg-[#f9f5eb] group"
+        className="fixed left-6 bottom-10 z-40 flex items-center justify-center w-12 h-12 md:w-14 md:h-14 bg-white text-[#B71C1C] border-2 border-gold/40 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-110 hover:border-gold hover:bg-[#f9f5eb] group"
         aria-label="Scroll to top"
       >
-        <ArrowUp size={24} className="group-hover:-translate-y-1 transition-transform duration-300" />
+        <ArrowUp size={24} className="group-hover:-translate-y-1 transition-transform duration-300 md:w-7 md:h-7" />
       </button>
 
       {/* Floating Cart Button (Right Bottom) */}
@@ -257,17 +303,22 @@ const Products = () => {
         onClick={() => setShowCart(true)}
         className="group fixed right-6 bottom-10 z-40 flex items-center h-14 bg-gradient-to-tr from-[#D32F2F] to-[#B71C1C] rounded-full shadow-md text-white transition-all duration-300 hover:shadow-lg"
       >
-        <div className="flex items-center justify-center w-14 h-14 shrink-0">
-          <ShoppingCart size={24} className="group-hover:scale-110 transition-transform" />
+        <div className="flex items-center justify-center w-14 h-14 md:w-16 md:h-16 shrink-0 relative">
+          <ShoppingCart size={24} className="group-hover:scale-110 transition-transform md:w-7 md:h-7" />
+          {cartTotals.totalQuantity > 0 && (
+            <span className="absolute top-0 right-0 -mt-1 -mr-1 md:-mt-2 md:-mr-2 flex items-center justify-center min-w-[22px] h-[22px] md:min-w-[28px] md:h-[28px] px-1.5 text-[11px] md:text-[14px] font-black text-[#B71C1C] bg-white rounded-full shadow-md border-2 border-white">
+              {cartTotals.totalQuantity}
+            </span>
+          )}
         </div>
-        <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs group-hover:pr-5 font-bold transition-all duration-300 ease-in-out">
+        <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs group-hover:pr-6 font-bold md:text-lg transition-all duration-300 ease-in-out">
           Cart
         </span>
       </button>
 
       {/* Filter Sidebar Overlay */}
       {showFilters && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm transition-opacity">
+        <div className="fixed inset-0 z-[70] flex justify-end bg-black/40 backdrop-blur-sm transition-opacity">
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
@@ -351,7 +402,7 @@ const Products = () => {
 
       {/* Cart Sidebar Overlay */}
       {showCart && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm transition-opacity">
+        <div className="fixed inset-0 z-[70] flex justify-end bg-black/40 backdrop-blur-sm transition-opacity">
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
@@ -369,19 +420,57 @@ const Products = () => {
               </button>
             </div>
 
-            <div className="flex-1 flex flex-col items-center justify-center text-center opacity-60">
-              <ShoppingCart size={48} className="text-gold mb-4" />
-              <p className="text-lg font-bold text-charcoal">Your cart is currently empty.</p>
-              <p className="text-sm mt-2">Selected products will appear here.</p>
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+              {cartItems.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center opacity-60">
+                  <ShoppingCart size={48} className="text-gold mb-4" />
+                  <p className="text-lg font-bold text-charcoal">Your cart is currently empty.</p>
+                  <p className="text-sm mt-2">Selected products will appear here.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {cartItems.map((item) => (
+                    <div key={item.id} className="flex gap-4 p-3 bg-[#f9f5eb] border border-gold/20 rounded-2xl items-center shadow-sm">
+                      <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-gold/30 bg-white">
+                        <img src={item.img} alt={item.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-sm text-[#B71C1C] truncate">{item.name}</h4>
+                        <div className="text-charcoal font-semibold text-xs mt-0.5">{item.price}</div>
+                      </div>
+                      <div className="flex items-center gap-2 bg-white rounded-full border border-gold/30 p-0.5 shrink-0">
+                        <button onClick={(e) => handleDecrementAction(e, item.id)} className="w-6 h-6 flex items-center justify-center text-[#B71C1C] hover:bg-cream-light rounded-full font-bold transition-colors">-</button>
+                        <span className="w-4 text-center font-bold text-xs">{item.quantity}</span>
+                        <button onClick={(e) => handleAddToCart(e, item)} className="w-6 h-6 flex items-center justify-center text-[#B71C1C] hover:bg-cream-light rounded-full font-bold transition-colors">+</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="mt-8 pt-6 border-t border-gold/20">
-              <button
-                onClick={() => setShowCart(false)}
-                className="w-full bg-[#B71C1C] hover:bg-red-800 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-colors"
-              >
-                Continue Shopping
-              </button>
+            <div className="mt-8 pt-6 border-t border-gold/20 space-y-3">
+              {cartItems.length > 0 && (
+                <div className="flex justify-between items-center mb-4 px-2">
+                  <span className="font-bold text-charcoal">Subtotal</span>
+                  <span className="font-black text-xl text-[#B71C1C]">₹{cartTotals.totalAmount.toLocaleString('en-IN')}</span>
+                </div>
+              )}
+              {cartItems.length > 0 ? (
+                <button
+                  onClick={() => navigate('/checkout')}
+                  className="w-full bg-[#B71C1C] hover:bg-red-800 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-colors flex justify-center items-center gap-2"
+                >
+                  Proceed to Checkout
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowCart(false)}
+                  className="w-full bg-[#B71C1C] hover:bg-red-800 text-white font-bold py-3 px-4 rounded-full shadow-lg transition-colors"
+                >
+                  Continue Shopping
+                </button>
+              )}
             </div>
           </motion.div>
         </div>

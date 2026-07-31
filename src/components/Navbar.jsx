@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FileText, Menu, X, ShoppingCart } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useCart } from '../context/CartContext';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { cartTotals } = useCart();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -86,7 +88,11 @@ const Navbar = () => {
             >
               <ShoppingCart className="w-6 h-6" />
               {/* Optional Cart Badge */}
-              <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-[#c00000] rounded-full border border-white">0</span>
+              {cartTotals.totalQuantity > 0 && (
+                <span className="absolute top-0 right-0 flex items-center justify-center min-w-[20px] h-[20px] px-1 text-[11px] font-black text-white bg-[#c00000] rounded-full shadow-sm border-2 border-white">
+                  {cartTotals.totalQuantity}
+                </span>
+              )}
             </Link>
             <Link 
               to="/products" 
@@ -138,7 +144,11 @@ const Navbar = () => {
                 className="flex items-center justify-center p-3 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 relative transition-colors"
               >
                 <ShoppingCart className="w-6 h-6" />
-                <span className="absolute top-1 right-1 inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-[#c00000] rounded-full border border-white">0</span>
+                {cartTotals.totalQuantity > 0 && (
+                  <span className="absolute top-1 right-1 flex items-center justify-center min-w-[20px] h-[20px] px-1 text-[11px] font-black text-white bg-[#c00000] rounded-full shadow-sm border-2 border-white">
+                    {cartTotals.totalQuantity}
+                  </span>
+                )}
               </Link>
               <Link 
                 to="/products" 

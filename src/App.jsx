@@ -7,6 +7,8 @@ import Products from './pages/Products';
 import Categories from './pages/Categories';
 import Gallery from './pages/Gallery';
 import Contact from './pages/Contact';
+import Checkout from './pages/Checkout';
+import { CartProvider } from './context/CartContext';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -20,19 +22,22 @@ function ScrollToTop() {
 
 function App() {
   return (
-    <Router>
-      <ScrollToTop />
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="about" element={<About />} />
-          <Route path="products" element={<Products />} />
-          <Route path="categories" element={<Categories />} />
-          <Route path="gallery" element={<Gallery />} />
-          <Route path="contact" element={<Contact />} />
-        </Route>
-      </Routes>
-    </Router>
+    <CartProvider>
+      <Router>
+        <ScrollToTop />
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="about" element={<About />} />
+            <Route path="products" element={<Products />} />
+            <Route path="categories" element={<Categories />} />
+            <Route path="gallery" element={<Gallery />} />
+            <Route path="contact" element={<Contact />} />
+            <Route path="checkout" element={<Checkout />} />
+          </Route>
+        </Routes>
+      </Router>
+    </CartProvider>
   );
 }
 
