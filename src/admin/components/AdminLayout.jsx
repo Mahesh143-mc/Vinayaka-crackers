@@ -12,7 +12,10 @@ import {
   ChevronRight,
   Box,
   Users,
-  Bell
+  Bell,
+  TrendingUp,
+  DollarSign,
+  Globe
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -27,6 +30,9 @@ const AdminLayout = () => {
     { name: 'Inventory', path: '/admin/inventory', icon: <Package size={22} /> },
     { name: 'Orders', path: '/admin/orders', icon: <ShoppingCart size={22} /> },
     { name: 'Billing / POS', path: '/admin/billing', icon: <FileText size={22} /> },
+    { name: 'Reports & Analytics', path: '/admin/reports', icon: <TrendingUp size={22} /> },
+    { name: 'Expenses Tracker', path: '/admin/expenses', icon: <DollarSign size={22} /> },
+    { name: 'Website Management', path: '/admin/website', icon: <Globe size={22} /> },
     { name: 'Customers', path: '/admin/customers', icon: <Users size={22} /> },
     { name: 'Settings', path: '/admin/settings', icon: <Settings size={22} /> },
   ];
@@ -144,7 +150,7 @@ const AdminLayout = () => {
 
         {/* Dynamic Page Body Canvas */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-[#F4F1EA]">
-          <Outlet />
+          <Outlet context={{ isDesktopSidebarExpanded }} />
         </main>
       </div>
       

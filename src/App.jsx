@@ -17,6 +17,12 @@ import AdminOrders from './admin/pages/Orders';
 import AdminBilling from './admin/pages/Billing';
 import AdminCustomers from './admin/pages/Customers';
 import AdminSettings from './admin/pages/Settings';
+import AdminAddProduct from './admin/pages/AddProduct';
+import AdminCategories from './admin/pages/Categories';
+import AdminOrderDetails from './admin/pages/OrderDetails';
+import AdminReports from './admin/pages/Reports';
+import AdminExpenses from './admin/pages/Expenses';
+import AdminWebsiteCMS from './admin/pages/WebsiteCMS';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -48,9 +54,16 @@ function App() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="products" element={<AdminProducts />} />
+            <Route path="products/add" element={<AdminAddProduct />} />
+            <Route path="products/edit/:id" element={<AdminAddProduct />} />
+            <Route path="categories" element={<AdminCategories />} />
             <Route path="inventory" element={<AdminInventory />} />
             <Route path="orders" element={<AdminOrders />} />
+            <Route path="orders/:id" element={<AdminOrderDetails />} />
             <Route path="billing" element={<AdminBilling />} />
+            <Route path="reports" element={<AdminReports />} />
+            <Route path="expenses" element={<AdminExpenses />} />
+            <Route path="website" element={<AdminWebsiteCMS />} />
             <Route path="customers" element={<AdminCustomers />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>

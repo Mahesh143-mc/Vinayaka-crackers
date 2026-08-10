@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Search, Filter, Eye, Phone, CheckCircle, Clock, Truck, XCircle, ShoppingBag, Edit3, X, Check, PackageCheck } from 'lucide-react';
+import { Search, Eye, Phone, CheckCircle, Clock, Truck, PackageCheck, Check, ChevronDown, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState([
     { 
-      id: '#ORD-092', 
+      id: 'ORD-092', 
       customer: 'Rahul Sharma', 
       phone: '+91 9876543210', 
       amount: 14500, 
@@ -19,7 +20,7 @@ const AdminOrders = () => {
       ]
     },
     { 
-      id: '#ORD-091', 
+      id: 'ORD-091', 
       customer: 'Priya Patel', 
       phone: '+91 9123456789', 
       amount: 8200, 
@@ -33,7 +34,7 @@ const AdminOrders = () => {
       ]
     },
     { 
-      id: '#ORD-090', 
+      id: 'ORD-090', 
       customer: 'Vikram Singh', 
       phone: '+91 9988776655', 
       amount: 22000, 
@@ -46,7 +47,7 @@ const AdminOrders = () => {
       ]
     },
     { 
-      id: '#ORD-089', 
+      id: 'ORD-089', 
       customer: 'Arun Kumar', 
       phone: '+91 9876512345', 
       amount: 5400, 
@@ -60,18 +61,31 @@ const AdminOrders = () => {
     },
   ]);
 
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [editingOrder, setEditingOrder] = useState(null);
-  const [editStatus, setEditStatus] = useState('');
-
+  const [confirmConfig, setConfirmConfig] = useState(null);
+  const [successToast, setSuccessToast] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
 
   const updateOrderStatus = (orderId, newStatus) => {
     setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
-    if (selectedOrder && selectedOrder.id === orderId) {
-      setSelectedOrder(prev => ({ ...prev, status: newStatus }));
-    }
+    triggerSuccess(`Order #${orderId} status changed to ${newStatus}!`);
+  };
+
+  const triggerSuccess = (msg) => {
+    setSuccessToast(msg);
+    setTimeout(() => setSuccessToast(''), 3000);
+  };
+
+  const promptAction = (title, message, confirmText, actionFn) => {
+    setConfirmConfig({
+      title,
+      message,
+      confirmText,
+      onConfirm: () => {
+        actionFn();
+        setConfirmConfig(null);
+      }
+    });
   };
 
   const filteredOrders = orders.filter(o => {
@@ -96,7 +110,14 @@ const AdminOrders = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-10">
+    <div className="max-w-7xl mx-auto space-y-8 pb-10 relative">
+      {/* Toast Notification */}
+      {successToast && (
+        <div className="fixed top-24 right-8 z-50 bg-emerald-700 text-white px-5 py-3 rounded-2xl shadow-2xl border border-emerald-500 font-black text-xs flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
+          <CheckCircle2 size={18} /> {successToast}
+        </div>
+      )}
+
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#4A0E0E] via-[#701515] to-[#4A0E0E] p-7 rounded-3xl shadow-lg text-white">
         <div>
@@ -114,23 +135,26 @@ const AdminOrders = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by Order ID or Customer Name..." 
-            className="w-full pl-11 pr-4 py-3 bg-white border border-amber-900/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#4A0E0E]/30 text-sm font-bold text-gray-800"
+            className="w-full pl-11 pr-4 py-3 bg-white border-2 border-amber-900/20 rounded-2xl focus:outline-none focus:border-[#4A0E0E] text-sm font-black text-gray-900 shadow-sm"
           />
         </div>
-        <select 
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="w-full md:w-auto px-4 py-3 bg-white border border-amber-900/10 rounded-2xl font-bold text-amber-950 text-sm focus:outline-none"
-        >
-          <option value="All">All Statuses</option>
-          <option value="Pending">Pending</option>
-          <option value="Accepted">Accepted</option>
-          <option value="Shipped">Shipped</option>
-          <option value="Delivered">Delivered</option>
-        </select>
+        <div className="relative w-full md:w-auto">
+          <select 
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full md:w-auto pl-5 pr-11 py-3 bg-white border-2 border-amber-900/20 rounded-2xl font-black text-gray-900 text-sm focus:outline-none focus:border-[#4A0E0E] shadow-sm appearance-none cursor-pointer hover:border-[#4A0E0E] transition-all"
+          >
+            <option value="All">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="Accepted">Accepted</option>
+            <option value="Shipped">Shipped</option>
+            <option value="Delivered">Delivered</option>
+          </select>
+          <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#4A0E0E] pointer-events-none stroke-[2.5]" />
+        </div>
       </div>
 
-      {/* Table with Tinted Background & Header */}
+      {/* Table */}
       <div className="bg-[#FAF7F2] rounded-3xl shadow-sm border border-amber-900/10 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -141,14 +165,14 @@ const AdminOrders = () => {
                 <th className="px-6 py-6 text-xs font-black text-[#FFD700] uppercase tracking-widest">Amount</th>
                 <th className="px-6 py-6 text-xs font-black text-[#FFD700] uppercase tracking-widest">Status</th>
                 <th className="px-6 py-6 text-xs font-black text-[#FFD700] uppercase tracking-widest text-center">Status Action</th>
-                <th className="px-6 py-6 text-xs font-black text-[#FFD700] uppercase tracking-widest text-right">Details</th>
+                <th className="px-6 py-6 text-xs font-black text-[#FFD700] uppercase tracking-widest text-right">Details Page</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-amber-900/10">
               {filteredOrders.map((order, idx) => (
                 <tr key={order.id} className={idx % 2 === 0 ? 'bg-[#FAF7F2]' : 'bg-[#F2ECE1]'}>
                   <td className="px-6 py-5">
-                    <p className="text-sm font-black text-gray-900">{order.id}</p>
+                    <p className="text-sm font-black text-gray-900">#{order.id}</p>
                     <p className="text-xs font-bold text-amber-800 mt-0.5">{order.date}</p>
                   </td>
                   <td className="px-6 py-4">
@@ -168,7 +192,12 @@ const AdminOrders = () => {
                     <div className="flex items-center justify-center gap-2">
                       {order.status === 'Pending' && (
                         <button 
-                          onClick={() => updateOrderStatus(order.id, 'Accepted')}
+                          onClick={() => promptAction(
+                            'Accept Order?', 
+                            `Confirm acceptance of order #${order.id} for ${order.customer}?`,
+                            'Yes, Accept',
+                            () => updateOrderStatus(order.id, 'Accepted')
+                          )}
                           className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs shadow-sm flex items-center gap-1"
                         >
                           <Check size={14} /> Accept Order
@@ -176,7 +205,12 @@ const AdminOrders = () => {
                       )}
                       {order.status === 'Accepted' && (
                         <button 
-                          onClick={() => updateOrderStatus(order.id, 'Shipped')}
+                          onClick={() => promptAction(
+                            'Mark Shipped?', 
+                            `Confirm dispatch of order #${order.id}?`,
+                            'Yes, Ship Order',
+                            () => updateOrderStatus(order.id, 'Shipped')
+                          )}
                           className="px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl font-bold text-xs shadow-sm flex items-center gap-1"
                         >
                           <Truck size={14} /> Mark Shipped
@@ -184,7 +218,12 @@ const AdminOrders = () => {
                       )}
                       {order.status === 'Shipped' && (
                         <button 
-                          onClick={() => updateOrderStatus(order.id, 'Delivered')}
+                          onClick={() => promptAction(
+                            'Mark Delivered?', 
+                            `Confirm delivery of order #${order.id}?`,
+                            'Yes, Deliver',
+                            () => updateOrderStatus(order.id, 'Delivered')
+                          )}
                           className="px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-bold text-xs shadow-sm flex items-center gap-1"
                         >
                           <PackageCheck size={14} /> Mark Delivered
@@ -199,12 +238,12 @@ const AdminOrders = () => {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button 
-                        onClick={() => setSelectedOrder(order)}
+                      <Link 
+                        to={`/admin/orders/${order.id}`}
                         className="px-3 py-1.5 bg-amber-200/60 hover:bg-[#4A0E0E] text-amber-950 hover:text-white border border-amber-300 rounded-xl font-bold text-xs transition-all flex items-center gap-1"
                       >
-                        <Eye size={14} /> View Details
-                      </button>
+                        <Eye size={14} /> View Order Page
+                      </Link>
                     </div>
                   </td>
                 </tr>
@@ -214,54 +253,33 @@ const AdminOrders = () => {
         </div>
       </div>
 
-      {/* View Order Modal */}
-      {selectedOrder && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#FAF7F2] rounded-3xl max-w-xl w-full p-7 shadow-2xl border border-amber-900/20 relative">
-            <div className="flex items-center justify-between pb-4 border-b border-amber-900/10">
-              <div>
-                <h3 className="text-xl font-black text-gray-900 flex items-center gap-2">
-                  <ShoppingBag className="text-[#c00000]" /> Order Summary ({selectedOrder.id})
-                </h3>
-                <p className="text-xs font-bold text-amber-900 mt-0.5">Placed by {selectedOrder.customer} on {selectedOrder.date}</p>
-              </div>
-              <button onClick={() => setSelectedOrder(null)} className="p-2 text-gray-400 hover:text-gray-700 bg-white rounded-full">
-                <X size={18} />
+      {/* Confirmation Action Modal */}
+      {confirmConfig && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#FAF7F2] rounded-3xl max-w-md w-full p-7 shadow-2xl border border-amber-900/30 text-center relative space-y-4 animate-in fade-in zoom-in duration-200">
+            <div className="w-16 h-16 mx-auto rounded-full bg-amber-100 text-[#4A0E0E] flex items-center justify-center border-2 border-amber-300 shadow-md">
+              <AlertCircle size={36} />
+            </div>
+
+            <div>
+              <h3 className="text-xl font-serif font-black text-gray-900">{confirmConfig.title}</h3>
+              <p className="text-xs font-bold text-gray-600 mt-2 leading-relaxed">
+                {confirmConfig.message}
+              </p>
+            </div>
+
+            <div className="pt-4 border-t border-amber-900/15 grid grid-cols-2 gap-3">
+              <button 
+                onClick={() => setConfirmConfig(null)}
+                className="py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-black text-xs rounded-2xl transition-all"
+              >
+                Cancel
               </button>
-            </div>
-
-            <div className="py-4 space-y-4">
-              <div className="bg-white p-4 rounded-2xl border border-amber-900/10 text-sm font-medium text-gray-700">
-                <p className="font-bold text-amber-950">Delivery Address:</p>
-                <p className="text-xs text-gray-600 mt-0.5">{selectedOrder.address}</p>
-                <p className="text-xs text-[#c00000] font-bold mt-1">Contact: {selectedOrder.phone}</p>
-              </div>
-
-              <h4 className="font-black text-sm text-gray-900 uppercase tracking-wider">Ordered Products:</h4>
-              <div className="divide-y divide-amber-900/10 max-h-52 overflow-y-auto border border-amber-900/10 rounded-2xl bg-white">
-                {selectedOrder.items.map((item, index) => (
-                  <div key={index} className="p-3 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-bold text-gray-900">{item.name}</p>
-                      <p className="text-xs font-bold text-gray-400">₹{item.price} per unit</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-black text-[#4A0E0E]">₹{(item.qty * item.price).toLocaleString()}</p>
-                      <span className="text-xs font-extrabold bg-amber-100 text-amber-950 px-2 py-0.5 rounded-lg">Qty: {item.qty}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="pt-3 border-t border-amber-900/10 flex items-center justify-between">
-                <span className="font-black text-base text-gray-900">Total Order Amount:</span>
-                <span className="font-black text-2xl text-[#c00000]">₹{selectedOrder.amount.toLocaleString()}</span>
-              </div>
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-amber-900/10 flex justify-end">
-              <button onClick={() => setSelectedOrder(null)} className="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl font-bold text-sm">
-                Close Summary
+              <button 
+                onClick={confirmConfig.onConfirm}
+                className="py-3 bg-gradient-to-r from-[#FFD700] to-amber-500 hover:from-amber-400 hover:to-amber-600 text-[#4A0E0E] font-black text-xs rounded-2xl shadow-md transition-all"
+              >
+                {confirmConfig.confirmText || 'Yes, Confirm'}
               </button>
             </div>
           </div>
