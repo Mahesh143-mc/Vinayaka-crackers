@@ -49,11 +49,11 @@ const About = () => {
           >
             {/* Decorative background box */}
             <div className="absolute inset-0 bg-gold/30 rounded-[2.5rem] transform translate-x-4 translate-y-4 -z-10"></div>
-            <div className="w-full h-[450px] rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white relative z-10">
+            <div className="w-full h-[450px] rounded-[2rem] overflow-hidden shadow-2xl border-4 border-[#FFD700]/30 relative z-10 bg-white p-6 flex items-center justify-center">
               <img 
-                src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=800" 
-                alt="Our Journey" 
-                className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
+                src="https://res.cloudinary.com/vf0fqhwo/image/upload/v1786363324/logo_q7lezq.jpg" 
+                alt="Karuppan Crackers Logo" 
+                className="w-full h-full object-contain transform hover:scale-105 transition-transform duration-700"
               />
             </div>
             {/* Floating badge */}
@@ -85,7 +85,7 @@ const About = () => {
               {/* Decorative quote mark */}
               <div className="absolute -top-8 -left-4 text-7xl text-gold/20 font-serif leading-none pointer-events-none">"</div>
               <p className="text-lg text-brown leading-relaxed mb-6 relative z-10 pl-5 border-l-2 border-gold/40">
-                Chimera Crackers was born from a dream to make every festival brighter. From a small stall in Sivakasi to a trusted name across India, we source directly from Sivakasi’s finest.
+                Karuppan Crackers was born from a dream to make every festival brighter. From a small stall in Sivakasi to a trusted name across India, we source directly from Sivakasi’s finest.
               </p>
             </div>
             <p className="text-lg text-brown leading-relaxed pl-5">
@@ -155,7 +155,7 @@ const About = () => {
       {/* 4. Why Choose Us (Constellation Nodes) */}
       <section className="py-24 px-4 bg-cream-light relative overflow-hidden">
         <div className="max-w-5xl mx-auto text-center relative z-10">
-          <h2 className="text-4xl font-serif font-bold text-charcoal mb-16">Why Chimera?</h2>
+          <h2 className="text-4xl font-serif font-bold text-charcoal mb-16">Why Karuppan?</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {[

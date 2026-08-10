@@ -70,7 +70,7 @@ const Checkout = () => {
 
     setTimeout(() => {
       // Format the WhatsApp message
-      let message = `🛒 *Chimera Crackers - Order Confirmation*\n\n`;
+      let message = `🛒 *Karuppan Crackers - Order Confirmation*\n\n`;
       message += `👤 *Customer Details:*\n`;
       message += `Name: ${formData.name}\n`;
       message += `Phone: ${formData.phone}\n`;
@@ -95,10 +95,10 @@ const Checkout = () => {
         message += `📝 *Notes:*\n${formData.notes}\n\n`;
       }
 
-      message += `Thank you for choosing Chimera Crackers! 🎆`;
+      message += `Thank you for choosing Karuppan Crackers! 🎆`;
 
       // Encode and redirect
-      const whatsappNumber = "919943852902";
+      const whatsappNumber = "918825419454";
       const encodedMessage = encodeURIComponent(message);
       const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
       
@@ -116,7 +116,7 @@ const Checkout = () => {
     // Header
     doc.setFontSize(22);
     doc.setTextColor(183, 28, 28); // Deep Crimson
-    doc.text('CHIMERA CRACKERS', 105, 20, { align: 'center' });
+    doc.text('KARUPPAN CRACKERS', 105, 20, { align: 'center' });
     
     doc.setFontSize(12);
     doc.setTextColor(44, 44, 44);
@@ -176,9 +176,9 @@ const Checkout = () => {
     doc.setFont(undefined, 'normal');
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
-    doc.text('Thank you for shopping with Chimera Crackers!', 105, finalY + 45, { align: 'center' });
+    doc.text('Thank you for shopping with Karuppan Crackers!', 105, finalY + 45, { align: 'center' });
 
-    doc.save(`Chimera_Crackers_Invoice_${Date.now()}.pdf`);
+    doc.save(`Karuppan_Crackers_Invoice_${Date.now()}.pdf`);
   };
 
   // SUCCESS STATE VIEW
@@ -200,7 +200,7 @@ const Checkout = () => {
           
           <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center">
             <button 
-              onClick={() => window.open('https://wa.me/919943852902', '_blank')}
+              onClick={() => window.open('https://wa.me/918825419454', '_blank')}
               className="bg-[#FFB300] hover:bg-[#FF8F00] text-white font-bold py-3 px-6 rounded-full transition-colors flex items-center justify-center"
             >
               View Order Status

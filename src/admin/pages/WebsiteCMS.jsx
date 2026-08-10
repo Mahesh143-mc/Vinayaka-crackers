@@ -19,9 +19,9 @@ const AdminWebsiteCMS = () => {
   const [minOrderForDiscount, setMinOrderForDiscount] = useState(3000);
 
   // Tab 3: Store Information & Legal Contact
-  const [storeName, setStoreName] = useState('Chimera Crackers');
-  const [supportPhone, setSupportPhone] = useState('9943852902');
-  const [whatsappNumber, setWhatsappNumber] = useState('9943852902');
+  const [storeName, setStoreName] = useState('Karuppan Crackers');
+  const [supportPhone, setSupportPhone] = useState('8825419454');
+  const [whatsappNumber, setWhatsappNumber] = useState('8825419454');
   const [supportEmail, setSupportEmail] = useState('chimeratechweb@gmail.com');
   const [storeAddress, setStoreAddress] = useState('124/B, Main Road, Sivakasi - 626123, Tamil Nadu, India');
   const [gstinNumber, setGstinNumber] = useState('33AAAAA0000A1Z5');

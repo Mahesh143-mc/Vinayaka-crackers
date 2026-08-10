@@ -48,9 +48,13 @@ const AdminLayout = () => {
       >
         <div className="flex items-center justify-between h-20 px-6 border-b border-red-900/30 shrink-0">
           <Link to="/admin" className={`flex items-center gap-3 overflow-hidden ${!isDesktopSidebarExpanded && 'lg:hidden'}`}>
-            <span className="text-2xl drop-shadow-md">🪔</span>
+            <img 
+              src="https://res.cloudinary.com/vf0fqhwo/image/upload/v1786363324/logo_q7lezq.jpg" 
+              alt="Karuppan Crackers Logo" 
+              className="w-9 h-9 rounded-xl object-contain border border-amber-400/40 shadow-sm shrink-0" 
+            />
             <span className="font-serif font-extrabold text-white text-xl tracking-tight whitespace-nowrap">
-              Chimera Admin
+              Karuppan Admin
             </span>
           </Link>
           
@@ -139,7 +143,7 @@ const AdminLayout = () => {
             <div className="flex items-center gap-3 pl-4 border-l border-red-900/40">
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-bold text-white leading-tight">Mahesh Admin</p>
-                <p className="text-[11px] font-medium text-red-200">admin@chimera.com</p>
+                <p className="text-[11px] font-medium text-red-200">admin@karuppancrackers.com</p>
               </div>
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#FFD700] to-amber-500 flex items-center justify-center text-[#4A0E0E] font-black text-base shadow-sm">
                 M

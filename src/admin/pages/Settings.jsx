@@ -76,7 +76,7 @@ const AdminSettings = () => {
                 <label className="block text-xs font-black text-amber-950 uppercase mb-2">Store Display Name</label>
                 <input 
                   type="text" 
-                  defaultValue="Chimera Crackers"
+                  defaultValue="Karuppan Crackers"
                   className="w-full px-4 py-3 bg-white border border-amber-900/10 rounded-2xl focus:outline-none font-bold text-gray-800 text-sm"
                 />
               </div>
@@ -94,7 +94,7 @@ const AdminSettings = () => {
                   <label className="block text-xs font-black text-amber-950 uppercase mb-2">Support Phone / WhatsApp</label>
                   <input 
                     type="text" 
-                    defaultValue="9943852902"
+                    defaultValue="8825419454"
                     className="w-full px-4 py-3 bg-white border border-amber-900/10 rounded-2xl focus:outline-none font-bold text-gray-800 text-sm"
                   />
                 </div>

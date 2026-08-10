@@ -44,12 +44,14 @@ const Navbar = () => {
           
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link to="/" className="flex items-center gap-2 group">
-              <span className="text-2xl drop-shadow-[0_0_10px_rgba(255,165,0,0.8)] transform group-hover:scale-110 transition-transform">
-                🪔
-              </span>
+            <Link to="/" className="flex items-center gap-2.5 group">
+              <img 
+                src="https://res.cloudinary.com/vf0fqhwo/image/upload/v1786363324/logo_q7lezq.jpg" 
+                alt="Karuppan Crackers" 
+                className="h-11 sm:h-12 w-auto object-contain rounded-xl shadow-sm border border-amber-300/40 group-hover:scale-105 transition-transform" 
+              />
               <span className="text-2xl font-serif font-extrabold text-[#c00000] tracking-tight">
-                Chimera Crackers
+                Karuppan Crackers
               </span>
             </Link>
           </div>

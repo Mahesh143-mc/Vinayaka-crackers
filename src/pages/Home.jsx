@@ -230,7 +230,7 @@ const Home = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="text-[#2C2C2C] text-xs sm:text-base md:text-lg font-sans leading-relaxed mb-6 sm:mb-8 text-center max-w-xl px-2 opacity-90"
             >
-              Chimera Crackers is your trusted destination for premium-quality fireworks from Sivakasi. We offer a wide range of safe, vibrant, and high-quality crackers at competitive prices. Celebrate every occasion with confidence, backed by reliable service and customer satisfaction.
+              Karuppan Crackers is your trusted destination for premium-quality fireworks from Sivakasi. We offer a wide range of safe, vibrant, and high-quality crackers at competitive prices. Celebrate every occasion with confidence, backed by reliable service and customer satisfaction.
             </motion.p>
 
             <motion.div
@@ -454,7 +454,7 @@ const Home = () => {
           {/* Left Side: Text Content */}
           <div className="text-center flex flex-col items-center justify-center">
             <h2 className="text-3xl md:text-5xl font-sans font-extrabold text-[#ffb300] mb-3 drop-shadow-md">
-              Chimera Crackers
+              Karuppan Crackers
             </h2>
             <p className="text-white text-base md:text-lg font-medium mb-6 max-w-lg leading-relaxed drop-shadow-md">
               To make your Diwali shopping even more delightful, we're offering exclusive discounts and combo deals on our crackers.
@@ -484,7 +484,7 @@ const Home = () => {
           <div className="text-center mb-10 sm:mb-16 px-2">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-extrabold text-[#B71C1C] mb-4 leading-snug drop-shadow-sm">
               Festival celebration with <br className="hidden sm:block" />
-              <span>Chimera Crackers</span>
+              <span>Karuppan Crackers</span>
             </h2>
             <div className="w-[80px] h-1 bg-[#FFB300] mx-auto rounded-full shadow-sm shadow-amber-400/50"></div>
           </div>

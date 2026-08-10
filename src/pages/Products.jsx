@@ -127,7 +127,7 @@ const Products = () => {
       {/* 1. Page Header (Banner Image) */}
       <section
         className="w-full h-[300px] sm:h-[400px] lg:h-[500px] relative z-10 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url('https://res.cloudinary.com/vf0fqhwo/image/upload/v1785330064/Banner_Product_eo1ceg.png')` }}
+        style={{ backgroundImage: `url('https://res.cloudinary.com/vf0fqhwo/image/upload/v1786363847/banner_km6rhv.png')` }}
       >
       </section>
 

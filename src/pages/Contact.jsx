@@ -92,17 +92,17 @@ const Contact = () => {
             
             {/* Quick Contact Buttons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <a href="tel:+919943852902" className="bg-white border border-gray-100 hover:border-blue-200 p-6 rounded-[2rem] flex flex-col items-center justify-center gap-4 shadow-sm hover:shadow-xl transition-all group">
-                <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <PhoneCall className="w-8 h-8" />
+              <a href="tel:+918825419454" className="bg-white border border-gray-100 hover:border-blue-200 p-6 rounded-[2rem] flex flex-col items-center justify-center gap-4 shadow-sm hover:shadow-xl transition-all group">
+                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Phone className="w-6 h-6" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">Call Us Directly</p>
-                  <p className="text-xl font-black text-charcoal">+91 99438 52902</p>
+                  <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Direct Call</span>
+                  <span className="text-base font-extrabold text-gray-800 group-hover:text-blue-600 transition-colors">+91 88254 19454</span>
                 </div>
               </a>
 
-              <a href="https://wa.me/919943852902" className="bg-white border border-gray-100 hover:border-green-200 p-6 rounded-[2rem] flex flex-col items-center justify-center gap-4 shadow-sm hover:shadow-xl transition-all group">
+              <a href="https://wa.me/918825419454" className="bg-white border border-gray-100 hover:border-green-200 p-6 rounded-[2rem] flex flex-col items-center justify-center gap-4 shadow-sm hover:shadow-xl transition-all group">
                 <div className="w-16 h-16 bg-green-50 text-[#25D366] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform relative">
                   <div className="absolute inset-0 rounded-full border-2 border-[#25D366] animate-ping opacity-20"></div>
                   <MessageCircle className="w-8 h-8" />

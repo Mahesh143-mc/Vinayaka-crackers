@@ -85,7 +85,7 @@ const AdminCustomers = () => {
           <p className="text-amber-200/90 text-sm mt-1 font-medium">Manage buyer profiles, track festival spending, and launch WhatsApp offers.</p>
         </div>
         <a 
-          href={`https://wa.me/?text=Hello!%20Check%20out%20special%20festive%20firecracker%20offers%20at%20Chimera%20Crackers!`}
+          href={`https://wa.me/?text=Hello!%20Check%20out%20special%20festive%20firecracker%20offers%20at%20Karuppan%20Crackers!`}
           target="_blank"
           rel="noopener noreferrer"
           className="bg-[#25D366] hover:bg-[#1ebd53] text-white px-5 py-2.5 rounded-2xl font-bold shadow-md flex items-center gap-2"
@@ -276,7 +276,7 @@ const AdminCustomers = () => {
             {/* Action Row */}
             <div className="pt-2 flex gap-3">
               <a 
-                href={`https://wa.me/91${selectedCustomer.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(selectedCustomer.name)},%20thank%20you%20for%20shopping%20with%20Chimera%20Crackers!`}
+                href={`https://wa.me/91${selectedCustomer.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(selectedCustomer.name)},%20thank%20you%20for%20shopping%20with%20Karuppan%20Crackers!`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 py-3 bg-[#25D366] hover:bg-[#1ebd53] text-white rounded-2xl font-black text-xs shadow-md flex items-center justify-center gap-2 text-center"

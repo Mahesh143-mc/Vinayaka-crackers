@@ -158,14 +158,14 @@ const AdminOrders = () => {
       <div className="bg-[#FAF7F2] rounded-3xl shadow-sm border border-amber-900/10 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gradient-to-r from-[#4A0E0E] to-[#2B0808] border-b border-red-950 text-white">
-                <th className="px-6 py-6 text-xs font-black text-[#FFD700] uppercase tracking-widest">Order ID & Date</th>
-                <th className="px-6 py-6 text-xs font-black text-[#FFD700] uppercase tracking-widest">Customer Info</th>
-                <th className="px-6 py-6 text-xs font-black text-[#FFD700] uppercase tracking-widest">Amount</th>
-                <th className="px-6 py-6 text-xs font-black text-[#FFD700] uppercase tracking-widest">Status</th>
-                <th className="px-6 py-6 text-xs font-black text-[#FFD700] uppercase tracking-widest text-center">Status Action</th>
-                <th className="px-6 py-6 text-xs font-black text-[#FFD700] uppercase tracking-widest text-right">Details Page</th>
+            <thead className="bg-[#3B0B0B] text-white uppercase text-xs font-black tracking-wider border-b-2 border-amber-400">
+              <tr>
+                <th className="px-6 py-4">Order ID & Date</th>
+                <th className="px-6 py-4">Customer Info</th>
+                <th className="px-6 py-4">Amount</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4 text-center">Status Action</th>
+                <th className="px-6 py-4 text-right">Details Page</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-amber-900/10">

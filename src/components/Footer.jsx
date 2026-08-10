@@ -35,8 +35,15 @@ const Footer = () => {
           
           {/* Brand Col */}
           <div className="col-span-1 md:col-span-1">
-            <Link to="/" className="text-3xl font-serif font-bold text-white mb-4 block">
-              Chimera<span className="text-gold">.</span>
+            <Link to="/" className="flex items-center gap-3 mb-4 block group">
+              <img 
+                src="https://res.cloudinary.com/vf0fqhwo/image/upload/v1786363324/logo_q7lezq.jpg" 
+                alt="Karuppan Crackers" 
+                className="h-12 w-auto object-contain rounded-xl shadow-md border border-amber-400/30" 
+              />
+              <span className="text-3xl font-serif font-bold text-white">
+                Karuppan<span className="text-gold">.</span>
+              </span>
             </Link>
             <p className="text-cream-light/80 mb-6 font-sans">
               Spreading joy and light since 1995. India’s most trusted and vibrant fireworks brand for all your celebrations.
@@ -130,7 +137,7 @@ const Footer = () => {
                 <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mr-3 flex-shrink-0 group-hover:bg-gold transition-colors duration-300">
                   <Phone className="w-4 h-4 text-gold group-hover:text-saffron-dark transition-colors duration-300" />
                 </div>
-                <span className="group-hover:text-white transition-colors duration-300 text-sm">+91 99438 52902</span>
+                <span className="group-hover:text-white transition-colors duration-300 text-sm">+91 88254 19454</span>
               </li>
               <li className="flex items-center group">
                 <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mr-3 flex-shrink-0 group-hover:bg-gold transition-colors duration-300">
@@ -143,7 +150,7 @@ const Footer = () => {
         </div>
 
         <div className="mt-16 pt-8 border-t border-white/20 text-center text-sm text-cream-light/60">
-          <p>&copy; {new Date().getFullYear()} Chimera Crackers. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Karuppan Crackers. All rights reserved.</p>
         </div>
       </div>
     </footer>

@@ -34,7 +34,7 @@ const AdminBilling = () => {
   ]);
 
   const [customerName, setCustomerName] = useState('Walk-in Customer');
-  const [customerPhone, setCustomerPhone] = useState('9943852902');
+  const [customerPhone, setCustomerPhone] = useState('8825419454');
 
   const [completedOrder, setCompletedOrder] = useState(null);
 
@@ -110,7 +110,7 @@ const AdminBilling = () => {
       {/* Full-Width Product Catalog Workspace */}
       <div className="w-full bg-[#FAF7F2] rounded-none sm:rounded-3xl shadow-sm border-x-0 sm:border border-amber-900/20 overflow-hidden">
         {/* Header Bar */}
-        <div className="p-3.5 sm:p-6 bg-gradient-to-r from-[#4A0E0E] to-[#2B0808] border-b border-red-950 text-white space-y-3 sm:space-y-4">
+        <div className="p-4 sm:p-6 bg-gradient-to-r from-[#4A0E0E] via-[#5C1212] to-[#3B0B0B] border-b-2 border-amber-400/40 text-white space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between gap-3">
             {/* POS Title (Desktop Only) */}
             <h2 className="hidden md:flex text-2xl font-serif font-black items-center gap-2 text-white">
@@ -515,7 +515,7 @@ const AdminBilling = () => {
                 </button>
 
                 <a 
-                  href={`https://wa.me/91${completedOrder.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(completedOrder.customer)},%20your%20Chimera%20Crackers%20order%20%23${completedOrder.orderId}%20bill%20for%20Rs.${completedOrder.grandTotal}%20has%20been%20confirmed!`}
+                  href={`https://wa.me/91${completedOrder.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(completedOrder.customer)},%20your%20Karuppan%20Crackers%20order%20%23${completedOrder.orderId}%20bill%20for%20Rs.${completedOrder.grandTotal}%20has%20been%20confirmed!`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="py-3 bg-[#25D366] hover:bg-[#1ebd53] text-white rounded-xl font-black text-xs shadow-md flex items-center justify-center gap-1.5 text-center"

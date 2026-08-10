@@ -78,7 +78,7 @@ const AdminExpenses = () => {
           <p className="text-amber-200/90 text-sm mt-1 font-medium">Record store expenditures manually to compute exact realized profit margins.</p>
         </div>
 
-        <button 
+        <button
           onClick={() => setShowAddModal(true)}
           className="bg-[#FFD700] hover:bg-amber-400 text-[#4A0E0E] px-5 py-3 rounded-2xl font-black text-xs shadow-md flex items-center gap-2 transition-all transform hover:scale-105"
         >
@@ -102,16 +102,16 @@ const AdminExpenses = () => {
           <p className="text-[11px] font-bold text-gray-500">Stock purchases & shop overheads</p>
         </div>
 
-        {/* Real Net Profit */}
-        <div className="bg-gradient-to-br from-[#4A0E0E] to-[#250606] p-6 rounded-3xl border-2 border-[#FFD700]/40 shadow-md text-white space-y-2">
+        {/* Real Net Profit (Warm Gold Card) */}
+        <div className="bg-gradient-to-br from-amber-100 via-amber-50 to-orange-100 p-6 rounded-3xl border-2 border-amber-400 shadow-md space-y-2">
           <div className="flex justify-between items-center">
-            <span className="text-xs font-black text-amber-300 uppercase tracking-wider">Realized Net Profit</span>
-            <span className="bg-[#FFD700] text-[#4A0E0E] font-black text-[10px] px-2.5 py-0.5 rounded-full">
+            <span className="text-xs font-black text-[#4A0E0E] uppercase tracking-wider">Realized Net Profit</span>
+            <span className="bg-[#4A0E0E] text-[#FFD700] font-black text-[10px] px-2.5 py-0.5 rounded-full shadow-sm">
               {profitPercentage}% Margin
             </span>
           </div>
-          <p className="text-3xl font-black text-[#FFD700]">₹{netProfitMargin.toLocaleString()}</p>
-          <p className="text-[11px] font-bold text-amber-200/80">Revenue minus total recorded expenses</p>
+          <p className="text-3xl font-black text-[#c00000]">₹{netProfitMargin.toLocaleString()}</p>
+          <p className="text-[11px] font-bold text-amber-950/80">Revenue minus total recorded expenses</p>
         </div>
       </div>
 
@@ -119,11 +119,11 @@ const AdminExpenses = () => {
       <div className="bg-[#EFEAE1] p-4 rounded-3xl border border-amber-900/10 shadow-sm flex flex-col sm:flex-row gap-4 justify-between items-center">
         <div className="relative w-full sm:w-96">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-800" size={19} />
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search expense title or vendor name..." 
+            placeholder="Search expense title or vendor name..."
             className="w-full pl-11 pr-4 py-2.5 bg-white border border-amber-900/10 rounded-2xl focus:outline-none text-sm font-bold text-gray-800"
           />
         </div>
@@ -134,11 +134,10 @@ const AdminExpenses = () => {
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-                selectedCategory === cat 
-                  ? 'bg-[#4A0E0E] text-white font-black shadow-sm' 
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${selectedCategory === cat
+                  ? 'bg-[#4A0E0E] text-white font-black shadow-sm'
                   : 'bg-white text-gray-700 hover:bg-amber-100 border border-amber-900/10'
-              }`}
+                }`}
             >
               {cat}
             </button>
@@ -148,19 +147,19 @@ const AdminExpenses = () => {
 
       {/* Itemized Expenses Table */}
       <div className="bg-[#FAF7F2] rounded-3xl border-2 border-amber-900/15 overflow-hidden shadow-sm">
-        <div className="p-6 bg-gradient-to-r from-[#4A0E0E] to-[#250606] text-white flex items-center justify-between">
+        <div className="p-6 bg-gradient-to-r from-[#4A0E0E] via-[#5C1212] to-[#3B0B0B] border-b-2 border-amber-400/40 text-white flex items-center justify-between">
           <div>
-            <h3 className="text-xl font-serif font-black">📋 Itemized Expense Log</h3>
-            <p className="text-amber-200/90 text-xs font-medium mt-0.5">Showing {filteredExpenses.length} expense entries</p>
+            <h3 className="text-xl font-serif font-black text-white">📋 Itemized Expense Log</h3>
+            <p className="text-amber-200 font-medium text-xs mt-0.5">Showing {filteredExpenses.length} expense entries</p>
           </div>
-          <span className="bg-[#FFD700] text-[#4A0E0E] text-xs font-black px-3 py-1 rounded-full">
+          <span className="bg-[#FFD700] text-[#4A0E0E] text-xs font-black px-3.5 py-1.5 rounded-full shadow-md">
             Total: ₹{filteredExpenses.reduce((sum, e) => sum + e.amount, 0).toLocaleString()}
           </span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs font-bold text-gray-800">
-            <thead className="bg-[#4A0E0E] text-[#FFD700] uppercase text-[10px] font-black border-b border-red-950">
+            <thead className="bg-[#3B0B0B] text-white uppercase text-xs font-black tracking-wider border-b-2 border-amber-400">
               <tr>
                 <th className="py-4 px-6">ID</th>
                 <th className="py-4 px-6">Expense Title & Description</th>
@@ -188,7 +187,7 @@ const AdminExpenses = () => {
                   <td className="py-4 px-6 font-bold text-gray-600">{exp.date}</td>
                   <td className="py-4 px-6 text-right font-black text-rose-700 text-base">₹{exp.amount.toLocaleString()}</td>
                   <td className="py-4 px-6 text-center">
-                    <button 
+                    <button
                       onClick={() => setExpenseToDelete(exp)}
                       className="p-2 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-xl transition-colors"
                       title="Delete expense"
@@ -207,7 +206,7 @@ const AdminExpenses = () => {
       {showAddModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <form onSubmit={handleAddExpense} className="bg-[#FAF7F2] rounded-3xl max-w-lg w-full p-7 shadow-2xl border border-amber-900/30 space-y-5 animate-in fade-in zoom-in duration-200 relative">
-            <button 
+            <button
               type="button"
               onClick={() => setShowAddModal(false)}
               className="absolute top-6 right-6 w-9 h-9 rounded-full bg-amber-200/80 hover:bg-amber-300 text-[#4A0E0E] flex items-center justify-center font-black"
@@ -228,7 +227,7 @@ const AdminExpenses = () => {
             <div className="space-y-4 text-xs font-bold">
               <div>
                 <label className="block text-[#4A0E0E] uppercase tracking-wider mb-1.5">Expense Title *</label>
-                <input 
+                <input
                   type="text"
                   required
                   value={newTitle}
@@ -241,7 +240,7 @@ const AdminExpenses = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[#4A0E0E] uppercase tracking-wider mb-1.5">Category *</label>
-                  <select 
+                  <select
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value)}
                     className="w-full p-3 bg-white border-2 border-amber-900/20 rounded-2xl text-xs font-black text-gray-900 focus:outline-none"
@@ -254,7 +253,7 @@ const AdminExpenses = () => {
 
                 <div>
                   <label className="block text-[#4A0E0E] uppercase tracking-wider mb-1.5">Amount (₹) *</label>
-                  <input 
+                  <input
                     type="number"
                     required
                     min="1"
@@ -269,7 +268,7 @@ const AdminExpenses = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[#4A0E0E] uppercase tracking-wider mb-1.5">Vendor / Payee Name</label>
-                  <input 
+                  <input
                     type="text"
                     value={newVendor}
                     onChange={(e) => setNewVendor(e.target.value)}
@@ -280,7 +279,7 @@ const AdminExpenses = () => {
 
                 <div>
                   <label className="block text-[#4A0E0E] uppercase tracking-wider mb-1.5">Payment Mode</label>
-                  <select 
+                  <select
                     value={newPaymentMode}
                     onChange={(e) => setNewPaymentMode(e.target.value)}
                     className="w-full p-3 bg-white border-2 border-amber-900/20 rounded-2xl text-xs font-black text-gray-900 focus:outline-none"
@@ -295,14 +294,14 @@ const AdminExpenses = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-3 pt-3 border-t border-amber-900/15">
-              <button 
+              <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
                 className="py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-2xl text-xs font-black"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 type="submit"
                 className="py-3 bg-[#4A0E0E] hover:bg-red-950 text-white rounded-2xl text-xs font-black shadow-md"
               >
@@ -329,13 +328,13 @@ const AdminExpenses = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-3 pt-2">
-              <button 
+              <button
                 onClick={() => setExpenseToDelete(null)}
                 className="py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-2xl text-xs font-black"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={confirmDeleteExpense}
                 className="py-3 bg-rose-700 hover:bg-rose-800 text-white rounded-2xl text-xs font-black shadow-md"
               >
