@@ -36,20 +36,59 @@
   }
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 /* Custom Scrollbar for a polished look */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #FFFBF0; 
+  background: #F4F1EA; 
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #FFD54F; 
-  border-radius: 4px;
+  background: #4A0E0E; 
+  border-radius: 9999px;
+  border: 2px solid #F4F1EA;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #FFB300; 
+  background: #701515; 
+}
+
+/* Print Styles for Official Tax Invoice */
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide screen-only UI elements during print */
+  aside, 
+  header, 
+  nav, 
+  button, 
+  .no-print,
+  .screen-only {
+    display: none !important;
+  }
+
+  /* Ensure print area renders crisp and full width */
+  .print-area {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
 }

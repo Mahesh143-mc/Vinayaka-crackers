@@ -28,6 +28,8 @@ const AdminOrderDetails = () => {
   const [confirmConfig, setConfirmConfig] = useState(null);
   // Success Toast Message State
   const [successToast, setSuccessToast] = useState('');
+  // Tax Invoice Modal State
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
   const updateStatus = (newStatus) => {
     setOrder(prev => ({ ...prev, status: newStatus }));
@@ -58,13 +60,15 @@ const AdminOrderDetails = () => {
   const grandTotal = subtotal - discount + gst + deliveryFee;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-12 relative">
-      {/* Success Notification Toast */}
-      {successToast && (
-        <div className="fixed top-24 right-8 z-50 bg-emerald-700 text-white px-5 py-3 rounded-2xl shadow-2xl border border-emerald-500 font-black text-xs flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
-          <CheckCircle2 size={18} /> {successToast}
-        </div>
-      )}
+    <>
+      {/* SCREEN ONLY CONTENT */}
+      <div className="screen-only max-w-6xl mx-auto space-y-8 pb-12 relative">
+        {/* Success Notification Toast */}
+        {successToast && (
+          <div className="fixed top-24 right-8 z-50 bg-emerald-700 text-white px-5 py-3 rounded-2xl shadow-2xl border border-emerald-500 font-black text-xs flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
+            <CheckCircle2 size={18} /> {successToast}
+          </div>
+        )}
 
       {/* Top Navigation Bar */}
       <div className="flex items-center justify-between">
@@ -148,13 +152,8 @@ const AdminOrderDetails = () => {
           )}
 
           <button 
-            onClick={() => promptAction(
-              'Print Invoice Confirmation', 
-              `Generate and print official tax invoice for order ${order.id}?`,
-              'Yes, Print Invoice',
-              () => triggerSuccess('Printing official tax receipt invoice...')
-            )}
-            className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-2xl font-bold text-xs backdrop-blur-md transition-all flex items-center gap-1.5"
+            onClick={() => setShowInvoiceModal(true)}
+            className="px-4 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-[#4A0E0E] rounded-2xl font-black text-xs shadow-md transition-all flex items-center gap-1.5 transform hover:scale-105"
           >
             <Printer size={15} /> Print Invoice
           </button>
@@ -354,7 +353,321 @@ const AdminOrderDetails = () => {
           </div>
         </div>
       )}
-    </div>
+
+      {/* Official Tax Invoice Modal & Print View */}
+      {showInvoiceModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto no-print">
+          <div className="bg-white rounded-3xl max-w-4xl w-full shadow-2xl border border-gray-300 relative overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+            {/* Modal Top Header Controls */}
+            <div className="p-4 bg-gradient-to-r from-[#4A0E0E] to-[#2B0808] text-white flex justify-between items-center shrink-0 border-b-2 border-amber-400">
+              <div className="flex items-center gap-2">
+                <Printer className="text-[#FFD700]" size={20} />
+                <h3 className="font-serif font-black text-lg text-white">Official Tax Invoice Preview — {order.id}</h3>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerSuccess('Opening browser print dialog...');
+                    setTimeout(() => window.print(), 200);
+                  }}
+                  className="px-5 py-2 bg-gradient-to-r from-[#FFD700] to-amber-500 hover:from-amber-400 hover:to-amber-600 text-[#4A0E0E] font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-2 transform hover:scale-105"
+                >
+                  <Printer size={16} strokeWidth={2.5} /> Print Invoice Now
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowInvoiceModal(false)}
+                  className="p-2 text-gray-300 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all"
+                  title="Close Invoice Preview"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+
+            {/* Scrollable Printable Invoice Content */}
+            <div className="p-8 overflow-y-auto flex-1 bg-white text-gray-900 printable-invoice-document">
+              {/* Document Header */}
+              <div className="flex justify-between items-start border-b-2 border-gray-900 pb-6 mb-6">
+                <div className="flex items-center gap-4">
+                  <img 
+                    src="https://res.cloudinary.com/vf0fqhwo/image/upload/v1786363324/logo_q7lezq.jpg" 
+                    alt="Karuppa Crackers" 
+                    className="w-16 h-16 rounded-xl border border-gray-300 object-contain shrink-0" 
+                  />
+                  <div>
+                    <h1 className="text-2xl font-serif font-black text-[#4A0E0E] uppercase tracking-wide">KARUPPA CRACKERS</h1>
+                    <p className="text-xs font-bold text-amber-900">Sivakasi Premium Fireworks & Fancy Sky Shots Direct Manufacturer</p>
+                    <p className="text-[11px] text-gray-600 mt-1 leading-tight">
+                      123 Main Road, Industrial Estate, Sivakasi, Tamil Nadu - 626123<br />
+                      Phone: +91 98765 43210 | Email: sales@karuppacrackers.com | Web: www.karuppacrackers.com
+                    </p>
+                    <p className="text-[10px] font-bold text-gray-800 mt-1">
+                      GSTIN: <span className="font-black">33AAACK1234F1Z9</span> | Explosives License: <span className="font-black">E/SC/TN/22/10082</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="inline-block px-4 py-1.5 bg-[#4A0E0E] text-[#FFD700] font-black text-xs uppercase tracking-widest rounded-md mb-2">
+                    OFFICIAL TAX INVOICE
+                  </span>
+                  <p className="text-xs font-bold text-gray-800">Invoice No: <span className="font-black text-gray-900">{order.id}</span></p>
+                  <p className="text-xs text-gray-600">Date: <span className="font-bold text-gray-800">{order.date.split('-')[0]}</span></p>
+                  <p className="text-xs text-gray-600">Payment Status: <span className="font-black text-emerald-800 uppercase">PAID ({order.paymentMethod})</span></p>
+                </div>
+              </div>
+
+              {/* Billed To & Shipped To Grid */}
+              <div className="grid grid-cols-2 gap-6 border-b-2 border-gray-900 pb-6 mb-6 text-xs">
+                <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-900/15">
+                  <h3 className="font-black uppercase text-[#4A0E0E] text-xs border-b border-amber-900/20 pb-1 mb-2">CUSTOMER DETAILS (BILLED TO)</h3>
+                  <p className="font-black text-sm text-gray-900">{order.customer}</p>
+                  <p className="text-gray-700 font-bold mt-1">Phone: {order.phone}</p>
+                  <p className="text-gray-700 font-medium">Email: {order.email}</p>
+                </div>
+
+                <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-900/15">
+                  <h3 className="font-black uppercase text-[#4A0E0E] text-xs border-b border-amber-900/20 pb-1 mb-2">DISPATCH & SHIPPING ADDRESS</h3>
+                  <p className="text-gray-900 font-bold leading-relaxed">{order.address}</p>
+                </div>
+              </div>
+
+              {/* Itemized Table */}
+              <table className="w-full text-left text-xs border-collapse border border-gray-900 mb-6">
+                <thead>
+                  <tr className="bg-[#4A0E0E] text-white font-black uppercase tracking-wider text-[11px]">
+                    <th className="p-3 border border-gray-900 w-12 text-center">S.No</th>
+                    <th className="p-3 border border-gray-900">Product Item Description</th>
+                    <th className="p-3 border border-gray-900 text-center">Category</th>
+                    <th className="p-3 border border-gray-900 text-right">Unit Price</th>
+                    <th className="p-3 border border-gray-900 text-center">Qty</th>
+                    <th className="p-3 border border-gray-900 text-right">Total (₹)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-300">
+                  {order.items.map((item, idx) => (
+                    <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-amber-50/20'}>
+                      <td className="p-3 border border-gray-300 text-center font-bold">{idx + 1}</td>
+                      <td className="p-3 border border-gray-300">
+                        <p className="font-black text-gray-900">{item.name}</p>
+                        <p className="text-[10px] text-gray-500 font-bold">Code: {item.id}</p>
+                      </td>
+                      <td className="p-3 border border-gray-300 text-center font-bold text-gray-700">{item.category}</td>
+                      <td className="p-3 border border-gray-300 text-right font-bold">₹{item.price.toLocaleString()}</td>
+                      <td className="p-3 border border-gray-300 text-center font-black">{item.qty}</td>
+                      <td className="p-3 border border-gray-300 text-right font-black">₹{(item.price * item.qty).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Calculation & Summary Grid */}
+              <div className="flex justify-between items-start gap-6 border-b-2 border-gray-900 pb-6 mb-6">
+                <div className="flex-1 space-y-3 text-xs">
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-300 space-y-1">
+                    <p className="font-black text-gray-900 uppercase text-[10px]">Payment & Dispatch Info</p>
+                    <p className="text-gray-700">Payment Mode: <span className="font-bold">{order.paymentMethod}</span></p>
+                    <p className="text-gray-700">Origin Warehouse: <span className="font-bold">Sivakasi Central Depot</span></p>
+                  </div>
+
+                  <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-gray-700 font-medium">
+                    <p className="font-black text-gray-900 mb-0.5">Safety Instructions:</p>
+                    Burst crackers strictly outdoors under adult supervision. Keep water nearby.
+                  </div>
+                </div>
+
+                <div className="w-80 space-y-1.5 text-xs font-bold text-gray-800">
+                  <div className="flex justify-between py-1 border-b border-gray-200">
+                    <span>Items Subtotal:</span>
+                    <span className="font-black text-gray-900">₹{subtotal.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-gray-200 text-emerald-700">
+                    <span>Festive Offer Discount (5%):</span>
+                    <span>-₹{discount.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-gray-200">
+                    <span>CGST (9%):</span>
+                    <span>₹{(gst / 2).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-gray-200">
+                    <span>SGST (9%):</span>
+                    <span>₹{(gst / 2).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-gray-200">
+                    <span>Safe Transport & Packaging:</span>
+                    <span>₹{deliveryFee}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-t-2 border-gray-900 text-base font-black text-gray-900 bg-amber-100/70 px-3 rounded-lg mt-2">
+                    <span>NET AMOUNT PAID:</span>
+                    <span className="text-[#c00000]">₹{grandTotal.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Terms & Authorized Signatory Footer */}
+              <div className="flex justify-between items-end text-[11px] text-gray-700 pt-2">
+                <div>
+                  <p className="font-black text-gray-900 uppercase">Terms & Conditions:</p>
+                  <ol className="list-decimal list-inside space-y-0.5 mt-1 text-[10px] text-gray-600">
+                    <li>Goods once sold will not be returned or exchanged.</li>
+                    <li>All disputes subject to Sivakasi Jurisdiction only.</li>
+                    <li>This is a computer-generated tax invoice receipt.</li>
+                  </ol>
+                </div>
+
+                <div className="text-center w-56 border-t-2 border-gray-900 pt-2 mt-8">
+                  <p className="font-serif font-black text-[#4A0E0E] text-xs">For KARUPPA CRACKERS</p>
+                  <div className="h-10"></div>
+                  <p className="font-bold text-[10px] uppercase text-gray-600">Authorized Signatory</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      </div>
+
+      {/* DEDICATED PRINTABLE TAX INVOICE (Visible ONLY in browser print dialog) */}
+      <div className="hidden print:block print-area bg-white text-gray-900 p-8 font-sans w-full leading-normal">
+        {/* Document Header */}
+        <div className="flex justify-between items-start border-b-2 border-gray-900 pb-6 mb-6">
+          <div className="flex items-center gap-4">
+            <img 
+              src="https://res.cloudinary.com/vf0fqhwo/image/upload/v1786363324/logo_q7lezq.jpg" 
+              alt="Karuppa Crackers" 
+              className="w-16 h-16 rounded-xl border border-gray-300 object-contain shrink-0" 
+            />
+            <div>
+              <h1 className="text-2xl font-serif font-black text-[#4A0E0E] uppercase tracking-wide">KARUPPA CRACKERS</h1>
+              <p className="text-xs font-bold text-amber-900">Sivakasi Premium Fireworks & Fancy Sky Shots Direct Manufacturer</p>
+              <p className="text-[11px] text-gray-600 mt-1 leading-tight">
+                123 Main Road, Industrial Estate, Sivakasi, Tamil Nadu - 626123<br />
+                Phone: +91 98765 43210 | Email: sales@karuppacrackers.com | Web: www.karuppacrackers.com
+              </p>
+              <p className="text-[10px] font-bold text-gray-800 mt-1">
+                GSTIN: <span className="font-black">33AAACK1234F1Z9</span> | Explosives License: <span className="font-black">E/SC/TN/22/10082</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="text-right">
+            <span className="inline-block px-4 py-1.5 bg-[#4A0E0E] text-[#FFD700] font-black text-xs uppercase tracking-widest rounded-md mb-2">
+              OFFICIAL TAX INVOICE
+            </span>
+            <p className="text-xs font-bold text-gray-800">Invoice No: <span className="font-black text-gray-900">{order.id}</span></p>
+            <p className="text-xs text-gray-600">Date: <span className="font-bold text-gray-800">{order.date.split('-')[0]}</span></p>
+            <p className="text-xs text-gray-600">Payment Status: <span className="font-black text-emerald-800 uppercase">PAID ({order.paymentMethod})</span></p>
+          </div>
+        </div>
+
+        {/* Billed To & Shipped To Grid */}
+        <div className="grid grid-cols-2 gap-6 border-b-2 border-gray-900 pb-6 mb-6 text-xs">
+          <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-900/15">
+            <h3 className="font-black uppercase text-[#4A0E0E] text-xs border-b border-amber-900/20 pb-1 mb-2">CUSTOMER DETAILS (BILLED TO)</h3>
+            <p className="font-black text-sm text-gray-900">{order.customer}</p>
+            <p className="text-gray-700 font-bold mt-1">Phone: {order.phone}</p>
+            <p className="text-gray-700 font-medium">Email: {order.email}</p>
+          </div>
+
+          <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-900/15">
+            <h3 className="font-black uppercase text-[#4A0E0E] text-xs border-b border-amber-900/20 pb-1 mb-2">DISPATCH & SHIPPING ADDRESS</h3>
+            <p className="text-gray-900 font-bold leading-relaxed">{order.address}</p>
+          </div>
+        </div>
+
+        {/* Itemized Table */}
+        <table className="w-full text-left text-xs border-collapse border border-gray-900 mb-6">
+          <thead>
+            <tr className="bg-[#4A0E0E] text-white font-black uppercase tracking-wider text-[11px]">
+              <th className="p-3 border border-gray-900 w-12 text-center">S.No</th>
+              <th className="p-3 border border-gray-900">Product Item Description</th>
+              <th className="p-3 border border-gray-900 text-center">Category</th>
+              <th className="p-3 border border-gray-900 text-right">Unit Price</th>
+              <th className="p-3 border border-gray-900 text-center">Qty</th>
+              <th className="p-3 border border-gray-900 text-right">Total (₹)</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-300">
+            {order.items.map((item, idx) => (
+              <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-amber-50/20'}>
+                <td className="p-3 border border-gray-300 text-center font-bold">{idx + 1}</td>
+                <td className="p-3 border border-gray-300">
+                  <p className="font-black text-gray-900">{item.name}</p>
+                  <p className="text-[10px] text-gray-500 font-bold">Code: {item.id}</p>
+                </td>
+                <td className="p-3 border border-gray-300 text-center font-bold text-gray-700">{item.category}</td>
+                <td className="p-3 border border-gray-300 text-right font-bold">₹{item.price.toLocaleString()}</td>
+                <td className="p-3 border border-gray-300 text-center font-black">{item.qty}</td>
+                <td className="p-3 border border-gray-300 text-right font-black">₹{(item.price * item.qty).toLocaleString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Calculation & Summary Grid */}
+        <div className="flex justify-between items-start gap-6 border-b-2 border-gray-900 pb-6 mb-6">
+          <div className="flex-1 space-y-3 text-xs">
+            <div className="bg-gray-50 p-4 rounded-xl border border-gray-300 space-y-1">
+              <p className="font-black text-gray-900 uppercase text-[10px]">Payment & Dispatch Info</p>
+              <p className="text-gray-700">Payment Mode: <span className="font-bold">{order.paymentMethod}</span></p>
+              <p className="text-gray-700">Origin Warehouse: <span className="font-bold">Sivakasi Central Depot</span></p>
+            </div>
+
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-gray-700 font-medium">
+              <p className="font-black text-gray-900 mb-0.5">Safety Instructions:</p>
+              Burst crackers strictly outdoors under adult supervision. Keep water nearby.
+            </div>
+          </div>
+
+          <div className="w-80 space-y-1.5 text-xs font-bold text-gray-800">
+            <div className="flex justify-between py-1 border-b border-gray-200">
+              <span>Items Subtotal:</span>
+              <span className="font-black text-gray-900">₹{subtotal.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-gray-200 text-emerald-700">
+              <span>Festive Offer Discount (5%):</span>
+              <span>-₹{discount.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-gray-200">
+              <span>CGST (9%):</span>
+              <span>₹{(gst / 2).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-gray-200">
+              <span>SGST (9%):</span>
+              <span>₹{(gst / 2).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-gray-200">
+              <span>Safe Transport & Packaging:</span>
+              <span>₹{deliveryFee}</span>
+            </div>
+            <div className="flex justify-between py-2 border-t-2 border-gray-900 text-base font-black text-gray-900 bg-amber-100/70 px-3 rounded-lg mt-2">
+              <span>NET AMOUNT PAID:</span>
+              <span className="text-[#c00000]">₹{grandTotal.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Terms & Authorized Signatory Footer */}
+        <div className="flex justify-between items-end text-[11px] text-gray-700 pt-2">
+          <div>
+            <p className="font-black text-gray-900 uppercase">Terms & Conditions:</p>
+            <ol className="list-decimal list-inside space-y-0.5 mt-1 text-[10px] text-gray-600">
+              <li>Goods once sold will not be returned or exchanged.</li>
+              <li>All disputes subject to Sivakasi Jurisdiction only.</li>
+              <li>This is a computer-generated tax invoice receipt.</li>
+            </ol>
+          </div>
+
+          <div className="text-center w-56 border-t-2 border-gray-900 pt-2 mt-8">
+            <p className="font-serif font-black text-[#4A0E0E] text-xs">For KARUPPA CRACKERS</p>
+            <div className="h-10"></div>
+            <p className="font-bold text-[10px] uppercase text-gray-600">Authorized Signatory</p>
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
 

@@ -20,6 +20,7 @@ const AdminAddProduct = () => {
     shotsCount: isEditMode ? '120 Shots' : '',
     safetyRating: 'Green Crackers Approved',
     status: 'Active',
+    showInFrontend: true,
   });
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -282,7 +283,26 @@ const AdminAddProduct = () => {
               </div>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-2 space-y-2">
+              <div 
+                onClick={() => setFormData(prev => ({ ...prev, showInFrontend: !prev.showInFrontend }))}
+                className="flex items-center justify-between p-3.5 bg-white rounded-2xl border-2 border-amber-900/15 cursor-pointer shadow-sm hover:border-[#4A0E0E] transition-all"
+              >
+                <div>
+                  <span className="font-black text-xs text-[#4A0E0E] block">Show in Frontend Website</span>
+                  <span className="text-[10px] font-bold text-gray-500">
+                    {formData.showInFrontend ? 'Product is ON (Visible in customer shop)' : 'Product is OFF (Hidden from customer shop)'}
+                  </span>
+                </div>
+                <div className={`w-10 h-6 rounded-full p-0.5 transition-colors relative flex items-center shrink-0 ${
+                  formData.showInFrontend ? 'bg-emerald-600' : 'bg-gray-400'
+                }`}>
+                  <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${
+                    formData.showInFrontend ? 'translate-x-4' : 'translate-x-0'
+                  }`} />
+                </div>
+              </div>
+
               <label className="flex items-center justify-between p-3.5 bg-white rounded-2xl border-2 border-amber-900/15 cursor-pointer shadow-sm">
                 <span className="font-black text-xs text-[#4A0E0E]">Green Crackers Certified</span>
                 <input type="checkbox" defaultChecked className="w-4 h-4 accent-[#4A0E0E]" />

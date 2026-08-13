@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Search, Trash2, Edit3, DollarSign, Truck, ShoppingBag, Users, Calendar, Filter, CheckCircle2, AlertCircle, X, ShieldAlert } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Search, Trash2, Edit3, DollarSign, Truck, ShoppingBag, Users, Calendar, Filter, CheckCircle2, AlertCircle, X, ShieldAlert, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
 const AdminExpenses = () => {
   const [expenses, setExpenses] = useState([
@@ -8,10 +8,63 @@ const AdminExpenses = () => {
     { id: 'EXP-103', title: 'Shop Helper Wages & Food Allowance', category: 'Staff Wages', amount: 12000, date: '2023-10-12', vendor: 'Diwali Shop Staff', paymentMode: 'Cash' },
     { id: 'EXP-104', title: 'Cardboard Box Packaging & Tags', category: 'Packaging Materials', amount: 9800, date: '2023-10-14', vendor: 'Sivakasi Packaging Printers', paymentMode: 'UPI' },
     { id: 'EXP-105', title: 'Commercial Shop Electricity & Generators', category: 'Utilities', amount: 9500, date: '2023-10-15', vendor: 'TNEB Commercial', paymentMode: 'Bank Transfer' },
+    { id: 'EXP-106', title: 'Seasonal Showroom Space Rent (Month 1)', category: 'Shop Rent', amount: 35000, date: '2023-10-01', vendor: 'Building Owner', paymentMode: 'Bank Transfer' },
+    { id: 'EXP-107', title: 'Local Auto Goods Rickshaw Delivery', category: 'Transport & Freight', amount: 4500, date: '2023-10-09', vendor: 'Local Auto Drivers', paymentMode: 'Cash' },
+    { id: 'EXP-108', title: 'Fancy Sky Shots Additional Batch', category: 'Firecracker Stock', amount: 85000, date: '2023-10-10', vendor: 'National Pyrotechnics', paymentMode: 'Bank Transfer' },
+    { id: 'EXP-109', title: 'Flex Banner Printing & Standees', category: 'Packaging Materials', amount: 6200, date: '2023-10-03', vendor: 'Sri Sai Digital Printers', paymentMode: 'UPI' },
+    { id: 'EXP-110', title: 'Security Guard & Night Watchman Advance', category: 'Staff Wages', amount: 8000, date: '2023-10-04', vendor: 'Security Agency', paymentMode: 'Cash' },
+    { id: 'EXP-111', title: 'Fire Safety Extinguishers & Inspection', category: 'Utilities', amount: 7500, date: '2023-10-02', vendor: 'Safety Solutions Sivakasi', paymentMode: 'UPI' },
+    { id: 'EXP-112', title: 'Gift Hamper Packing Ribbons & Sweets', category: 'Packaging Materials', amount: 5400, date: '2023-10-11', vendor: 'Sweet Mart & Crafts', paymentMode: 'Cash' },
+    { id: 'EXP-113', title: 'Express Courier Parcel Shipping Charges', category: 'Transport & Freight', amount: 11200, date: '2023-10-13', vendor: 'DTDC Courier Service', paymentMode: 'UPI' },
+    { id: 'EXP-114', title: 'Sparklers & Ground Chakkars Stock Batch 2', category: 'Firecracker Stock', amount: 65000, date: '2023-10-07', vendor: 'Standard Fireworks Agent', paymentMode: 'Bank Transfer' },
+    { id: 'EXP-115', title: 'Overtime Tea & Refreshments for Staff', category: 'Staff Wages', amount: 3200, date: '2023-10-14', vendor: 'Local Tea Stall', paymentMode: 'Cash' },
+    { id: 'EXP-116', title: 'Temporary Showroom Lighting & Decorative LEDs', category: 'Utilities', amount: 8800, date: '2023-10-06', vendor: 'Velu Electric Works', paymentMode: 'UPI' },
+    { id: 'EXP-117', title: 'Bubble Wrap & Waterproof Tarpaulin Rolls', category: 'Packaging Materials', amount: 4900, date: '2023-10-05', vendor: 'Polythene House', paymentMode: 'Cash' },
+    { id: 'EXP-118', title: 'Sivakasi Direct Factory Transport Lorry 2', category: 'Transport & Freight', amount: 21000, date: '2023-10-15', vendor: 'VRL Logistics', paymentMode: 'Bank Transfer' },
+    { id: 'EXP-119', title: 'Wholesale Flower Pots & Rockets Restock', category: 'Firecracker Stock', amount: 92000, date: '2023-10-12', vendor: 'Meena Fireworks Factory', paymentMode: 'Bank Transfer' },
+    { id: 'EXP-120', title: 'Showroom Daily Cleaning & Sanitation', category: 'Staff Wages', amount: 4000, date: '2023-10-10', vendor: 'Sanitation Staff', paymentMode: 'Cash' },
+    { id: 'EXP-121', title: 'Municipal Shop License & Clearance Fee', category: 'Utilities', amount: 6000, date: '2023-09-29', vendor: 'Municipal Office', paymentMode: 'UPI' },
+    { id: 'EXP-122', title: 'Customer Carry Bags & Printed Plastic Sacks', category: 'Packaging Materials', amount: 7800, date: '2023-10-08', vendor: 'Printers Guild', paymentMode: 'UPI' },
+    { id: 'EXP-123', title: 'High Density 1000 Crackers Bulk Batch', category: 'Firecracker Stock', amount: 54000, date: '2023-10-09', vendor: 'Sri Lakshmi Pyro Factory', paymentMode: 'Bank Transfer' },
+    { id: 'EXP-124', title: 'Diesel Refill for Backup Generator', category: 'Utilities', amount: 4200, date: '2023-10-13', vendor: 'HP Bunk Station', paymentMode: 'UPI' },
+    { id: 'EXP-125', title: 'Festive Bonus Advance to Packing Workers', category: 'Staff Wages', amount: 15000, date: '2023-10-15', vendor: 'Staff Advance', paymentMode: 'Bank Transfer' },
   ]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+
+  // 15 items per page pagination state
+  const itemsPerPage = 15;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Sorting state
+  const [sortField, setSortField] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+
+  // Automatically scroll container and window to top whenever currentPage changes
+  useEffect(() => {
+    const mainEl = document.querySelector('main');
+    if (mainEl) {
+      mainEl.scrollTop = 0;
+      mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [currentPage]);
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
 
   // New Expense Modal State
   const [showAddModal, setShowAddModal] = useState(false);
@@ -66,6 +119,43 @@ const AdminExpenses = () => {
     const matchesCategory = selectedCategory === 'All' || e.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const sortedExpenses = [...filteredExpenses].sort((a, b) => {
+    let aVal = a[sortField];
+    let bVal = b[sortField];
+    if (typeof aVal === 'string') {
+      return sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+    }
+    return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+  });
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory]);
+
+  const totalPages = Math.ceil(sortedExpenses.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedExpenses = sortedExpenses.slice(startIndex, startIndex + itemsPerPage);
+
+  const renderSortHeader = (label, field, align = 'left') => {
+    const isActive = sortField === field;
+    return (
+      <th 
+        onClick={() => handleSort(field)} 
+        className={`py-4 px-6 font-black uppercase text-xs cursor-pointer select-none group transition-colors hover:bg-[#2B0808] ${align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left'}`}
+        title={`Sort by ${label} (${isActive && sortOrder === 'asc' ? 'Descending' : 'Ascending'})`}
+      >
+        <div className={`inline-flex items-center gap-1.5 ${align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start'}`}>
+          <span className={isActive ? 'text-[#FFD700]' : 'text-amber-100/90 group-hover:text-[#FFD700]'}>{label}</span>
+          {isActive ? (
+            sortOrder === 'asc' ? <ArrowUp size={14} className="text-[#FFD700]" /> : <ArrowDown size={14} className="text-[#FFD700]" />
+          ) : (
+            <ArrowUpDown size={14} className="text-amber-300/40 group-hover:text-amber-300" />
+          )}
+        </div>
+      </th>
+    );
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-12">
@@ -146,7 +236,7 @@ const AdminExpenses = () => {
       </div>
 
       {/* Itemized Expenses Table */}
-      <div className="bg-[#FAF7F2] rounded-3xl border-2 border-amber-900/15 overflow-hidden shadow-sm">
+      <div key={currentPage} className="bg-[#FAF7F2] rounded-3xl border-2 border-amber-900/15 overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-3 duration-300">
         <div className="p-6 bg-gradient-to-r from-[#4A0E0E] via-[#5C1212] to-[#3B0B0B] border-b-2 border-amber-400/40 text-white flex items-center justify-between">
           <div>
             <h3 className="text-xl font-serif font-black text-white">📋 Itemized Expense Log</h3>
@@ -161,17 +251,17 @@ const AdminExpenses = () => {
           <table className="w-full text-left text-xs font-bold text-gray-800">
             <thead className="bg-[#3B0B0B] text-white uppercase text-xs font-black tracking-wider border-b-2 border-amber-400">
               <tr>
-                <th className="py-4 px-6">ID</th>
-                <th className="py-4 px-6">Expense Title & Description</th>
-                <th className="py-4 px-6">Category</th>
-                <th className="py-4 px-6">Vendor / Receiver</th>
-                <th className="py-4 px-6">Date</th>
-                <th className="py-4 px-6 text-right">Amount (₹)</th>
+                {renderSortHeader('ID', 'id')}
+                {renderSortHeader('Expense Title & Description', 'title')}
+                {renderSortHeader('Category', 'category')}
+                {renderSortHeader('Vendor / Receiver', 'vendor')}
+                {renderSortHeader('Date', 'date')}
+                {renderSortHeader('Amount (₹)', 'amount', 'right')}
                 <th className="py-4 px-6 text-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-amber-900/10">
-              {filteredExpenses.map((exp, idx) => (
+              {paginatedExpenses.map((exp, idx) => (
                 <tr key={exp.id} className={`hover:bg-amber-100/60 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-[#FAF7F2]'}`}>
                   <td className="py-4 px-6 font-black text-gray-900">{exp.id}</td>
                   <td className="py-4 px-6">
@@ -199,6 +289,70 @@ const AdminExpenses = () => {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* 15-Item Pagination Controls Bar */}
+        <div className="p-4 bg-[#FAF7F2] border-t border-amber-900/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-xs font-bold text-gray-700">
+            Showing <span className="font-black text-[#4A0E0E]">{filteredExpenses.length > 0 ? startIndex + 1 : 0}</span> to <span className="font-black text-[#4A0E0E]">{Math.min(startIndex + itemsPerPage, filteredExpenses.length)}</span> of <span className="font-black text-[#4A0E0E]">{filteredExpenses.length}</span> items
+          </div>
+
+          <div className="flex items-center gap-1">
+            {/* First Page << */}
+            <button
+              onClick={() => handlePageChange(1)}
+              disabled={currentPage === 1}
+              className="p-2 rounded-xl text-xs font-black bg-white border border-amber-900/15 text-gray-700 hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm flex items-center justify-center"
+              title="First Page"
+            >
+              <ChevronsLeft size={16} strokeWidth={2.5} />
+            </button>
+
+            {/* Previous Page < */}
+            <button
+              onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
+              disabled={currentPage === 1}
+              className="p-2 rounded-xl text-xs font-black bg-white border border-amber-900/15 text-gray-700 hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm flex items-center justify-center"
+              title="Previous Page"
+            >
+              <ChevronLeft size={16} strokeWidth={2.5} />
+            </button>
+
+            {/* Page Numbers */}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                className={`w-8 h-8 rounded-xl text-xs font-black transition-all border shadow-sm ${
+                  currentPage === page
+                    ? 'bg-[#4A0E0E] text-white border-[#4A0E0E]'
+                    : 'bg-white text-gray-800 border-amber-900/15 hover:bg-amber-100'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+
+            {/* Next Page > */}
+            <button
+              onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded-xl text-xs font-black bg-white border border-amber-900/15 text-gray-700 hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm flex items-center justify-center"
+              title="Next Page"
+            >
+              <ChevronRight size={16} strokeWidth={2.5} />
+            </button>
+
+            {/* Last Page >> */}
+            <button
+              onClick={() => handlePageChange(totalPages)}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded-xl text-xs font-black bg-white border border-amber-900/15 text-gray-700 hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm flex items-center justify-center"
+              title="Last Page"
+            >
+              <ChevronsRight size={16} strokeWidth={2.5} />
+            </button>
+          </div>
         </div>
       </div>
 

@@ -47,11 +47,11 @@ const Navbar = () => {
             <Link to="/" className="flex items-center gap-2.5 group">
               <img 
                 src="https://res.cloudinary.com/vf0fqhwo/image/upload/v1786363324/logo_q7lezq.jpg" 
-                alt="Karuppan Crackers" 
+                alt="Karuppa Crackers" 
                 className="h-11 sm:h-12 w-auto object-contain rounded-xl shadow-sm border border-amber-300/40 group-hover:scale-105 transition-transform" 
               />
-              <span className="text-2xl font-serif font-extrabold text-[#c00000] tracking-tight">
-                Karuppan Crackers
+              <span className="hidden md:inline text-2xl font-serif font-extrabold text-[#c00000] tracking-tight">
+                Karuppa Crackers
               </span>
             </Link>
           </div>
@@ -82,7 +82,7 @@ const Navbar = () => {
             })}
           </div>
 
-          {/* Right Side: Cart & Price List Button */}
+          {/* Right Side: Cart & Price List Button (Desktop) */}
           <div className="hidden md:flex items-center space-x-4">
             <Link
               to="/products"
@@ -105,16 +105,34 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
+          {/* Mobile Right Side: Price List Button, Cart Icon & Menu Button */}
+          <div className="md:hidden flex items-center gap-2 sm:gap-3">
+            <Link 
+              to="/products" 
+              className="flex items-center gap-1.5 bg-[#c00000] hover:bg-[#a00000] text-white font-bold text-xs sm:text-sm py-1.5 px-3 rounded-full shadow-md transition-transform"
+            >
+              <span>Price List</span>
+              <FileText className="w-3.5 h-3.5 text-white" />
+            </Link>
+            <Link
+              to="/products"
+              className="p-1.5 sm:p-2 rounded-full transition-colors relative text-gray-800 hover:text-[#c00000] hover:bg-gray-100"
+            >
+              <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
+              {cartTotals.totalQuantity > 0 && (
+                <span className="absolute top-0 right-0 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-black text-white bg-[#c00000] rounded-full shadow-sm border-2 border-white">
+                  {cartTotals.totalQuantity}
+                </span>
+              )}
+            </Link>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className={`${scrolled ? 'text-[#c00000]' : 'text-[#c00000]'} hover:opacity-70 focus:outline-none`}
             >
               {mobileMenuOpen ? (
-                <X className="h-8 w-8" />
+                <X className="h-7 w-7 sm:h-8 sm:w-8" />
               ) : (
-                <Menu className="h-8 w-8" />
+                <Menu className="h-7 w-7 sm:h-8 sm:w-8" />
               )}
             </button>
           </div>

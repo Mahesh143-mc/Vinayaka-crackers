@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ArrowLeft, Plus, Edit2, Trash2, Tag, Search, FolderPlus, Check, CheckCircle2, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, Plus, Edit2, Trash2, Tag, Search, FolderPlus, Check, CheckCircle2, ArrowRight, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 const AdminCategories = () => {
@@ -10,6 +10,26 @@ const AdminCategories = () => {
     { id: 3, name: 'Fancy Sky Shots', description: 'Multi-shot aerial repeaters and display fireworks.', count: 15, icon: '🎆' },
     { id: 4, name: 'Fountains & Pots', description: 'Flower pots, peacock fountains, and ground spinners.', count: 10, icon: '🪔' },
     { id: 5, name: 'Novelty & Rockets', description: 'Whistling rockets and novelty sky lanterns.', count: 6, icon: '🚀' },
+    { id: 6, name: 'Ground Chakkars', description: 'High speed spinning ground wheels.', count: 14, icon: '⚡' },
+    { id: 7, name: 'Garland Crackers', description: '100 to 10,000 continuous noise garlands.', count: 9, icon: '💥' },
+    { id: 8, name: 'Color Smoke Grenades', description: 'Daytime multi-color smoke fountains.', count: 5, icon: '✨' },
+    { id: 9, name: 'Kid Safe Sparklers', description: 'Non-heat chemical sparklers for young children.', count: 11, icon: '⭐' },
+    { id: 10, name: 'Peacock Fountains', description: 'Multi-stage colorful dancing fountains.', count: 8, icon: '🪔' },
+    { id: 11, name: 'Night Aerial Shells', description: 'High explosion night sky shells with stars.', count: 18, icon: '🎆' },
+    { id: 12, name: 'Whistling Rockets', description: 'Sound rockets with high altitude trail.', count: 7, icon: '🚀' },
+    { id: 13, name: 'Gift Combo Boxes', description: 'Festive family gift packages and assortments.', count: 15, icon: '🎁' },
+    { id: 14, name: 'Flash Sparklers', description: 'High brightness silver & gold flashers.', count: 10, icon: '✨' },
+    { id: 15, name: 'Mega Thunder Bombs', description: 'Heavy vibration loud sound crackers.', count: 6, icon: '💥' },
+    { id: 16, name: 'Multi-Color Fountains', description: '7-in-1 color changing ground pots.', count: 12, icon: '🪔' },
+    { id: 17, name: 'Sky Paper Lanterns', description: 'Eco-friendly biodegradable night lanterns.', count: 4, icon: '🚀' },
+    { id: 18, name: 'Deluxe Sound Garlands', description: 'Premium quality continuous firecrackers.', count: 13, icon: '💥' },
+    { id: 19, name: '30 Shots Sky Display', description: 'Quick-firing aerial colorful shot tubes.', count: 9, icon: '🎆' },
+    { id: 20, name: 'Musical Fountains', description: 'Fountains emitting crackling sound effects.', count: 7, icon: '🪔' },
+    { id: 21, name: 'Twinkling Stars', description: 'Long burning handheld twinkling sticks.', count: 16, icon: '⭐' },
+    { id: 22, name: 'Atom Bombs', description: 'Medium loudness festive sound crackers.', count: 10, icon: '💥' },
+    { id: 23, name: 'Tri-Color Pots', description: 'Red, green, and gold fountain bursts.', count: 8, icon: '🪔' },
+    { id: 24, name: '60 Shots Multi-color', category: 'Fancy', description: '60 shots high altitude aerial burst.', count: 11, icon: '🎆' },
+    { id: 25, name: 'Safety Sparklers Gold', description: 'Low smoke sparklers approved for indoor use.', count: 15, icon: '✨' },
   ]);
 
   const [newCatName, setNewCatName] = useState('');
@@ -20,6 +40,26 @@ const AdminCategories = () => {
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
+
+  // 15 items per page pagination state
+  const itemsPerPage = 15;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Automatically scroll container and window to top whenever currentPage changes
+  useEffect(() => {
+    const mainEl = document.querySelector('main');
+    if (mainEl) {
+      mainEl.scrollTop = 0;
+      mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [currentPage]);
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [lastCreatedCat, setLastCreatedCat] = useState('');
@@ -62,6 +102,14 @@ const AdminCategories = () => {
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     c.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  const totalPages = Math.ceil(filteredCategories.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedCategories = filteredCategories.slice(startIndex, startIndex + itemsPerPage);
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-12">
@@ -173,8 +221,8 @@ const AdminCategories = () => {
           </div>
 
           {/* Categories Grid */}
-          <div className="space-y-4">
-            {filteredCategories.map((cat) => (
+          <div key={currentPage} className="space-y-4 animate-in fade-in slide-in-from-bottom-3 duration-300">
+            {paginatedCategories.map((cat) => (
               <div 
                 key={cat.id}
                 className="bg-[#FAF7F2] p-5 rounded-3xl shadow-sm border border-amber-900/20 hover:border-amber-500 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
@@ -235,6 +283,70 @@ const AdminCategories = () => {
                 )}
               </div>
             ))}
+          </div>
+
+          {/* 15-Item Pagination Controls Bar */}
+          <div className="p-4 bg-[#FAF7F2] rounded-3xl border border-amber-900/10 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+            <div className="text-xs font-bold text-gray-700">
+              Showing <span className="font-black text-[#4A0E0E]">{filteredCategories.length > 0 ? startIndex + 1 : 0}</span> to <span className="font-black text-[#4A0E0E]">{Math.min(startIndex + itemsPerPage, filteredCategories.length)}</span> of <span className="font-black text-[#4A0E0E]">{filteredCategories.length}</span> categories
+            </div>
+
+            <div className="flex items-center gap-1">
+              {/* First Page << */}
+              <button
+                onClick={() => handlePageChange(1)}
+                disabled={currentPage === 1}
+                className="p-2 rounded-xl text-xs font-black bg-white border border-amber-900/15 text-gray-700 hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm flex items-center justify-center"
+                title="First Page"
+              >
+                <ChevronsLeft size={16} strokeWidth={2.5} />
+              </button>
+
+              {/* Previous Page < */}
+              <button
+                onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-xl text-xs font-black bg-white border border-amber-900/15 text-gray-700 hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm flex items-center justify-center"
+                title="Previous Page"
+              >
+                <ChevronLeft size={16} strokeWidth={2.5} />
+              </button>
+
+              {/* Page Numbers */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`w-8 h-8 rounded-xl text-xs font-black transition-all border shadow-sm ${
+                    currentPage === page
+                      ? 'bg-[#4A0E0E] text-white border-[#4A0E0E]'
+                      : 'bg-white text-gray-800 border-amber-900/15 hover:bg-amber-100'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+
+              {/* Next Page > */}
+              <button
+                onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-xl text-xs font-black bg-white border border-amber-900/15 text-gray-700 hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm flex items-center justify-center"
+                title="Next Page"
+              >
+                <ChevronRight size={16} strokeWidth={2.5} />
+              </button>
+
+              {/* Last Page >> */}
+              <button
+                onClick={() => handlePageChange(totalPages)}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-xl text-xs font-black bg-white border border-amber-900/15 text-gray-700 hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm flex items-center justify-center"
+                title="Last Page"
+              >
+                <ChevronsRight size={16} strokeWidth={2.5} />
+              </button>
+            </div>
           </div>
         </div>
       </div>

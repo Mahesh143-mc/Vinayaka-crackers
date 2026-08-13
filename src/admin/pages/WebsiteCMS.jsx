@@ -19,7 +19,7 @@ const AdminWebsiteCMS = () => {
   const [minOrderForDiscount, setMinOrderForDiscount] = useState(3000);
 
   // Tab 3: Store Information & Legal Contact
-  const [storeName, setStoreName] = useState('Karuppan Crackers');
+  const [storeName, setStoreName] = useState('Karuppa Crackers');
   const [supportPhone, setSupportPhone] = useState('8825419454');
   const [whatsappNumber, setWhatsappNumber] = useState('8825419454');
   const [supportEmail, setSupportEmail] = useState('chimeratechweb@gmail.com');

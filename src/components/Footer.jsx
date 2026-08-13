@@ -38,11 +38,11 @@ const Footer = () => {
             <Link to="/" className="flex items-center gap-3 mb-4 block group">
               <img 
                 src="https://res.cloudinary.com/vf0fqhwo/image/upload/v1786363324/logo_q7lezq.jpg" 
-                alt="Karuppan Crackers" 
+                alt="Karuppa Crackers" 
                 className="h-12 w-auto object-contain rounded-xl shadow-md border border-amber-400/30" 
               />
               <span className="text-3xl font-serif font-bold text-white">
-                Karuppan<span className="text-gold">.</span>
+                Karuppa<span className="text-gold">.</span>
               </span>
             </Link>
             <p className="text-cream-light/80 mb-6 font-sans">
@@ -150,7 +150,7 @@ const Footer = () => {
         </div>
 
         <div className="mt-16 pt-8 border-t border-white/20 text-center text-sm text-cream-light/60">
-          <p>&copy; {new Date().getFullYear()} Karuppan Crackers. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Karuppa Crackers. All rights reserved.</p>
         </div>
       </div>
     </footer>

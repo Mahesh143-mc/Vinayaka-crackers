@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { PhoneCall, MessageCircle, Mail, MapPin, Clock, Send, Sparkles } from 'lucide-react';
+import { Phone, PhoneCall, MessageCircle, Mail, MapPin, Clock, Send, Sparkles } from 'lucide-react';
 
 const Contact = () => {
   return (

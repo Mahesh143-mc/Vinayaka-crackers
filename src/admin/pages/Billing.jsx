@@ -15,16 +15,20 @@ const AdminBilling = () => {
   // Floating Bottom Cart Receipt Drawer Modal (Works on Mobile & Desktop!)
   const [showCartDrawer, setShowCartDrawer] = useState(false);
 
-  const catalog = [
-    { id: 'PRD-01', name: '120 Shots Multi-color', category: 'Fancy', price: 1200, stock: 45, icon: '🎆' },
-    { id: 'PRD-02', name: 'Giant Sparklers (50pcs)', category: 'Sparklers', price: 350, stock: 120, icon: '✨' },
-    { id: 'PRD-03', name: 'Lakshmi Bomb Deluxe', category: 'Bombs', price: 150, stock: 8, icon: '💥' },
-    { id: 'PRD-04', name: 'Flower Pots Mega', category: 'Fountains', price: 650, stock: 25, icon: '🪔' },
-    { id: 'PRD-05', name: 'Sky Lanterns Pack', category: 'Novelty', price: 400, stock: 15, icon: '🚀' },
-    { id: 'PRD-06', name: '7 Color Rockets (10pcs)', category: 'Fancy', price: 850, stock: 30, icon: '⭐' },
-    { id: 'PRD-07', name: 'Chakra Ground Spinner', category: 'Fountains', price: 280, stock: 60, icon: '🌀' },
-    { id: 'PRD-08', name: 'Electric Sparklers Gold', category: 'Sparklers', price: 450, stock: 90, icon: '⚡' },
-  ];
+  const [catalog, setCatalog] = useState([
+    { id: 'PRD-01', name: '120 Shots Multi-color', category: 'Fancy', price: 1200, stock: 45, icon: '🎆', showInFrontend: true },
+    { id: 'PRD-02', name: 'Giant Sparklers (50pcs)', category: 'Sparklers', price: 350, stock: 120, icon: '✨', showInFrontend: true },
+    { id: 'PRD-03', name: 'Lakshmi Bomb Deluxe', category: 'Bombs', price: 150, stock: 8, icon: '💥', showInFrontend: true },
+    { id: 'PRD-04', name: 'Flower Pots Mega', category: 'Fountains', price: 650, stock: 25, icon: '🪔', showInFrontend: true },
+    { id: 'PRD-05', name: 'Sky Lanterns Pack', category: 'Novelty', price: 400, stock: 15, icon: '🚀', showInFrontend: false },
+    { id: 'PRD-06', name: '7 Color Rockets (10pcs)', category: 'Fancy', price: 850, stock: 30, icon: '⭐', showInFrontend: true },
+    { id: 'PRD-07', name: 'Chakra Ground Spinner', category: 'Fountains', price: 280, stock: 60, icon: '🌀', showInFrontend: true },
+    { id: 'PRD-08', name: 'Electric Sparklers Gold', category: 'Sparklers', price: 450, stock: 90, icon: '⚡', showInFrontend: true },
+  ]);
+
+  const toggleFrontendVisibility = (id) => {
+    setCatalog(catalog.map(item => item.id === id ? { ...item, showInFrontend: !item.showInFrontend } : item));
+  };
 
   const categories = ['All', 'Sparklers', 'Bombs', 'Fancy', 'Fountains', 'Novelty'];
 
@@ -264,6 +268,28 @@ const AdminBilling = () => {
                       <span className="text-lg sm:text-xl font-black text-[#c00000]">₹{product.price}</span>
                     </div>
 
+                    {/* Show in Frontend Toggle Switch */}
+                    <div className="flex items-center justify-between bg-amber-100/60 px-3 py-1.5 rounded-xl border border-amber-900/15">
+                      <span className="text-[10px] sm:text-xs font-black text-[#4A0E0E] flex items-center gap-1">
+                        <span>Frontend:</span>
+                        <span className={product.showInFrontend ? "text-emerald-700 font-extrabold" : "text-gray-500 font-extrabold"}>
+                          {product.showInFrontend ? "ON" : "OFF"}
+                        </span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); toggleFrontendVisibility(product.id); }}
+                        className={`w-9 h-5 rounded-full p-0.5 transition-colors relative flex items-center shrink-0 ${
+                          product.showInFrontend ? 'bg-emerald-600' : 'bg-gray-400'
+                        }`}
+                        title={product.showInFrontend ? "Disable on Frontend" : "Enable on Frontend"}
+                      >
+                        <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform ${
+                          product.showInFrontend ? 'translate-x-4' : 'translate-x-0'
+                        }`} />
+                      </button>
+                    </div>
+
                     {/* Full-Width Button Row */}
                     <div className="pt-1">
                       {isInCart ? (
@@ -328,9 +354,24 @@ const AdminBilling = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between sm:justify-end gap-4 border-t sm:border-t-0 pt-2 sm:pt-0">
+                    <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 border-t sm:border-t-0 pt-2 sm:pt-0">
                       <span className="font-black text-[#4A0E0E] text-sm sm:text-base">₹{product.price}</span>
-                      
+
+                      {/* Frontend Toggle Switch */}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); toggleFrontendVisibility(product.id); }}
+                        className={`px-3 py-1 rounded-xl text-[10px] font-black border transition-all flex items-center gap-1.5 ${
+                          product.showInFrontend 
+                            ? 'bg-emerald-100 text-emerald-900 border-emerald-300' 
+                            : 'bg-gray-200 text-gray-700 border-gray-300'
+                        }`}
+                        title="Toggle Frontend Visibility"
+                      >
+                        <span className={`w-2 h-2 rounded-full ${product.showInFrontend ? 'bg-emerald-600' : 'bg-gray-500'}`}></span>
+                        {product.showInFrontend ? 'Frontend: ON' : 'Frontend: OFF'}
+                      </button>
+
                       {isInCart ? (
                         <div className="flex items-center bg-[#4A0E0E] text-white rounded-xl overflow-hidden shadow-sm">
                           <button onClick={() => updateQty(product.id, -1)} className="p-1.5 hover:bg-red-950"><Minus size={13}/></button>
@@ -515,7 +556,7 @@ const AdminBilling = () => {
                 </button>
 
                 <a 
-                  href={`https://wa.me/91${completedOrder.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(completedOrder.customer)},%20your%20Karuppan%20Crackers%20order%20%23${completedOrder.orderId}%20bill%20for%20Rs.${completedOrder.grandTotal}%20has%20been%20confirmed!`}
+                  href={`https://wa.me/91${completedOrder.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(completedOrder.customer)},%20your%20Karuppa%20Crackers%20order%20%23${completedOrder.orderId}%20bill%20for%20Rs.${completedOrder.grandTotal}%20has%20been%20confirmed!`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="py-3 bg-[#25D366] hover:bg-[#1ebd53] text-white rounded-xl font-black text-xs shadow-md flex items-center justify-center gap-1.5 text-center"
