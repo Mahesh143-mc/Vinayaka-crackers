@@ -227,35 +227,35 @@ const Products = () => {
                           transition={{ duration: 0.6, delay: index * 0.1 }}
                           className={`relative ${zIndexClass} transition-all duration-500`}
                         >
-                          {/* Sleek Pure White E-Commerce Card Container */}
-                          <div className="bg-white border border-amber-900/15 hover:border-[#8B1E1E] shadow-md hover:shadow-xl rounded-3xl overflow-hidden flex flex-col justify-between transition-all duration-300 transform hover:-translate-y-1 group h-full">
-                            {/* Fixed Size Image Container (Pure White Background) */}
+                          {/* Sleek Light Festive E-Commerce Card Container */}
+                          <div className="bg-[#FAF7F0] hover:bg-white border-2 border-amber-900/15 hover:border-[#8B1E1E] shadow-sm hover:shadow-xl rounded-3xl overflow-hidden flex flex-col justify-between transition-all duration-300 transform hover:-translate-y-1 group h-full">
+                            {/* Fixed Size Image Container (Clean White Frame) */}
                             <div 
-                              className="h-48 sm:h-56 w-full relative overflow-hidden bg-white p-3 cursor-pointer flex items-center justify-center border-b border-amber-900/10"
+                              className="h-48 sm:h-52 w-full relative overflow-hidden bg-white p-3 cursor-pointer flex items-center justify-center border-b border-amber-900/10 shrink-0"
                               onClick={() => setSelectedProduct(product)}
                             >
                               <img
                                 src={product.img}
                                 alt={product.name}
-                                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 drop-shadow-sm"
+                                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 drop-shadow-sm max-h-44"
                               />
                               
-                              <span className="absolute top-2.5 right-2.5 px-2.5 py-1 bg-[#8B1E1E] text-white text-[10px] font-bold rounded-full shadow-sm border border-amber-300/30">
-                                🎆 Green Crackers
+                              <span className="absolute top-2.5 right-2.5 px-2.5 py-1 bg-[#8B1E1E] text-white text-[10px] font-black rounded-full shadow-sm border border-amber-300/30 tracking-wider">
+                                🌿 Green Crackers
                               </span>
                             </div>
 
-                            {/* Pristine White Card Content & Details */}
-                            <div className="flex-1 p-4 flex flex-col justify-between bg-white">
+                            {/* Soft Light Card Content & Details */}
+                            <div className="flex-1 p-4 flex flex-col justify-between bg-[#FAF7F0] group-hover:bg-white transition-colors duration-300">
                               <div className="text-center mb-3">
                                 <h3 
-                                  className="text-sm sm:text-base font-serif font-black text-[#8B1E1E] leading-tight line-clamp-2 cursor-pointer hover:text-[#D32F2F] transition-colors"
+                                  className="text-sm sm:text-base font-serif font-black text-[#4A0E0E] leading-tight line-clamp-2 cursor-pointer hover:text-[#B71C1C] transition-colors min-h-[2.5rem] flex items-center justify-center"
                                   onClick={() => setSelectedProduct(product)}
                                 >
                                   {product.name}
                                 </h3>
-                                <div className="text-[#D32F2F] font-black text-xl sm:text-2xl mt-1.5 flex items-center justify-center gap-1">
-                                  <span>{typeof product.price === 'number' ? `₹${product.price}` : product.price}</span>
+                                <div className="text-[#C00000] font-black text-xl sm:text-2xl mt-1 flex items-center justify-center gap-1">
+                                  <span>{typeof product.price === 'number' ? `₹${product.price.toLocaleString('en-IN')}` : product.price}</span>
                                 </div>
                               </div>
 
@@ -265,19 +265,19 @@ const Products = () => {
                                   const cartItem = cartItems.find(item => item.id === product.id);
                                   if (cartItem) {
                                     return (
-                                      <div className="flex items-center justify-between bg-[#FAF7F2] rounded-full border border-[#8B1E1E]/30 p-1 w-full max-w-[140px] shadow-sm">
-                                        <button onClick={(e) => handleDecrementAction(e, product.id)} className="w-8 h-8 flex items-center justify-center text-[#8B1E1E] hover:bg-white rounded-full transition-colors font-bold text-lg">-</button>
-                                        <span className="flex-1 text-center font-black text-gray-900 text-sm">{cartItem.quantity}</span>
-                                        <button onClick={(e) => handleAddToCart(e, product)} className="w-8 h-8 flex items-center justify-center text-[#8B1E1E] hover:bg-white rounded-full transition-colors font-bold text-lg">+</button>
+                                      <div className="flex items-center justify-between bg-[#FAF7F0] rounded-full border-2 border-[#8B1E1E] p-1 w-full max-w-[145px] shadow-sm">
+                                        <button onClick={(e) => handleDecrementAction(e, product.id)} className="w-8 h-8 flex items-center justify-center text-[#8B1E1E] hover:bg-red-100 rounded-full transition-colors font-black text-lg">-</button>
+                                        <span className="flex-1 text-center font-black text-[#4A0E0E] text-sm">{cartItem.quantity}</span>
+                                        <button onClick={(e) => handleAddToCart(e, product)} className="w-8 h-8 flex items-center justify-center text-[#8B1E1E] hover:bg-red-100 rounded-full transition-colors font-black text-lg">+</button>
                                       </div>
                                     );
                                   } else {
                                     return (
                                       <button 
                                         onClick={(e) => handleAddToCart(e, product)} 
-                                        className="w-full bg-gradient-to-r from-[#D32F2F] to-[#B71C1C] hover:from-[#B71C1C] hover:to-[#8B1E1E] text-white font-bold py-2.5 px-4 rounded-full shadow-md transition-all flex items-center justify-center gap-2 text-xs sm:text-sm"
+                                        className="w-full bg-gradient-to-r from-[#B71C1C] via-[#9E1212] to-[#7A0D0D] hover:from-[#9E1212] hover:to-[#5E0909] text-white font-black py-2.5 px-4 rounded-full shadow-md transition-all flex items-center justify-center gap-2 text-xs sm:text-sm transform hover:scale-[1.02]"
                                       >
-                                        <ShoppingCart className="w-4 h-4 text-white" /> Add to Cart
+                                        <ShoppingCart className="w-4 h-4 text-[#FFD700]" /> Add to Cart
                                       </button>
                                     );
                                   }
