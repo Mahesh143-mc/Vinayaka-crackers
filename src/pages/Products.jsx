@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { ShoppingCart, Filter, Search, X, ArrowUp, SlidersHorizontal, Eye } from 'lucide-react';
+import { ShoppingCart, Filter, Search, X, ArrowUp, SlidersHorizontal, Eye, PackageOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
+import { subscribeProducts, subscribeCategories } from '../services/firebaseService';
 
 const Products = () => {
   const [searchFocused, setSearchFocused] = useState(false);
@@ -13,6 +14,38 @@ const Products = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const { cartItems, cartTotals, addToCart, decrementQuantity } = useCart();
   const navigate = useNavigate();
+
+  const [dbProducts, setDbProducts] = useState([]);
+  const [dbCategories, setDbCategories] = useState([]);
+
+  useEffect(() => {
+    const unsubProducts = subscribeProducts((firestoreProducts) => {
+      if (firestoreProducts) {
+        const active = firestoreProducts.filter(p => p.showInFrontend !== false);
+        const mapped = active.map(p => ({
+          id: p.id,
+          name: p.name,
+          price: `₹${Number(p.price || 0).toLocaleString('en-IN')}`,
+          tag: p.wholesalePrice ? 'Special Offer' : '',
+          category: p.category || 'General',
+          img: p.img || "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg",
+          rawPrice: Number(p.price || 0)
+        }));
+        setDbProducts(mapped);
+      }
+    });
+
+    const unsubCategories = subscribeCategories((firestoreCategories) => {
+      if (firestoreCategories) {
+        setDbCategories(firestoreCategories);
+      }
+    });
+
+    return () => {
+      unsubProducts();
+      unsubCategories();
+    };
+  }, []);
 
   const shootConfetti = () => {
     const colors = ['#FFD700', '#D32F2F', '#4CAF50', '#FF9800', '#ffffff'];
@@ -48,51 +81,13 @@ const Products = () => {
     shootConfetti();
   };
 
-  const categories = ["All", "Gift Hampers", "Sparklers", "Rockets", "Chakkars", "Sky Shots"];
+  // Derive categories list dynamically
+  const categoriesList = ["All", ...new Set([
+    ...dbCategories.map(c => c.name),
+    ...dbProducts.map(p => p.category)
+  ])];
 
-  const products = [
-    { id: 1, name: "Deluxe Gift Hamper", price: "₹2,999", tag: "Best Seller", category: "Gift Hampers", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 2, name: "Twinkling Sparklers", price: "₹599", tag: "New", category: "Sparklers", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 3, name: "Rocket 2000", price: "₹1,299", tag: "Top Rated", category: "Rockets", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 4, name: "Green Chakkars", price: "₹299", tag: "Eco", category: "Chakkars", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 5, name: "Mega Sky Shot", price: "₹899", tag: "", category: "Sky Shots", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 6, name: "Deluxe Gift Hamper", price: "₹2,999", tag: "Best Seller", category: "Gift Hampers", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 7, name: "Twinkling Sparklers", price: "₹599", tag: "New", category: "Sparklers", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 8, name: "Rocket 2000", price: "₹1,299", tag: "Top Rated", category: "Rockets", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 9, name: "Green Chakkars", price: "₹299", tag: "Eco", category: "Chakkars", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 10, name: "Mega Sky Shot", price: "₹899", tag: "", category: "Sky Shots", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 11, name: "Deluxe Gift Hamper", price: "₹2,999", tag: "Best Seller", category: "Gift Hampers", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 12, name: "Twinkling Sparklers", price: "₹599", tag: "New", category: "Sparklers", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 13, name: "Rocket 2000", price: "₹1,299", tag: "Top Rated", category: "Rockets", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 14, name: "Green Chakkars", price: "₹299", tag: "Eco", category: "Chakkars", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 15, name: "Mega Sky Shot", price: "₹899", tag: "", category: "Sky Shots", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 16, name: "Deluxe Gift Hamper", price: "₹2,999", tag: "Best Seller", category: "Gift Hampers", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 17, name: "Twinkling Sparklers", price: "₹599", tag: "New", category: "Sparklers", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 18, name: "Rocket 2000", price: "₹1,299", tag: "Top Rated", category: "Rockets", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 19, name: "Green Chakkars", price: "₹299", tag: "Eco", category: "Chakkars", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 20, name: "Mega Sky Shot", price: "₹899", tag: "", category: "Sky Shots", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 21, name: "Deluxe Gift Hamper", price: "₹2,999", tag: "Best Seller", category: "Gift Hampers", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 22, name: "Twinkling Sparklers", price: "₹599", tag: "New", category: "Sparklers", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 23, name: "Rocket 2000", price: "₹1,299", tag: "Top Rated", category: "Rockets", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 24, name: "Green Chakkars", price: "₹299", tag: "Eco", category: "Chakkars", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 25, name: "Mega Sky Shot", price: "₹899", tag: "", category: "Sky Shots", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 26, name: "Deluxe Gift Hamper", price: "₹2,999", tag: "Best Seller", category: "Gift Hampers", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 27, name: "Twinkling Sparklers", price: "₹599", tag: "New", category: "Sparklers", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 28, name: "Rocket 2000", price: "₹1,299", tag: "Top Rated", category: "Rockets", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 29, name: "Green Chakkars", price: "₹299", tag: "Eco", category: "Chakkars", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 30, name: "Mega Sky Shot", price: "₹899", tag: "", category: "Sky Shots", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 31, name: "Deluxe Gift Hamper", price: "₹2,999", tag: "Best Seller", category: "Gift Hampers", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 32, name: "Twinkling Sparklers", price: "₹599", tag: "New", category: "Sparklers", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 33, name: "Rocket 2000", price: "₹1,299", tag: "Top Rated", category: "Rockets", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 34, name: "Green Chakkars", price: "₹299", tag: "Eco", category: "Chakkars", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 35, name: "Mega Sky Shot", price: "₹899", tag: "", category: "Sky Shots", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 36, name: "Deluxe Gift Hamper", price: "₹2,999", tag: "Best Seller", category: "Gift Hampers", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 37, name: "Twinkling Sparklers", price: "₹599", tag: "New", category: "Sparklers", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 38, name: "Rocket 2000", price: "₹1,299", tag: "Top Rated", category: "Rockets", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 39, name: "Green Chakkars", price: "₹299", tag: "Eco", category: "Chakkars", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-    { id: 40, name: "Mega Sky Shot", price: "₹899", tag: "", category: "Sky Shots", img: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg" },
-  ];
-
+  const products = dbProducts;
   const filteredProducts = selectedCategory === "All" ? products : products.filter(p => p.category === selectedCategory);
 
   return (
@@ -180,7 +175,7 @@ const Products = () => {
         {/* Floating Islands Grid (Now using CSS Grid) */}
         <main className="w-full mx-auto">
           <div className="flex gap-4 mb-12 overflow-x-auto pb-4 hide-scrollbar">
-            {categories.map(category => (
+            {categoriesList.map(category => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
@@ -194,11 +189,21 @@ const Products = () => {
             ))}
           </div>
 
-
           <div className="space-y-16 pb-16">
-            {categories.filter(c => c !== "All" && (selectedCategory === "All" || selectedCategory === c)).map((category) => {
-              const categoryProducts = products.filter(p => p.category === category);
-              if (categoryProducts.length === 0) return null;
+            {products.length === 0 ? (
+              <div className="text-center py-20 px-4 bg-white/80 backdrop-blur-md rounded-3xl border-2 border-gold/30 shadow-md max-w-2xl mx-auto">
+                <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-[#8B1E1E] to-red-700 flex items-center justify-center text-white text-3xl font-black mb-4 shadow-lg">
+                  🪔
+                </div>
+                <h3 className="text-2xl font-serif font-black text-[#8B1E1E]">No Products Available Right Now</h3>
+                <p className="text-gray-600 font-medium text-sm mt-2 max-w-md mx-auto">
+                  Our Sivakasi store catalog is currently empty. New fireworks stock added by the store admin will appear here live!
+                </p>
+              </div>
+            ) : (
+              categoriesList.filter(c => c !== "All" && (selectedCategory === "All" || selectedCategory === c)).map((category) => {
+                const categoryProducts = products.filter(p => p.category === category);
+                if (categoryProducts.length === 0) return null;
 
               return (
                 <div key={category} className="mb-8">
@@ -222,57 +227,63 @@ const Products = () => {
                           transition={{ duration: 0.6, delay: index * 0.1 }}
                           className={`relative ${zIndexClass} transition-all duration-500`}
                         >
-                          {/* Card Container with uniform size */}
-                          <div
-                            className={`bg-white border border-gold/15 shadow-sm hover:shadow-md overflow-hidden relative rounded-2xl sm:rounded-3xl h-full w-full flex flex-col transition-shadow duration-300`}
-                            style={{ clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%)' }}
-                          >
-                            {/* Image taking upper portion */}
+                          {/* Sleek Pure White E-Commerce Card Container */}
+                          <div className="bg-white border border-amber-900/15 hover:border-[#8B1E1E] shadow-md hover:shadow-xl rounded-3xl overflow-hidden flex flex-col justify-between transition-all duration-300 transform hover:-translate-y-1 group h-full">
+                            {/* Fixed Size Image Container (Pure White Background) */}
                             <div 
-                              className="aspect-[4/3] relative overflow-hidden bg-[#f9f5eb] cursor-pointer"
+                              className="h-48 sm:h-56 w-full relative overflow-hidden bg-white p-3 cursor-pointer flex items-center justify-center border-b border-amber-900/10"
                               onClick={() => setSelectedProduct(product)}
                             >
                               <img
                                 src={product.img}
                                 alt={product.name}
-                                className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 drop-shadow-sm"
                               />
+                              
+                              <span className="absolute top-2.5 right-2.5 px-2.5 py-1 bg-[#8B1E1E] text-white text-[10px] font-bold rounded-full shadow-sm border border-amber-300/30">
+                                🎆 Green Crackers
+                              </span>
                             </div>
 
-                            {/* Practical E-commerce Text Block */}
-                            <div className="flex-1 bg-white p-3 sm:p-4 flex flex-col justify-between z-20 border-t border-cream">
+                            {/* Pristine White Card Content & Details */}
+                            <div className="flex-1 p-4 flex flex-col justify-between bg-white">
                               <div className="text-center mb-3">
                                 <h3 
-                                  className="text-sm sm:text-lg md:text-xl font-serif font-black text-[#B71C1C] leading-tight line-clamp-2 cursor-pointer hover:text-[#FFB300] transition-colors"
+                                  className="text-sm sm:text-base font-serif font-black text-[#8B1E1E] leading-tight line-clamp-2 cursor-pointer hover:text-[#D32F2F] transition-colors"
                                   onClick={() => setSelectedProduct(product)}
                                 >
                                   {product.name}
                                 </h3>
-                                <div className="text-[#FFB300] font-black text-sm sm:text-lg mt-1">{product.price}</div>
+                                <div className="text-[#D32F2F] font-black text-xl sm:text-2xl mt-1.5 flex items-center justify-center gap-1">
+                                  <span>{typeof product.price === 'number' ? `₹${product.price}` : product.price}</span>
+                                </div>
                               </div>
 
-                            {/* Quantity & Add to Cart Controls */}
-                            <div className="flex items-center justify-center mt-auto w-full pt-2">
-                              {(() => {
-                                const cartItem = cartItems.find(item => item.id === product.id);
-                                if (cartItem) {
-                                  return (
-                                    <div className="flex items-center justify-between bg-[#f9f5eb] rounded-full border border-gold/30 p-1 w-full max-w-[140px]">
-                                      <button onClick={(e) => handleDecrementAction(e, product.id)} className="w-8 h-8 flex items-center justify-center text-[#B71C1C] hover:bg-white rounded-full transition-colors font-bold shadow-sm text-lg">-</button>
-                                      <span className="flex-1 text-center font-bold text-charcoal text-sm">{cartItem.quantity}</span>
-                                      <button onClick={(e) => handleAddToCart(e, product)} className="w-8 h-8 flex items-center justify-center text-[#B71C1C] hover:bg-white rounded-full transition-colors font-bold shadow-sm text-lg">+</button>
-                                    </div>
-                                  );
-                                } else {
-                                  return (
-                                    <button onClick={(e) => handleAddToCart(e, product)} className="w-full bg-[#D32F2F] hover:bg-[#B71C1C] text-white font-bold py-2 px-4 rounded-full shadow-md transition-colors flex items-center justify-center gap-2 text-sm">
-                                      <ShoppingCart className="w-4 h-4" /> Add
-                                    </button>
-                                  );
-                                }
-                              })()}
+                              {/* Quantity & Add to Cart Controls */}
+                              <div className="flex items-center justify-center mt-auto w-full pt-1">
+                                {(() => {
+                                  const cartItem = cartItems.find(item => item.id === product.id);
+                                  if (cartItem) {
+                                    return (
+                                      <div className="flex items-center justify-between bg-[#FAF7F2] rounded-full border border-[#8B1E1E]/30 p-1 w-full max-w-[140px] shadow-sm">
+                                        <button onClick={(e) => handleDecrementAction(e, product.id)} className="w-8 h-8 flex items-center justify-center text-[#8B1E1E] hover:bg-white rounded-full transition-colors font-bold text-lg">-</button>
+                                        <span className="flex-1 text-center font-black text-gray-900 text-sm">{cartItem.quantity}</span>
+                                        <button onClick={(e) => handleAddToCart(e, product)} className="w-8 h-8 flex items-center justify-center text-[#8B1E1E] hover:bg-white rounded-full transition-colors font-bold text-lg">+</button>
+                                      </div>
+                                    );
+                                  } else {
+                                    return (
+                                      <button 
+                                        onClick={(e) => handleAddToCart(e, product)} 
+                                        className="w-full bg-gradient-to-r from-[#D32F2F] to-[#B71C1C] hover:from-[#B71C1C] hover:to-[#8B1E1E] text-white font-bold py-2.5 px-4 rounded-full shadow-md transition-all flex items-center justify-center gap-2 text-xs sm:text-sm"
+                                      >
+                                        <ShoppingCart className="w-4 h-4 text-white" /> Add to Cart
+                                      </button>
+                                    );
+                                  }
+                                })()}
+                              </div>
                             </div>
-                          </div>
                           </div>
                         </motion.div>
                       );
@@ -280,7 +291,7 @@ const Products = () => {
                   </div>
                 </div>
               );
-            })}
+            }))}
           </div>
         </main>
       </section>

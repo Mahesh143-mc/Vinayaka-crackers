@@ -1,45 +1,39 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, FolderPlus, Tag, ChevronDown, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Box } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { subscribeProducts, saveProductToFirestore, deleteProductFromFirestore, subscribeCategories } from '../../services/firebaseService';
 
 const AdminProducts = () => {
-  const [categories] = useState([
-    { id: 1, name: 'Sparklers', count: 12 },
-    { id: 2, name: 'Bombs', count: 8 },
-    { id: 3, name: 'Fancy', count: 15 },
-    { id: 4, name: 'Fountains', count: 10 },
-  ]);
+  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]);
 
-  const [products, setProducts] = useState([
-    { id: 'PRD-01', name: '120 Shots Multi-color', category: 'Fancy', price: 1200, stock: 45, status: 'Active', showInFrontend: true },
-    { id: 'PRD-02', name: 'Giant Sparklers (50pcs)', category: 'Sparklers', price: 350, stock: 120, status: 'Active', showInFrontend: true },
-    { id: 'PRD-03', name: 'Lakshmi Bomb Deluxe', category: 'Bombs', price: 150, stock: 8, status: 'Low Stock', showInFrontend: true },
-    { id: 'PRD-04', name: 'Sky Lanterns Pack', category: 'Novelty', price: 400, stock: 0, status: 'Out of Stock', showInFrontend: false },
-    { id: 'PRD-05', name: 'Flower Pots Mega', category: 'Fountains', price: 650, stock: 30, status: 'Active', showInFrontend: true },
-    { id: 'PRD-06', name: '7 Color Sky Rockets', category: 'Fancy', price: 850, stock: 60, status: 'Active', showInFrontend: true },
-    { id: 'PRD-07', name: 'Chakra Ground Spinner', category: 'Fountains', price: 280, stock: 95, status: 'Active', showInFrontend: true },
-    { id: 'PRD-08', name: 'Electric Sparklers Gold', category: 'Sparklers', price: 450, stock: 110, status: 'Active', showInFrontend: true },
-    { id: 'PRD-09', name: 'Atom Bomb Super Loud', category: 'Bombs', price: 220, stock: 18, status: 'Active', showInFrontend: true },
-    { id: 'PRD-10', name: 'Peacock Fountain Large', category: 'Fountains', price: 520, stock: 25, status: 'Active', showInFrontend: true },
-    { id: 'PRD-11', name: '240 Shots Night Display', category: 'Fancy', price: 2400, stock: 12, status: 'Active', showInFrontend: true },
-    { id: 'PRD-12', name: 'Color Smoke Grenade', category: 'Novelty', price: 320, stock: 50, status: 'Active', showInFrontend: true },
-    { id: 'PRD-13', name: 'Gold Twinkling Stars', category: 'Sparklers', price: 180, stock: 140, status: 'Active', showInFrontend: true },
-    { id: 'PRD-14', name: 'Hydro Bomb High Sound', category: 'Bombs', price: 300, stock: 5, status: 'Low Stock', showInFrontend: true },
-    { id: 'PRD-15', name: 'Tri-Color Fountain Pot', category: 'Fountains', price: 420, stock: 35, status: 'Active', showInFrontend: true },
-    { id: 'PRD-16', name: 'Whistling Sky Rockets', category: 'Fancy', price: 650, stock: 40, status: 'Active', showInFrontend: true },
-    { id: 'PRD-17', name: 'Red & Green Ground Wheel', category: 'Fountains', price: 210, stock: 85, status: 'Active', showInFrontend: true },
-    { id: 'PRD-18', name: 'Diwali Deluxe Combo Pack', category: 'Novelty', price: 3500, stock: 20, status: 'Active', showInFrontend: true },
-    { id: 'PRD-19', name: 'Silver Flash Sparklers', category: 'Sparklers', price: 260, stock: 90, status: 'Active', showInFrontend: true },
-    { id: 'PRD-20', name: 'Garland 1000 Crackers', category: 'Bombs', price: 1100, stock: 15, status: 'Active', showInFrontend: true },
-    { id: 'PRD-21', name: '30 Shots Peacock Sky', category: 'Fancy', price: 950, stock: 28, status: 'Active', showInFrontend: true },
-    { id: 'PRD-22', name: 'Multi-Color Musical Fountain', category: 'Fountains', price: 780, stock: 22, status: 'Active', showInFrontend: true },
-    { id: 'PRD-23', name: 'Crackling Sparklers (10pcs)', category: 'Sparklers', price: 290, stock: 75, status: 'Active', showInFrontend: true },
-    { id: 'PRD-24', name: 'Mega Sky Thunder Bomb', category: 'Bombs', price: 480, stock: 14, status: 'Active', showInFrontend: true },
-    { id: 'PRD-25', name: 'Kids Safe Crackers Box', category: 'Novelty', price: 890, stock: 65, status: 'Active', showInFrontend: true },
-  ]);
+  useEffect(() => {
+    // Delete any leftover sample PRD-01 product from Firestore if it exists
+    deleteProductFromFirestore('PRD-01').catch(() => {});
 
-  const toggleFrontendVisibility = (id) => {
-    setProducts(products.map(p => p.id === id ? { ...p, showInFrontend: !p.showInFrontend } : p));
+    // Listen strictly to live Firestore products
+    const unsubProducts = subscribeProducts((firestoreProducts) => {
+      setProducts(firestoreProducts || []);
+    });
+
+    // Listen strictly to live Firestore categories
+    const unsubCategories = subscribeCategories((firestoreCategories) => {
+      setCategories(firestoreCategories || []);
+    });
+
+    return () => {
+      unsubProducts();
+      unsubCategories();
+    };
+  }, []);
+
+  const toggleFrontendVisibility = async (id) => {
+    const target = products.find(p => p.id === id);
+    if (target) {
+      const updated = { ...target, showInFrontend: !target.showInFrontend };
+      setProducts(products.map(p => p.id === id ? updated : p));
+      await saveProductToFirestore(updated);
+    }
   };
 
   const [confirmConfig, setConfirmConfig] = useState(null);
@@ -85,8 +79,9 @@ const AdminProducts = () => {
       title: 'Delete Product Confirmation',
       message: `Are you sure you want to delete "${name}" (${id}) from your store catalog? This action cannot be undone.`,
       confirmText: 'Yes, Delete Product',
-      onConfirm: () => {
+      onConfirm: async () => {
         setProducts(products.filter(p => p.id !== id));
+        await deleteProductFromFirestore(id);
         setConfirmConfig(null);
         setSuccessToast(`Product "${name}" deleted successfully!`);
         setTimeout(() => setSuccessToast(''), 3000);
@@ -248,7 +243,9 @@ const AdminProducts = () => {
               <tr className="bg-gradient-to-r from-[#4A0E0E] to-[#2B0808] border-b border-red-950 text-white">
                 {renderSortHeader('Product Info', 'name')}
                 {renderSortHeader('Category', 'category')}
-                {renderSortHeader('Price', 'price')}
+                {renderSortHeader('Retail Price', 'price')}
+                {renderSortHeader('Cost Price', 'costPrice')}
+                {renderSortHeader('Est. Profit', 'profit')}
                 {renderSortHeader('Stock', 'stock')}
                 {renderSortHeader('Status', 'status')}
                 {renderSortHeader('Show in Frontend', 'showInFrontend', true)}
@@ -256,7 +253,12 @@ const AdminProducts = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-amber-900/10">
-              {paginatedProducts.map((product, idx) => (
+              {paginatedProducts.map((product, idx) => {
+                const cost = product.costPrice || product.cost || Math.round(product.price * 0.6);
+                const profitAmt = product.price - cost;
+                const profitPct = cost > 0 ? ((profitAmt / cost) * 100).toFixed(0) : 0;
+
+                return (
                 <tr key={product.id} className={idx % 2 === 0 ? 'bg-[#FAF7F2]' : 'bg-[#F2ECE1]'}>
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-3">
@@ -275,6 +277,12 @@ const AdminProducts = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm font-black text-gray-900">₹{product.price.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-sm font-black text-amber-900">₹{cost.toLocaleString()}</td>
+                  <td className="px-6 py-4">
+                    <span className="inline-block px-2.5 py-1 bg-emerald-100 text-emerald-950 font-black text-xs rounded-xl border border-emerald-300">
+                      +₹{profitAmt.toLocaleString()} ({profitPct}%)
+                    </span>
+                  </td>
                   <td className="px-6 py-4">
                     <span className={`text-sm font-black ${product.stock < 10 ? 'text-red-700' : 'text-gray-900'}`}>
                       {product.stock} units
@@ -328,7 +336,8 @@ const AdminProducts = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+              );
+              })}
             </tbody>
           </table>
         </div>

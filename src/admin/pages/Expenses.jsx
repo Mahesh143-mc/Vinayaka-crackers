@@ -1,34 +1,25 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Trash2, Edit3, DollarSign, Truck, ShoppingBag, Users, Calendar, Filter, CheckCircle2, AlertCircle, X, ShieldAlert, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Search, Trash2, Edit3, DollarSign, Truck, ShoppingBag, Users, Calendar, Filter, CheckCircle2, AlertCircle, X, ShieldAlert, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, ChevronDown } from 'lucide-react';
+import { subscribeExpenses, saveExpenseToFirestore, deleteExpenseFromFirestore, subscribeOrders } from '../../services/firebaseService';
 
 const AdminExpenses = () => {
-  const [expenses, setExpenses] = useState([
-    { id: 'EXP-101', title: 'Factory Bulk Crackers Purchase (Sivakasi)', category: 'Firecracker Stock', amount: 145000, date: '2023-10-05', vendor: 'Sri Lakshmi Pyro Factory', paymentMode: 'Bank Transfer' },
-    { id: 'EXP-102', title: 'Lorry Freight & Transport Charges', category: 'Transport & Freight', amount: 18500, date: '2023-10-08', vendor: 'VRL Logistics', paymentMode: 'UPI' },
-    { id: 'EXP-103', title: 'Shop Helper Wages & Food Allowance', category: 'Staff Wages', amount: 12000, date: '2023-10-12', vendor: 'Diwali Shop Staff', paymentMode: 'Cash' },
-    { id: 'EXP-104', title: 'Cardboard Box Packaging & Tags', category: 'Packaging Materials', amount: 9800, date: '2023-10-14', vendor: 'Sivakasi Packaging Printers', paymentMode: 'UPI' },
-    { id: 'EXP-105', title: 'Commercial Shop Electricity & Generators', category: 'Utilities', amount: 9500, date: '2023-10-15', vendor: 'TNEB Commercial', paymentMode: 'Bank Transfer' },
-    { id: 'EXP-106', title: 'Seasonal Showroom Space Rent (Month 1)', category: 'Shop Rent', amount: 35000, date: '2023-10-01', vendor: 'Building Owner', paymentMode: 'Bank Transfer' },
-    { id: 'EXP-107', title: 'Local Auto Goods Rickshaw Delivery', category: 'Transport & Freight', amount: 4500, date: '2023-10-09', vendor: 'Local Auto Drivers', paymentMode: 'Cash' },
-    { id: 'EXP-108', title: 'Fancy Sky Shots Additional Batch', category: 'Firecracker Stock', amount: 85000, date: '2023-10-10', vendor: 'National Pyrotechnics', paymentMode: 'Bank Transfer' },
-    { id: 'EXP-109', title: 'Flex Banner Printing & Standees', category: 'Packaging Materials', amount: 6200, date: '2023-10-03', vendor: 'Sri Sai Digital Printers', paymentMode: 'UPI' },
-    { id: 'EXP-110', title: 'Security Guard & Night Watchman Advance', category: 'Staff Wages', amount: 8000, date: '2023-10-04', vendor: 'Security Agency', paymentMode: 'Cash' },
-    { id: 'EXP-111', title: 'Fire Safety Extinguishers & Inspection', category: 'Utilities', amount: 7500, date: '2023-10-02', vendor: 'Safety Solutions Sivakasi', paymentMode: 'UPI' },
-    { id: 'EXP-112', title: 'Gift Hamper Packing Ribbons & Sweets', category: 'Packaging Materials', amount: 5400, date: '2023-10-11', vendor: 'Sweet Mart & Crafts', paymentMode: 'Cash' },
-    { id: 'EXP-113', title: 'Express Courier Parcel Shipping Charges', category: 'Transport & Freight', amount: 11200, date: '2023-10-13', vendor: 'DTDC Courier Service', paymentMode: 'UPI' },
-    { id: 'EXP-114', title: 'Sparklers & Ground Chakkars Stock Batch 2', category: 'Firecracker Stock', amount: 65000, date: '2023-10-07', vendor: 'Standard Fireworks Agent', paymentMode: 'Bank Transfer' },
-    { id: 'EXP-115', title: 'Overtime Tea & Refreshments for Staff', category: 'Staff Wages', amount: 3200, date: '2023-10-14', vendor: 'Local Tea Stall', paymentMode: 'Cash' },
-    { id: 'EXP-116', title: 'Temporary Showroom Lighting & Decorative LEDs', category: 'Utilities', amount: 8800, date: '2023-10-06', vendor: 'Velu Electric Works', paymentMode: 'UPI' },
-    { id: 'EXP-117', title: 'Bubble Wrap & Waterproof Tarpaulin Rolls', category: 'Packaging Materials', amount: 4900, date: '2023-10-05', vendor: 'Polythene House', paymentMode: 'Cash' },
-    { id: 'EXP-118', title: 'Sivakasi Direct Factory Transport Lorry 2', category: 'Transport & Freight', amount: 21000, date: '2023-10-15', vendor: 'VRL Logistics', paymentMode: 'Bank Transfer' },
-    { id: 'EXP-119', title: 'Wholesale Flower Pots & Rockets Restock', category: 'Firecracker Stock', amount: 92000, date: '2023-10-12', vendor: 'Meena Fireworks Factory', paymentMode: 'Bank Transfer' },
-    { id: 'EXP-120', title: 'Showroom Daily Cleaning & Sanitation', category: 'Staff Wages', amount: 4000, date: '2023-10-10', vendor: 'Sanitation Staff', paymentMode: 'Cash' },
-    { id: 'EXP-121', title: 'Municipal Shop License & Clearance Fee', category: 'Utilities', amount: 6000, date: '2023-09-29', vendor: 'Municipal Office', paymentMode: 'UPI' },
-    { id: 'EXP-122', title: 'Customer Carry Bags & Printed Plastic Sacks', category: 'Packaging Materials', amount: 7800, date: '2023-10-08', vendor: 'Printers Guild', paymentMode: 'UPI' },
-    { id: 'EXP-123', title: 'High Density 1000 Crackers Bulk Batch', category: 'Firecracker Stock', amount: 54000, date: '2023-10-09', vendor: 'Sri Lakshmi Pyro Factory', paymentMode: 'Bank Transfer' },
-    { id: 'EXP-124', title: 'Diesel Refill for Backup Generator', category: 'Utilities', amount: 4200, date: '2023-10-13', vendor: 'HP Bunk Station', paymentMode: 'UPI' },
-    { id: 'EXP-125', title: 'Festive Bonus Advance to Packing Workers', category: 'Staff Wages', amount: 15000, date: '2023-10-15', vendor: 'Staff Advance', paymentMode: 'Bank Transfer' },
-  ]);
+  const [expenses, setExpenses] = useState([]);
+  const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    const unsubExpenses = subscribeExpenses((firestoreExpenses) => {
+      setExpenses(firestoreExpenses || []);
+    });
+
+    const unsubOrders = subscribeOrders((firestoreOrders) => {
+      setOrders(firestoreOrders || []);
+    });
+
+    return () => {
+      unsubExpenses();
+      unsubOrders();
+    };
+  }, []);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -78,9 +69,34 @@ const AdminExpenses = () => {
   // Delete Confirmation State
   const [expenseToDelete, setExpenseToDelete] = useState(null);
 
+  // Edit Expense State
+  const [editingExpense, setEditingExpense] = useState(null);
+  const [successToast, setSuccessToast] = useState('');
+
+  const triggerSuccess = (msg) => {
+    setSuccessToast(msg);
+    setTimeout(() => setSuccessToast(''), 3000);
+  };
+
   const categories = ['All', 'Firecracker Stock', 'Transport & Freight', 'Staff Wages', 'Packaging Materials', 'Utilities', 'Shop Rent'];
 
-  const handleAddExpense = (e) => {
+  const handleSaveEditExpense = async (e) => {
+    e.preventDefault();
+    if (!editingExpense || !editingExpense.title || !editingExpense.amount) return;
+
+    const payload = {
+      ...editingExpense,
+      amount: Number(editingExpense.amount)
+    };
+
+    setExpenses(prev => prev.map(item => item.id === editingExpense.id ? payload : item));
+    await saveExpenseToFirestore(payload);
+
+    triggerSuccess(`Expense #${editingExpense.id} updated in Firestore successfully!`);
+    setEditingExpense(null);
+  };
+
+  const handleAddExpense = async (e) => {
     e.preventDefault();
     if (!newTitle || !newAmount) return;
 
@@ -95,24 +111,29 @@ const AdminExpenses = () => {
     };
 
     setExpenses([newEntry, ...expenses]);
+    await saveExpenseToFirestore(newEntry);
+
     setShowAddModal(false);
     setNewTitle('');
     setNewAmount('');
     setNewVendor('');
+    triggerSuccess(`New expense "${newEntry.title}" added to Firestore!`);
   };
 
-  const confirmDeleteExpense = () => {
+  const confirmDeleteExpense = async () => {
     if (expenseToDelete) {
       setExpenses(expenses.filter(e => e.id !== expenseToDelete.id));
+      await deleteExpenseFromFirestore(expenseToDelete.id);
+      triggerSuccess(`Expense #${expenseToDelete.id} deleted from Firestore!`);
       setExpenseToDelete(null);
     }
   };
 
   // Financial Metrics
-  const grossSalesRevenue = 485200;
-  const totalExpenseSum = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const grossSalesRevenue = orders.reduce((sum, o) => sum + Number(o.grandTotal || o.amount || 0), 0);
+  const totalExpenseSum = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
   const netProfitMargin = grossSalesRevenue - totalExpenseSum;
-  const profitPercentage = ((netProfitMargin / grossSalesRevenue) * 100).toFixed(1);
+  const profitPercentage = grossSalesRevenue > 0 ? ((netProfitMargin / grossSalesRevenue) * 100).toFixed(1) : '0.0';
 
   const filteredExpenses = expenses.filter(e => {
     const matchesSearch = e.title.toLowerCase().includes(searchQuery.toLowerCase()) || e.vendor.toLowerCase().includes(searchQuery.toLowerCase());
@@ -218,20 +239,23 @@ const AdminExpenses = () => {
           />
         </div>
 
-        {/* Category Filter */}
-        <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${selectedCategory === cat
-                  ? 'bg-[#4A0E0E] text-white font-black shadow-sm'
-                  : 'bg-white text-gray-700 hover:bg-amber-100 border border-amber-900/10'
-                }`}
-            >
-              {cat}
-            </button>
-          ))}
+        {/* Category Dropdown Filter */}
+        <div className="relative w-full sm:w-64">
+          <select
+            value={selectedCategory}
+            onChange={(e) => {
+              setSelectedCategory(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full pl-9 pr-9 py-2.5 bg-white border border-amber-900/10 rounded-2xl text-xs sm:text-sm font-black text-gray-800 focus:outline-none appearance-none cursor-pointer hover:bg-amber-50 transition-all shadow-sm"
+          >
+            <option value="All">All Categories</option>
+            {categories.filter(c => c !== 'All').map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+          <Filter size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-900 pointer-events-none stroke-[2.5]" />
+          <ChevronDown size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-900 pointer-events-none stroke-[2.5]" />
         </div>
       </div>
 
@@ -277,13 +301,22 @@ const AdminExpenses = () => {
                   <td className="py-4 px-6 font-bold text-gray-600">{exp.date}</td>
                   <td className="py-4 px-6 text-right font-black text-rose-700 text-base">₹{exp.amount.toLocaleString()}</td>
                   <td className="py-4 px-6 text-center">
-                    <button
-                      onClick={() => setExpenseToDelete(exp)}
-                      className="p-2 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-xl transition-colors"
-                      title="Delete expense"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <div className="flex items-center justify-center gap-1">
+                      <button
+                        onClick={() => setEditingExpense(exp)}
+                        className="p-2 text-amber-800 hover:text-amber-950 hover:bg-amber-100 rounded-xl transition-colors"
+                        title="Edit expense details"
+                      >
+                        <Edit3 size={16} />
+                      </button>
+                      <button
+                        onClick={() => setExpenseToDelete(exp)}
+                        className="p-2 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-xl transition-colors"
+                        title="Delete expense"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -496,6 +529,133 @@ const AdminExpenses = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Toast Notification Banner */}
+      {successToast && (
+        <div className="fixed top-6 right-6 z-[1000005] bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-800 text-white font-black text-xs sm:text-sm px-5 py-3.5 rounded-2xl shadow-2xl border-2 border-amber-300 flex items-center gap-3 animate-in slide-in-from-top-5 duration-300">
+          <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+            <CheckCircle2 size={18} className="text-[#FFD700]" />
+          </div>
+          <span>{successToast}</span>
+        </div>
+      )}
+
+      {/* Edit Expense Modal Form */}
+      {editingExpense && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <form onSubmit={handleSaveEditExpense} className="bg-[#FAF7F2] rounded-3xl max-w-lg w-full p-7 shadow-2xl border border-amber-900/30 space-y-5 animate-in fade-in zoom-in duration-200 relative">
+            <button
+              type="button"
+              onClick={() => setEditingExpense(null)}
+              className="absolute top-6 right-6 w-9 h-9 rounded-full bg-amber-200/80 hover:bg-amber-300 text-[#4A0E0E] flex items-center justify-center font-black"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="flex items-center gap-3 border-b border-amber-900/15 pb-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#4A0E0E] to-amber-700 flex items-center justify-center text-white font-black text-xl shadow-md">
+                <Edit3 size={22} />
+              </div>
+              <div>
+                <h3 className="text-xl font-serif font-black text-gray-900">Edit Expense Entry #{editingExpense.id}</h3>
+                <p className="text-xs font-bold text-gray-500">Update store expenditure title, category, vendor or amount</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 text-xs font-bold">
+              <div>
+                <label className="block text-[#4A0E0E] uppercase tracking-wider mb-1.5">Expense Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={editingExpense.title}
+                  onChange={(e) => setEditingExpense({ ...editingExpense, title: e.target.value })}
+                  className="w-full p-3 bg-white border-2 border-amber-900/20 rounded-2xl text-sm font-black text-gray-900 focus:outline-none focus:border-[#4A0E0E]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[#4A0E0E] uppercase tracking-wider mb-1.5">Category *</label>
+                  <select
+                    value={editingExpense.category}
+                    onChange={(e) => setEditingExpense({ ...editingExpense, category: e.target.value })}
+                    className="w-full p-3 bg-white border-2 border-amber-900/20 rounded-2xl text-xs font-black text-gray-900 focus:outline-none"
+                  >
+                    {categories.filter(c => c !== 'All').map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[#4A0E0E] uppercase tracking-wider mb-1.5">Amount (₹) *</label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    value={editingExpense.amount}
+                    onChange={(e) => setEditingExpense({ ...editingExpense, amount: e.target.value })}
+                    className="w-full p-3 bg-white border-2 border-amber-900/20 rounded-2xl text-sm font-black text-gray-900 focus:outline-none focus:border-[#4A0E0E]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[#4A0E0E] uppercase tracking-wider mb-1.5">Vendor / Payee Name</label>
+                  <input
+                    type="text"
+                    value={editingExpense.vendor}
+                    onChange={(e) => setEditingExpense({ ...editingExpense, vendor: e.target.value })}
+                    className="w-full p-3 bg-white border-2 border-amber-900/20 rounded-2xl text-xs font-bold text-gray-900 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[#4A0E0E] uppercase tracking-wider mb-1.5">Payment Mode</label>
+                  <select
+                    value={editingExpense.paymentMode}
+                    onChange={(e) => setEditingExpense({ ...editingExpense, paymentMode: e.target.value })}
+                    className="w-full p-3 bg-white border-2 border-amber-900/20 rounded-2xl text-xs font-black text-gray-900 focus:outline-none"
+                  >
+                    <option value="UPI">UPI / GPay</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Cheque">Cheque</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[#4A0E0E] uppercase tracking-wider mb-1.5">Expense Date</label>
+                <input
+                  type="date"
+                  value={editingExpense.date}
+                  onChange={(e) => setEditingExpense({ ...editingExpense, date: e.target.value })}
+                  className="w-full p-3 bg-white border-2 border-amber-900/20 rounded-2xl text-xs font-bold text-gray-900 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-amber-900/15">
+              <button
+                type="button"
+                onClick={() => setEditingExpense(null)}
+                className="py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-2xl text-xs font-black"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="py-3 bg-[#4A0E0E] hover:bg-red-950 text-white rounded-2xl text-xs font-black shadow-md"
+              >
+                Save Changes
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>

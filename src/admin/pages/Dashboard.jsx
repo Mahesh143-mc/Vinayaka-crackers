@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { 
   IndianRupee, 
   ShoppingCart, 
@@ -7,6 +8,7 @@ import {
   ArrowUpRight,
   Sparkles
 } from 'lucide-react';
+import { subscribeOrders, subscribeProducts, subscribeCustomers } from '../../services/firebaseService';
 
 const StatCard = ({ title, value, icon: Icon, trend, color }) => (
   <div className="bg-[#FAF7F2] p-6 rounded-3xl shadow-sm border border-amber-900/10 hover:border-amber-500 transition-all group">
@@ -26,19 +28,35 @@ const StatCard = ({ title, value, icon: Icon, trend, color }) => (
 );
 
 const AdminDashboard = () => {
-  const recentOrders = [
-    { id: '#ORD-092', customer: 'Rahul Sharma', amount: '₹14,500', status: 'Pending', time: '10 mins ago' },
-    { id: '#ORD-091', customer: 'Priya Patel', amount: '₹8,200', status: 'Completed', time: '1 hour ago' },
-    { id: '#ORD-090', customer: 'Vikram Singh', amount: '₹22,000', status: 'Processing', time: '3 hours ago' },
-    { id: '#ORD-089', customer: 'Arun Kumar', amount: '₹5,400', status: 'Completed', time: '5 hours ago' },
-  ];
+  const [orders, setOrders] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [customersCount, setCustomersCount] = useState(0);
 
-  const lowStockProducts = [
-    { name: '120 Shots Multi-color', stock: 5, category: 'Fancy' },
-    { name: 'Giant Sparklers (50pcs)', stock: 12, category: 'Sparklers' },
-    { name: 'Lakshmi Bomb Deluxe', stock: 8, category: 'Bombs' },
-    { name: 'Sky Lanterns Pack', stock: 3, category: 'Novelty' },
-  ];
+  useEffect(() => {
+    const unsubOrders = subscribeOrders((data) => {
+      if (data) setOrders(data);
+    });
+
+    const unsubProducts = subscribeProducts((data) => {
+      if (data) setProducts(data);
+    });
+
+    const unsubCustomers = subscribeCustomers((data) => {
+      if (data) setCustomersCount(data.length);
+    });
+
+    return () => {
+      unsubOrders();
+      unsubProducts();
+      unsubCustomers();
+    };
+  }, []);
+
+  // Compute Live Metrics
+  const totalRevenue = orders.reduce((sum, o) => sum + Number(o.grandTotal || o.amount || 0), 0);
+  const totalOrdersCount = orders.length;
+  const lowStockList = products.filter(p => Number(p.stock || 0) <= 15).slice(0, 5);
+  const recentOrdersList = orders.slice(0, 5);
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-10">
@@ -48,7 +66,7 @@ const AdminDashboard = () => {
           <h1 className="text-white text-3xl md:text-4xl font-serif font-black mb-2 flex items-center justify-center md:justify-start gap-3">
             Welcome back, Admin! <Sparkles className="text-[#FFD700]" />
           </h1>
-          <p className="text-amber-200/90 font-medium text-base">Here's a quick overview of today's sales and activities.</p>
+          <p className="text-amber-200/90 font-medium text-base">Here's a real-time overview of your Sivakasi store live on Firebase.</p>
         </div>
         <div className="relative z-10">
           <button className="bg-gradient-to-r from-[#FFD700] to-amber-500 text-[#4A0E0E] px-6 py-3 rounded-2xl font-black text-sm shadow-md hover:scale-105 transition-all">
@@ -61,21 +79,21 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
           title="Total Revenue" 
-          value="₹1,24,500" 
+          value={`₹${totalRevenue.toLocaleString()}`} 
           icon={IndianRupee} 
           trend="+14.2%" 
           color="bg-[#4A0E0E]"
         />
         <StatCard 
           title="Total Orders" 
-          value="184" 
+          value={totalOrdersCount} 
           icon={ShoppingCart} 
           trend="+8.1%" 
           color="bg-amber-600"
         />
         <StatCard 
           title="Active Customers" 
-          value="1,420" 
+          value={customersCount} 
           icon={Users} 
           trend="+5.4%" 
           color="bg-emerald-700"
@@ -95,8 +113,8 @@ const AdminDashboard = () => {
         <div className="lg:col-span-2 bg-[#FAF7F2] rounded-3xl shadow-sm border border-amber-900/10 overflow-hidden">
           <div className="p-6 border-b border-amber-900/10 bg-[#EFEAE1] flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-serif font-black text-gray-900">Recent Orders</h3>
-              <p className="text-xs text-amber-950 font-bold mt-0.5">Latest transactions from your store.</p>
+              <h3 className="text-lg font-serif font-black text-gray-900">Live Recent Orders (Firestore)</h3>
+              <p className="text-xs text-amber-950 font-bold mt-0.5">Real-time orders synced directly from backend database.</p>
             </div>
             <button className="text-xs font-black text-[#4A0E0E] hover:underline">View All</button>
           </div>
@@ -109,27 +127,33 @@ const AdminDashboard = () => {
                   <th className="px-6 py-5">Customer</th>
                   <th className="px-6 py-5">Amount</th>
                   <th className="px-6 py-5">Status</th>
-                  <th className="px-6 py-5">Time</th>
+                  <th className="px-6 py-5">Date</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-amber-900/10 text-sm">
-                {recentOrders.map((order, idx) => (
-                  <tr key={order.id} className={idx % 2 === 0 ? 'bg-[#FAF7F2]' : 'bg-[#F2ECE1]'}>
-                    <td className="px-6 py-4.5 font-black text-gray-900">{order.id}</td>
-                    <td className="px-6 py-4 font-bold text-gray-800">{order.customer}</td>
-                    <td className="px-6 py-4 font-black text-[#4A0E0E]">{order.amount}</td>
+                {recentOrdersList.length > 0 ? recentOrdersList.map((order, idx) => (
+                  <tr key={order.id || idx} className={idx % 2 === 0 ? 'bg-[#FAF7F2]' : 'bg-[#F2ECE1]'}>
+                    <td className="px-6 py-4.5 font-black text-gray-900">{order.id || order.orderId}</td>
+                    <td className="px-6 py-4 font-bold text-gray-800">{order.customer || 'Walk-in Customer'}</td>
+                    <td className="px-6 py-4 font-black text-[#4A0E0E]">₹{Number(order.grandTotal || order.amount || 0).toLocaleString()}</td>
                     <td className="px-6 py-4">
                       <span className={`inline-block px-3 py-1 rounded-full text-xs font-black border ${
-                        order.status === 'Completed' ? 'bg-emerald-100 text-emerald-900 border-emerald-300' :
+                        order.status === 'Delivered' || order.status === 'Completed' ? 'bg-emerald-100 text-emerald-900 border-emerald-300' :
                         order.status === 'Pending' ? 'bg-amber-100 text-amber-900 border-amber-300' :
                         'bg-blue-100 text-blue-900 border-blue-300'
                       }`}>
-                        {order.status}
+                        {order.status || 'Delivered'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-xs font-bold text-gray-500">{order.time}</td>
+                    <td className="px-6 py-4 text-xs font-bold text-gray-500">{order.date || 'Today'}</td>
                   </tr>
-                ))}
+                )) : (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-xs font-bold text-gray-500">
+                      No recent orders in Firestore yet.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -143,13 +167,13 @@ const AdminDashboard = () => {
                 <PackageOpen size={22} />
               </div>
               <div>
-                <h3 className="text-lg font-serif font-black text-gray-900">Low Stock Alerts</h3>
+                <h3 className="text-lg font-serif font-black text-gray-900">Low Stock Alerts (Live)</h3>
                 <p className="text-xs text-amber-950 font-bold">Products needing restock soon.</p>
               </div>
             </div>
 
             <div className="space-y-4">
-              {lowStockProducts.map((item, i) => (
+              {lowStockList.length > 0 ? lowStockList.map((item, i) => (
                 <div key={i} className="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-amber-900/10">
                   <div>
                     <h4 className="text-sm font-black text-gray-900">{item.name}</h4>
@@ -159,7 +183,9 @@ const AdminDashboard = () => {
                     {item.stock} left
                   </span>
                 </div>
-              ))}
+              )) : (
+                <p className="text-xs font-bold text-emerald-800 text-center py-4">All products have healthy stock levels!</p>
+              )}
             </div>
           </div>
 

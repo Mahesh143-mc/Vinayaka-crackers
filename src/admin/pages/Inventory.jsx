@@ -1,62 +1,70 @@
 import { useState, useEffect } from 'react';
 import { PackageOpen, AlertTriangle, ArrowRightLeft, Search, Save, Check, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, ChevronDown, Plus, X, CheckCircle2 } from 'lucide-react';
+import { subscribeProducts, updateProductStockInFirestore, subscribeCategories } from '../../services/firebaseService';
 
 const AdminInventory = () => {
-  const [inventoryData, setInventoryData] = useState([
-    { id: 'PRD-01', name: '120 Shots Multi-color', category: 'Fancy', currentStock: 45, reorderLevel: 20, lastRestocked: '2023-10-15' },
-    { id: 'PRD-02', name: 'Giant Sparklers (50pcs)', category: 'Sparklers', currentStock: 120, reorderLevel: 50, lastRestocked: '2023-10-10' },
-    { id: 'PRD-03', name: 'Lakshmi Bomb Deluxe', category: 'Bombs', currentStock: 8, reorderLevel: 50, lastRestocked: '2023-09-28' },
-    { id: 'PRD-04', name: 'Sky Lanterns Pack', category: 'Novelty', currentStock: 0, reorderLevel: 30, lastRestocked: '2023-09-15' },
-    { id: 'PRD-05', name: 'Flower Pots Mega', category: 'Fountains', currentStock: 25, reorderLevel: 25, lastRestocked: '2023-10-01' },
-    { id: 'PRD-06', name: '7 Color Sky Rockets', category: 'Fancy', currentStock: 60, reorderLevel: 25, lastRestocked: '2023-10-12' },
-    { id: 'PRD-07', name: 'Chakra Ground Spinner', category: 'Fountains', currentStock: 95, reorderLevel: 40, lastRestocked: '2023-10-14' },
-    { id: 'PRD-08', name: 'Electric Sparklers Gold', category: 'Sparklers', currentStock: 110, reorderLevel: 45, lastRestocked: '2023-10-16' },
-    { id: 'PRD-09', name: 'Atom Bomb Super Loud', category: 'Bombs', currentStock: 18, reorderLevel: 30, lastRestocked: '2023-10-02' },
-    { id: 'PRD-10', name: 'Peacock Fountain Large', category: 'Fountains', currentStock: 25, reorderLevel: 20, lastRestocked: '2023-10-08' },
-    { id: 'PRD-11', name: '240 Shots Night Display', category: 'Fancy', currentStock: 12, reorderLevel: 15, lastRestocked: '2023-10-05' },
-    { id: 'PRD-12', name: 'Color Smoke Grenade', category: 'Novelty', currentStock: 50, reorderLevel: 20, lastRestocked: '2023-10-11' },
-    { id: 'PRD-13', name: 'Gold Twinkling Stars', category: 'Sparklers', currentStock: 140, reorderLevel: 60, lastRestocked: '2023-10-17' },
-    { id: 'PRD-14', name: 'Hydro Bomb High Sound', category: 'Bombs', currentStock: 5, reorderLevel: 25, lastRestocked: '2023-09-25' },
-    { id: 'PRD-15', name: 'Tri-Color Fountain Pot', category: 'Fountains', currentStock: 35, reorderLevel: 20, lastRestocked: '2023-10-13' },
-    { id: 'PRD-16', name: 'Whistling Sky Rockets', category: 'Fancy', currentStock: 40, reorderLevel: 20, lastRestocked: '2023-10-09' },
-    { id: 'PRD-17', name: 'Red & Green Ground Wheel', category: 'Fountains', currentStock: 85, reorderLevel: 30, lastRestocked: '2023-10-14' },
-    { id: 'PRD-18', name: 'Diwali Deluxe Combo Pack', category: 'Novelty', currentStock: 20, reorderLevel: 10, lastRestocked: '2023-10-07' },
-    { id: 'PRD-19', name: 'Silver Flash Sparklers', category: 'Sparklers', currentStock: 90, reorderLevel: 40, lastRestocked: '2023-10-15' },
-    { id: 'PRD-20', name: 'Garland 1000 Crackers', category: 'Bombs', currentStock: 15, reorderLevel: 20, lastRestocked: '2023-10-03' },
-    { id: 'PRD-21', name: '30 Shots Peacock Sky', category: 'Fancy', currentStock: 28, reorderLevel: 15, lastRestocked: '2023-10-10' },
-    { id: 'PRD-22', name: 'Multi-Color Musical Fountain', category: 'Fountains', currentStock: 22, reorderLevel: 15, lastRestocked: '2023-10-06' },
-    { id: 'PRD-23', name: 'Crackling Sparklers (10pcs)', category: 'Sparklers', currentStock: 75, reorderLevel: 30, lastRestocked: '2023-10-12' },
-    { id: 'PRD-24', name: 'Mega Sky Thunder Bomb', category: 'Bombs', currentStock: 14, reorderLevel: 20, lastRestocked: '2023-10-04' },
-    { id: 'PRD-25', name: 'Kids Safe Crackers Box', category: 'Novelty', currentStock: 65, reorderLevel: 25, lastRestocked: '2023-10-16' },
-  ]);
+  const [inventoryData, setInventoryData] = useState([]);
+  const [inventoryCategories, setInventoryCategories] = useState([]);
+
+  useEffect(() => {
+    const unsubProducts = subscribeProducts((products) => {
+      if (products) {
+        const mapped = products.map(p => ({
+          id: p.id,
+          name: p.name,
+          category: p.category || 'General',
+          currentStock: Number(p.stock || 0),
+          reorderLevel: Number(p.reorderLevel || 20),
+          lastRestocked: p.lastRestocked || new Date().toISOString().split('T')[0]
+        }));
+        setInventoryData(mapped);
+      }
+    });
+
+    const unsubCategories = subscribeCategories((cats) => {
+      setInventoryCategories(cats || []);
+    });
+
+    return () => {
+      unsubProducts();
+      unsubCategories();
+    };
+  }, []);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   
   // Modal & Toast States
   const [stockModalItem, setStockModalItem] = useState(null);
-  const [newStockVal, setNewStockVal] = useState('');
+  const [addedStockVal, setAddedStockVal] = useState('');
   const [successToast, setSuccessToast] = useState('');
 
   const openStockModal = (item) => {
     setStockModalItem(item);
-    setNewStockVal(item.currentStock.toString());
+    setAddedStockVal('');
   };
 
-  const handleSaveModalStock = () => {
+  const handleSaveModalStock = async () => {
     if (!stockModalItem) return;
-    const parsedStock = parseInt(newStockVal, 10);
-    const validStock = isNaN(parsedStock) ? 0 : Math.max(0, parsedStock);
+    const current = Number(stockModalItem.currentStock || 0);
+    const added = Math.max(0, parseInt(addedStockVal || '0', 10));
+    const validStock = current + added;
     
     setInventoryData(inventoryData.map(item => 
       item.id === stockModalItem.id 
         ? { ...item, currentStock: validStock, lastRestocked: new Date().toISOString().split('T')[0] } 
         : item
     ));
+
+    try {
+      await updateProductStockInFirestore(stockModalItem.id, validStock);
+    } catch (err) {
+      console.error("Error updating stock in Firestore:", err);
+    }
     
     const updatedName = stockModalItem.name;
     setStockModalItem(null);
-    setSuccessToast(`Stock count updated to ${validStock} units for "${updatedName}"!`);
+    setSuccessToast(`Successfully added +${added} units! New total stock is ${validStock} units for "${updatedName}"!`);
     setTimeout(() => setSuccessToast(''), 3500);
   };
 
@@ -145,6 +153,10 @@ const AdminInventory = () => {
     );
   };
 
+  const totalStockUnits = inventoryData.reduce((sum, item) => sum + Number(item.currentStock || 0), 0);
+  const lowStockWarningsCount = inventoryData.filter(item => Number(item.currentStock || 0) > 0 && Number(item.currentStock || 0) <= Number(item.reorderLevel || 20)).length;
+  const outOfStockCount = inventoryData.filter(item => Number(item.currentStock || 0) === 0).length;
+
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-10">
       {/* Header Banner */}
@@ -173,7 +185,7 @@ const AdminInventory = () => {
           </div>
           <div>
             <p className="text-emerald-950 text-xs font-black uppercase tracking-wider">Total Stock Units</p>
-            <p className="text-3xl font-black text-emerald-900 mt-1">4,250</p>
+            <p className="text-3xl font-black text-emerald-900 mt-1">{totalStockUnits.toLocaleString()}</p>
           </div>
         </div>
         <div className="bg-[#FAF7F2] rounded-3xl p-6 shadow-sm border border-amber-300 flex items-center gap-4">
@@ -182,16 +194,16 @@ const AdminInventory = () => {
           </div>
           <div>
             <p className="text-amber-950 text-xs font-black uppercase tracking-wider">Low Stock Warnings</p>
-            <p className="text-3xl font-black text-amber-900 mt-1">18 Items</p>
+            <p className="text-3xl font-black text-amber-900 mt-1">{lowStockWarningsCount} Items</p>
           </div>
         </div>
         <div className="bg-[#FAF7F2] rounded-3xl p-6 shadow-sm border border-rose-300 flex items-center gap-4">
           <div className="w-14 h-14 rounded-2xl bg-rose-700 text-white flex items-center justify-center font-bold shadow-md">
-            <PackageOpen size={26} />
+            <X size={26} />
           </div>
           <div>
             <p className="text-rose-950 text-xs font-black uppercase tracking-wider">Out of Stock</p>
-            <p className="text-3xl font-black text-rose-900 mt-1">4 Items</p>
+            <p className="text-3xl font-black text-rose-900 mt-1">{outOfStockCount} Items</p>
           </div>
         </div>
       </div>
@@ -217,12 +229,10 @@ const AdminInventory = () => {
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="w-full sm:w-auto pl-4 pr-10 py-2.5 bg-white border border-amber-900/10 rounded-2xl font-black text-gray-900 text-sm focus:outline-none focus:border-[#4A0E0E] cursor-pointer appearance-none shadow-sm"
             >
-              <option value="All">All Categories ({inventoryData.length})</option>
-              <option value="Sparklers">Sparklers</option>
-              <option value="Bombs">Bombs</option>
-              <option value="Fancy">Fancy Sky Shots</option>
-              <option value="Fountains">Fountains & Pots</option>
-              <option value="Novelty">Novelty & Rockets</option>
+              <option value="All">All Categories ({inventoryCategories.length})</option>
+              {inventoryCategories.map(cat => (
+                <option key={cat.id} value={cat.name}>{cat.name}</option>
+              ))}
             </select>
             <ChevronDown size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#4A0E0E] pointer-events-none stroke-[2.5]" />
           </div>
@@ -358,101 +368,112 @@ const AdminInventory = () => {
       )}
 
       {/* Stock Update Modal Dialog */}
-      {stockModalItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#FAF7F2] border-2 border-amber-900/20 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-6 relative animate-in zoom-in-95 duration-200">
-            
-            {/* Close Button */}
-            <button
-              onClick={() => setStockModalItem(null)}
-              className="absolute top-5 right-5 p-2 text-gray-400 hover:text-gray-700 bg-white rounded-full border border-gray-200 shadow-sm transition-all"
-              title="Close Dialog"
-            >
-              <X size={18} />
-            </button>
+      {stockModalItem && (() => {
+        const currentStock = Number(stockModalItem.currentStock || 0);
+        const addedQty = Math.max(0, parseInt(addedStockVal || '0', 10));
+        const finalStock = currentStock + addedQty;
 
-            {/* Header */}
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-100 border border-amber-300 rounded-full text-amber-950 text-xs font-black mb-2">
-                <PackageOpen size={14} /> Stock Adjustment Dialog
-              </div>
-              <h3 className="text-xl font-serif font-black text-gray-900">{stockModalItem.name}</h3>
-              <p className="text-xs font-bold text-amber-800 mt-0.5">Product ID: {stockModalItem.id} • Category: {stockModalItem.category}</p>
-            </div>
-
-            {/* Current Stock Banner */}
-            <div className="bg-[#EFEAE1] p-4 rounded-2xl border border-amber-900/10 flex justify-between items-center">
-              <div>
-                <p className="text-[11px] font-black uppercase text-gray-500">Current Stock</p>
-                <p className="text-2xl font-black text-[#4A0E0E]">{stockModalItem.currentStock} units</p>
-              </div>
-              <div className="text-right">
-                <p className="text-[11px] font-black uppercase text-gray-500">Reorder Level</p>
-                <p className="text-sm font-bold text-gray-700">{stockModalItem.reorderLevel} units</p>
-              </div>
-            </div>
-
-            {/* New Stock Input */}
-            <div className="space-y-2">
-              <label className="block text-xs font-black text-gray-800 uppercase tracking-wider">
-                Enter New Total Stock Count
-              </label>
-              <input
-                type="number"
-                value={newStockVal}
-                onChange={(e) => setNewStockVal(e.target.value)}
-                className="w-full px-4 py-3 bg-white border-2 border-amber-900/20 rounded-2xl font-black text-xl text-[#4A0E0E] text-center focus:outline-none focus:border-[#4A0E0E] shadow-sm"
-                placeholder="e.g. 50"
-                autoFocus
-              />
-
-              {/* Quick Add Buttons */}
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setNewStockVal((parseInt(newStockVal || '0', 10) + 10).toString())}
-                  className="flex-1 py-2 bg-amber-100 hover:bg-amber-200 text-amber-950 rounded-xl font-black text-xs border border-amber-300/80 transition-all shadow-sm"
-                >
-                  +10 Units
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setNewStockVal((parseInt(newStockVal || '0', 10) + 25).toString())}
-                  className="flex-1 py-2 bg-amber-100 hover:bg-amber-200 text-amber-950 rounded-xl font-black text-xs border border-amber-300/80 transition-all shadow-sm"
-                >
-                  +25 Units
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setNewStockVal((parseInt(newStockVal || '0', 10) + 50).toString())}
-                  className="flex-1 py-2 bg-amber-100 hover:bg-amber-200 text-amber-950 rounded-xl font-black text-xs border border-amber-300/80 transition-all shadow-sm"
-                >
-                  +50 Units
-                </button>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-3 pt-2">
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-[#FAF7F2] border-2 border-amber-900/20 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-6 relative animate-in zoom-in-95 duration-200">
+              
+              {/* Close Button */}
               <button
-                type="button"
                 onClick={() => setStockModalItem(null)}
-                className="flex-1 py-3 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 font-bold text-xs rounded-2xl transition-all shadow-sm"
+                className="absolute top-5 right-5 p-2 text-gray-400 hover:text-gray-700 bg-white rounded-full border border-gray-200 shadow-sm transition-all"
+                title="Close Dialog"
               >
-                Cancel
+                <X size={18} />
               </button>
-              <button
-                type="button"
-                onClick={handleSaveModalStock}
-                className="flex-1 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 border border-emerald-600"
-              >
-                <Check size={16} strokeWidth={3} /> Save Stock Count
-              </button>
-            </div>
 
+              {/* Header */}
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-100 border border-amber-300 rounded-full text-amber-950 text-xs font-black mb-2">
+                  <PackageOpen size={14} /> Add Incoming Stock Batch
+                </div>
+                <h3 className="text-xl font-serif font-black text-gray-900">{stockModalItem.name}</h3>
+                <p className="text-xs font-bold text-amber-800 mt-0.5">Product ID: {stockModalItem.id} • Category: {stockModalItem.category}</p>
+              </div>
+
+              {/* Current Stock Banner */}
+              <div className="bg-[#EFEAE1] p-4 rounded-2xl border border-amber-900/10 flex justify-between items-center">
+                <div>
+                  <p className="text-[11px] font-black uppercase text-gray-500">Current In-Stock</p>
+                  <p className="text-2xl font-black text-[#4A0E0E]">{currentStock} units</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[11px] font-black uppercase text-gray-500">Reorder Level</p>
+                  <p className="text-sm font-bold text-gray-700">{stockModalItem.reorderLevel || 20} units</p>
+                </div>
+              </div>
+
+              {/* Added Stock Input */}
+              <div className="space-y-2">
+                <label className="block text-xs font-black text-gray-800 uppercase tracking-wider">
+                  ENTER NEW STOCK QUANTITY TO ADD (+)
+                </label>
+                <input
+                  type="number"
+                  value={addedStockVal}
+                  onChange={(e) => setAddedStockVal(e.target.value)}
+                  className="w-full px-4 py-3 bg-white border-2 border-amber-900/20 rounded-2xl font-black text-2xl text-[#4A0E0E] text-center focus:outline-none focus:border-[#4A0E0E] shadow-sm"
+                  placeholder="Enter incoming stock e.g. 50"
+                  autoFocus
+                />
+
+                {/* Quick Add Buttons */}
+                <div className="grid grid-cols-3 gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setAddedStockVal((parseInt(addedStockVal || '0', 10) + 10).toString())}
+                    className="py-2 bg-amber-100 hover:bg-amber-200 text-amber-950 rounded-xl font-black text-xs border border-amber-300/80 transition-all shadow-sm"
+                  >
+                    +10 Units
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAddedStockVal((parseInt(addedStockVal || '0', 10) + 25).toString())}
+                    className="py-2 bg-amber-100 hover:bg-amber-200 text-amber-950 rounded-xl font-black text-xs border border-amber-300/80 transition-all shadow-sm"
+                  >
+                    +25 Units
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAddedStockVal((parseInt(addedStockVal || '0', 10) + 50).toString())}
+                    className="py-2 bg-amber-100 hover:bg-amber-200 text-amber-950 rounded-xl font-black text-xs border border-amber-300/80 transition-all shadow-sm"
+                  >
+                    +50 Units
+                  </button>
+                </div>
+              </div>
+
+              {/* Real-time Math Summary Box */}
+              <div className="bg-emerald-50 border border-emerald-300/60 p-3.5 rounded-2xl flex items-center justify-between text-xs font-bold text-emerald-950">
+                <span>Updated Total Stock:</span>
+                <span className="text-base font-black text-emerald-900">{currentStock} + {addedQty} = <span className="text-lg font-black text-[#4A0E0E] underline">{finalStock} units</span></span>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setStockModalItem(null)}
+                  className="flex-1 py-3 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 font-bold text-xs rounded-2xl transition-all shadow-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveModalStock}
+                  className="flex-1 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 border border-emerald-600"
+                >
+                  <Check size={16} strokeWidth={3} /> Save & Add Stock
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };

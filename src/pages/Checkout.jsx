@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { saveOrderToFirestore, saveCustomerToFirestore } from '../services/firebaseService';
 
 const Checkout = () => {
   const { cartItems, cartTotals, addToCart, decrementQuantity, removeFromCart, clearCart } = useCart();
@@ -61,16 +62,60 @@ const Checkout = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (cartItems.length === 0) return;
 
     triggerSparkles(e);
     setIsSubmitting(true);
 
+    const newOrderId = `ORD-${Math.floor(Math.random() * 90000 + 10000)}`;
+    const now = new Date().toISOString();
+
+    const orderPayload = {
+      id: newOrderId,
+      customerName: formData.name,
+      phone: formData.phone,
+      whatsapp: formData.whatsapp,
+      email: formData.email || '',
+      address: `${formData.address}, ${formData.pincode}`,
+      pincode: formData.pincode,
+      notes: formData.notes || '',
+      itemsCount: cartItems.reduce((sum, item) => sum + item.quantity, 0),
+      items: cartItems.map(item => ({
+        id: item.id,
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price
+      })),
+      totalAmount: grandTotal,
+      subtotal: subtotal,
+      discount: discountAmount,
+      status: 'Pending',
+      createdAt: now,
+      updatedAt: now
+    };
+
+    // Save order & customer to Cloud Firestore
+    try {
+      await saveOrderToFirestore(orderPayload);
+      await saveCustomerToFirestore({
+        id: formData.phone || `CUST-${Date.now()}`,
+        name: formData.name,
+        phone: formData.phone,
+        whatsapp: formData.whatsapp,
+        address: `${formData.address}, ${formData.pincode}`,
+        createdAt: now,
+        updatedAt: now
+      });
+    } catch (err) {
+      console.warn("Cloud Firestore order save notice:", err);
+    }
+
     setTimeout(() => {
       // Format the WhatsApp message
       let message = `🛒 *Karuppa Crackers - Order Confirmation*\n\n`;
+      message += `🆔 *Order ID:* ${newOrderId}\n`;
       message += `👤 *Customer Details:*\n`;
       message += `Name: ${formData.name}\n`;
       message += `Phone: ${formData.phone}\n`;
@@ -81,7 +126,8 @@ const Checkout = () => {
       
       message += `📦 *Order Summary:*\n`;
       cartItems.forEach((item) => {
-        const itemTotal = parseInt(item.price.replace(/[^\d]/g, ''), 10) * item.quantity;
+        const priceNum = typeof item.price === 'number' ? item.price : parseInt(String(item.price).replace(/[^\d]/g, ''), 10) || 0;
+        const itemTotal = priceNum * item.quantity;
         message += `${item.quantity} × ${item.name} = ₹${itemTotal.toLocaleString('en-IN')}\n`;
       });
       
@@ -107,78 +153,151 @@ const Checkout = () => {
       setIsSubmitting(false);
       setIsSuccess(true);
       clearCart();
-    }, 1500);
+    }, 1200);
   };
 
   const handleDownloadBill = () => {
-    const doc = new jsPDF();
-    
-    // Header
-    doc.setFontSize(22);
-    doc.setTextColor(183, 28, 28); // Deep Crimson
-    doc.text('KARUPPA CRACKERS', 105, 20, { align: 'center' });
-    
-    doc.setFontSize(12);
-    doc.setTextColor(44, 44, 44);
-    doc.text('Order Invoice', 105, 28, { align: 'center' });
-
-    // Customer Details
-    doc.setFontSize(10);
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 45);
-    doc.text(`Customer Name: ${formData.name}`, 14, 52);
-    doc.text(`Phone: ${formData.phone}`, 14, 59);
-    doc.text(`Delivery Address: ${formData.address}, ${formData.pincode}`, 14, 66);
-
-    // Table
-    const tableColumn = ["Product", "Quantity", "Price", "Total"];
-    const tableRows = [];
-
-    cartItems.forEach(item => {
-      const priceInt = parseInt(item.price.replace(/[^\d]/g, ''), 10);
-      const total = priceInt * item.quantity;
-      const itemData = [
-        item.name,
-        item.quantity,
-        `Rs. ${priceInt.toLocaleString('en-IN')}`,
-        `Rs. ${total.toLocaleString('en-IN')}`
-      ];
-      tableRows.push(itemData);
-    });
-
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 75,
-      theme: 'grid',
-      headStyles: { fillColor: [183, 28, 28], textColor: [255, 255, 255] },
-      alternateRowStyles: { fillColor: [255, 248, 231] },
-      styles: { fontSize: 10, cellPadding: 4 },
-      columnStyles: { 0: { cellWidth: 80 } }
-    });
-
-    const finalY = doc.lastAutoTable.finalY || 75;
-
-    // Totals
-    if (discountAmount > 0) {
-      doc.setFont(undefined, 'normal');
-      doc.text(`Subtotal: Rs. ${subtotal.toLocaleString('en-IN')}`, 140, finalY + 10);
-      doc.setTextColor(46, 125, 50); // Green
-      doc.text(`Discount: -Rs. ${discountAmount.toLocaleString('en-IN')}`, 140, finalY + 17);
-      doc.setTextColor(44, 44, 44);
-      doc.setFont(undefined, 'bold');
-      doc.text(`Grand Total: Rs. ${grandTotal.toLocaleString('en-IN')}`, 140, finalY + 27);
-    } else {
-      doc.setFont(undefined, 'bold');
-      doc.text(`Grand Total: Rs. ${grandTotal.toLocaleString('en-IN')}`, 140, finalY + 15);
+    const invId = `INV-${Math.floor(Math.random() * 90000 + 10000)}`;
+    const invoiceHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Karuppa Crackers Official Tax Invoice - #${invId}</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 30px; color: #111; line-height: 1.5; background: #fff; }
+    .header { display: flex; justify-content: space-between; border-bottom: 2px solid #4A0E0E; padding-bottom: 15px; margin-bottom: 20px; }
+    .company-title { color: #4A0E0E; font-size: 26px; font-weight: bold; margin: 0; }
+    .tagline { color: #701515; font-size: 12px; font-weight: bold; margin: 2px 0 6px 0; }
+    .meta-text { font-size: 11px; color: #555; margin: 0; }
+    .badge { background: #4A0E0E; color: #FFD700; padding: 6px 14px; font-weight: bold; border-radius: 6px; display: inline-block; font-size: 11px; text-transform: uppercase; }
+    .grid { display: flex; gap: 20px; border-bottom: 2px solid #4A0E0E; padding-bottom: 15px; margin-bottom: 20px; }
+    .card { flex: 1; background: #FAF7F2; padding: 12px 15px; border-radius: 8px; border: 1px solid #e2d7c5; font-size: 12px; }
+    .card h4 { margin: 0 0 6px 0; color: #4A0E0E; text-transform: uppercase; font-size: 11px; border-bottom: 1px solid #d4c5b0; padding-bottom: 4px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; border: 1px solid #333; }
+    th { background: #4A0E0E; color: #fff; padding: 10px; text-align: left; font-size: 11px; text-transform: uppercase; }
+    td { padding: 9px 10px; border-bottom: 1px solid #ddd; border-right: 1px solid #eee; }
+    .totals-wrap { display: flex; justify-content: space-between; border-bottom: 2px solid #4A0E0E; padding-bottom: 15px; margin-bottom: 20px; }
+    .totals { width: 320px; font-size: 12px; }
+    .total-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #eee; }
+    .grand-total { font-size: 16px; font-weight: bold; color: #c00000; background: #FAF7F2; padding: 8px; border-radius: 6px; border-top: 2px solid #4A0E0E; margin-top: 6px; }
+    .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; font-size: 11px; color: #444; }
+    .sign-box { text-align: center; border-top: 2px solid #4A0E0E; width: 200px; padding-top: 6px; }
+    @media print {
+      body { margin: 0; padding: 15px; }
     }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1 class="company-title">KARUPPA CRACKERS</h1>
+      <p class="tagline">Sivakasi Premium Fireworks & Fancy Sky Shots Direct Manufacturer</p>
+      <p class="meta-text">
+        123 Main Road, Industrial Estate, Sivakasi, Tamil Nadu - 626123<br/>
+        Phone: +91 88254 19454 | Email: sales@karuppacrackers.com<br/>
+        <strong>GSTIN: 33AAACK1234F1Z9</strong> | Explosives License: E/SC/TN/22/10082
+      </p>
+    </div>
+    <div style="text-align: right;">
+      <div class="badge">OFFICIAL GST TAX INVOICE</div>
+      <p style="margin: 8px 0 2px 0; font-weight: bold; font-size: 13px;">Invoice No: #${invId}</p>
+      <p style="margin: 0; font-size: 12px;">Date: ${new Date().toLocaleDateString('en-IN')}</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; font-weight: bold; color: #065f46;">STATUS: ORDER CONFIRMED</p>
+    </div>
+  </div>
 
-    // Footer
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    doc.text('Thank you for shopping with Karuppa Crackers!', 105, finalY + 45, { align: 'center' });
+  <div class="grid">
+    <div class="card">
+      <h4>Billed To (Customer Details)</h4>
+      <strong style="font-size: 14px; color: #000;">${formData.name || 'Valued Customer'}</strong><br/>
+      Phone: ${formData.phone || 'N/A'}<br/>
+      WhatsApp: ${formData.whatsapp || 'N/A'}<br/>
+      Address: ${formData.address || 'Direct Order'}, Pincode: ${formData.pincode || ''}
+    </div>
+    <div class="card">
+      <h4>Store & Dispatch Hub</h4>
+      <strong>Karuppa Crackers Main Outlet & Warehouse</strong><br/>
+      Industrial Estate, Sivakasi Hub<br/>
+      Dispatch Method: Doorstep Delivery Courier / Transport
+    </div>
+  </div>
 
-    doc.save(`Karuppa_Crackers_Invoice_${Date.now()}.pdf`);
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 30px; text-align: center;">#</th>
+        <th>Product Description</th>
+        <th style="text-align: center;">Category</th>
+        <th style="text-align: right;">Unit Price</th>
+        <th style="text-align: center;">Qty</th>
+        <th style="text-align: right;">Total (₹)</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${cartItems.map((item, idx) => {
+        const priceNum = typeof item.price === 'number' ? item.price : parseInt(String(item.price).replace(/[^\d]/g, ''), 10) || 0;
+        return `
+        <tr>
+          <td style="text-align: center;">${idx + 1}</td>
+          <td><strong>${item.name}</strong><br/><small style="color: #666;">Code: ${item.id}</small></td>
+          <td style="text-align: center;">${item.category || 'Fireworks'}</td>
+          <td style="text-align: right;">₹${priceNum.toLocaleString('en-IN')}</td>
+          <td style="text-align: center;"><strong>${item.quantity}</strong></td>
+          <td style="text-align: right;"><strong>₹${(priceNum * item.quantity).toLocaleString('en-IN')}</strong></td>
+        </tr>
+      `;
+      }).join('')}
+    </tbody>
+  </table>
+
+  <div class="totals-wrap">
+    <div style="flex: 1; font-size: 11px; color: #555; padding-right: 20px;">
+      <div style="background: #faf5eb; padding: 10px; border-radius: 6px; border: 1px solid #e2d7c5; margin-bottom: 10px;">
+        <strong>Order Summary Notes:</strong><br/>
+        Order Status: Sent to Store WhatsApp Admin<br/>
+        Notes: ${formData.notes || 'No special instructions'}
+      </div>
+      <div style="background: #fff8e6; padding: 8px; border-radius: 6px; border: 1px solid #ffd591; color: #873800;">
+        <strong>Safety Warning:</strong> Burst fireworks strictly outdoors under adult supervision. Keep water nearby.
+      </div>
+    </div>
+    <div class="totals">
+      <div class="total-row"><span>Items Subtotal:</span> <strong>₹${subtotal.toLocaleString('en-IN')}</strong></div>
+      ${discountAmount > 0 ? `<div class="total-row" style="color: #047857;"><span>Coupon Discount:</span> <span>-₹${discountAmount.toLocaleString('en-IN')}</span></div>` : ''}
+      <div class="total-row"><span>Estimated CGST (9%):</span> <span>₹${(grandTotal * 0.09).toFixed(2)}</span></div>
+      <div class="total-row"><span>Estimated SGST (9%):</span> <span>₹${(grandTotal * 0.09).toFixed(2)}</span></div>
+      <div class="total-row grand-total"><span>TOTAL ORDER AMOUNT:</span> <span>₹${grandTotal.toLocaleString('en-IN')}</span></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div>
+      <strong>Terms & Conditions:</strong>
+      <ol style="margin: 4px 0 0 0; padding-left: 16px; font-size: 10px;">
+        <li>Goods once sold will not be returned or exchanged.</li>
+        <li>All disputes subject to Sivakasi Jurisdiction only.</li>
+        <li>Computer-generated official Karuppa Crackers Tax Invoice.</li>
+      </ol>
+    </div>
+    <div class="sign-box">
+      <strong style="color: #4A0E0E; font-size: 12px;">For KARUPPA CRACKERS</strong><br/><br/><br/>
+      <small style="text-transform: uppercase;">Authorized Signatory</small>
+    </div>
+  </div>
+
+  <script>
+    window.onload = function() {
+      window.print();
+    };
+  </script>
+</body>
+</html>`;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(invoiceHtml);
+      printWindow.document.close();
+    }
   };
 
   // SUCCESS STATE VIEW

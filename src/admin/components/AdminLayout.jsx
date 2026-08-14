@@ -20,14 +20,27 @@ import {
   Globe
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { subscribeOrders } from '../../services/firebaseService';
 
 const AdminLayout = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isDesktopSidebarExpanded, setIsDesktopSidebarExpanded] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isOrdersSubmenuOpen, setIsOrdersSubmenuOpen] = useState(true);
+  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
   const location = useLocation();
   const mainRef = useRef(null);
+
+  // Subscribe to live orders to update badge & notifications in real-time
+  useEffect(() => {
+    const unsub = subscribeOrders((firestoreOrders) => {
+      if (Array.isArray(firestoreOrders)) {
+        const pending = firestoreOrders.filter(o => !o.status || o.status === 'Pending').length;
+        setPendingOrdersCount(pending);
+      }
+    });
+    return () => unsub();
+  }, []);
 
   // Auto-close orders submenu when navigating away from orders section
   useEffect(() => {
@@ -86,6 +99,7 @@ const AdminLayout = () => {
     { name: 'Complete Orders', path: '/admin/orders?status=Delivered', status: 'Delivered' },
     { name: 'Pending Orders', path: '/admin/orders?status=Pending', status: 'Pending' },
     { name: 'Processing Orders', path: '/admin/orders?status=Processing', status: 'Processing' },
+    { name: 'Offline Orders', path: '/admin/orders?status=Offline', status: 'Offline' },
   ];
 
   return (
@@ -248,10 +262,16 @@ const AdminLayout = () => {
           </div>
 
           <div className="flex items-center gap-6">
-            <button className="relative p-2 text-red-200 hover:text-white transition-colors bg-red-950/40 rounded-xl">
+            <Link to="/admin/orders?status=Pending" className="relative p-2 text-red-200 hover:text-white transition-colors bg-red-950/40 rounded-xl flex items-center justify-center" title={`${pendingOrdersCount} Pending Orders`}>
               <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#FFD700] rounded-full animate-pulse"></span>
-            </button>
+              {pendingOrdersCount > 0 ? (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] px-1 bg-[#FFD700] text-[#4A0E0E] text-[10px] font-black rounded-full flex items-center justify-center shadow-md animate-bounce border border-amber-300">
+                  {pendingOrdersCount}
+                </span>
+              ) : (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-400 rounded-full"></span>
+              )}
+            </Link>
             
             <div className="flex items-center gap-3 pl-4 border-l border-red-900/40">
               <div className="text-right hidden sm:block">

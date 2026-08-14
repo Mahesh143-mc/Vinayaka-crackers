@@ -1,34 +1,118 @@
 import { useState, useEffect } from 'react';
-import { Search, MessageCircle, Calendar, Users, Send, X, ShoppingBag, Phone, MapPin, Award, CheckCircle2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, MessageCircle, Calendar, Users, Send, X, ShoppingBag, Phone, MapPin, Award, CheckCircle2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Plus, UserPlus } from 'lucide-react';
+import { subscribeCustomers, subscribeOrders, saveCustomerToFirestore } from '../../services/firebaseService';
 
 const AdminCustomers = () => {
-  const [customers] = useState([
-    { id: 'CUST-001', sno: 1, name: 'Rahul Sharma', phone: '+91 9876543210', email: 'rahul.sharma@gmail.com', location: 'Sivakasi, Tamil Nadu', totalOrders: 5, totalSpent: 45500, lastActive: 'Oct 15, 2023', status: 'VIP', recentPurchases: [{ orderId: 'ORD-9842', date: 'Oct 15, 2023', items: '120 Shots Multi-color, Giant Sparklers', total: 12500 }] },
-    { id: 'CUST-002', sno: 2, name: 'Priya Patel', phone: '+91 9123456789', email: 'priya.patel@gmail.com', location: 'Madurai, Tamil Nadu', totalOrders: 1, totalSpent: 8200, lastActive: 'Oct 15, 2023', status: 'New', recentPurchases: [{ orderId: 'ORD-8761', date: 'Oct 15, 2023', items: 'Flower Pots Mega, Sky Lanterns Pack', total: 8200 }] },
-    { id: 'CUST-003', sno: 3, name: 'Vikram Singh', phone: '+91 9988776655', email: 'vikram.singh@gmail.com', location: 'Chennai, Tamil Nadu', totalOrders: 12, totalSpent: 122000, lastActive: 'Oct 14, 2023', status: 'Wholesale', recentPurchases: [{ orderId: 'ORD-9901', date: 'Oct 14, 2023', items: '7 Color Rockets (100pcs Bulk)', total: 45000 }] },
-    { id: 'CUST-004', sno: 4, name: 'Arun Kumar', phone: '+91 9876512345', email: 'arun.kumar@gmail.com', location: 'Coimbatore, Tamil Nadu', totalOrders: 2, totalSpent: 15400, lastActive: 'Sep 10, 2023', status: 'Regular', recentPurchases: [{ orderId: 'ORD-7612', date: 'Sep 10, 2023', items: 'Electric Sparklers Gold (20pcs)', total: 9000 }] },
-    { id: 'CUST-005', sno: 5, name: 'Kavitha Nathan', phone: '+91 9443322110', email: 'kavitha.n@gmail.com', location: 'Sivakasi, Tamil Nadu', totalOrders: 4, totalSpent: 28500, lastActive: 'Oct 13, 2023', status: 'VIP', recentPurchases: [{ orderId: 'ORD-8821', date: 'Oct 13, 2023', items: 'Whistling Rockets, Flower Pots', total: 12600 }] },
-    { id: 'CUST-006', sno: 6, name: 'Senthil Raj', phone: '+91 9789012345', email: 'senthil.raj@yahoo.com', location: 'Tirunelveli, Tamil Nadu', totalOrders: 3, totalSpent: 19800, lastActive: 'Oct 12, 2023', status: 'Regular', recentPurchases: [{ orderId: 'ORD-8710', date: 'Oct 12, 2023', items: '7 Color Sky Rockets', total: 9800 }] },
-    { id: 'CUST-007', sno: 7, name: 'Meena Sundaram', phone: '+91 9655443322', email: 'meena.s@gmail.com', location: 'Trichy, Tamil Nadu', totalOrders: 6, totalSpent: 54000, lastActive: 'Oct 12, 2023', status: 'VIP', recentPurchases: [{ orderId: 'ORD-8622', date: 'Oct 12, 2023', items: 'Chakra Ground Spinners', total: 18500 }] },
-    { id: 'CUST-008', sno: 8, name: 'Ganesh Ram', phone: '+91 9543210987', email: 'ganesh.ram@outlook.com', location: 'Salem, Tamil Nadu', totalOrders: 1, totalSpent: 3400, lastActive: 'Oct 11, 2023', status: 'New', recentPurchases: [{ orderId: 'ORD-8511', date: 'Oct 11, 2023', items: 'Electric Sparklers', total: 3400 }] },
-    { id: 'CUST-009', sno: 9, name: 'Anitha Ramesh', phone: '+91 9412345678', email: 'anitha.r@gmail.com', location: 'Coimbatore, Tamil Nadu', totalOrders: 4, totalSpent: 38000, lastActive: 'Oct 11, 2023', status: 'Regular', recentPurchases: [{ orderId: 'ORD-8411', date: 'Oct 11, 2023', items: 'Peacock Fountain Large', total: 15800 }] },
-    { id: 'CUST-010', sno: 10, name: 'Karthik Subramanian', phone: '+91 9321098765', email: 'karthik.s@gmail.com', location: 'Chennai, Tamil Nadu', totalOrders: 15, totalSpent: 165000, lastActive: 'Oct 10, 2023', status: 'Wholesale', recentPurchases: [{ orderId: 'ORD-8302', date: 'Oct 10, 2023', items: '240 Shots Night Display', total: 27500 }] },
-    { id: 'CUST-011', sno: 11, name: 'Deepak Varma', phone: '+91 9210987654', email: 'deepak.v@yahoo.com', location: 'Erode, Tamil Nadu', totalOrders: 2, totalSpent: 12500, lastActive: 'Oct 10, 2023', status: 'Regular', recentPurchases: [{ orderId: 'ORD-8201', date: 'Oct 10, 2023', items: 'Color Smoke Grenade', total: 6900 }] },
-    { id: 'CUST-012', sno: 12, name: 'Sita Lakshmi', phone: '+91 9109876543', email: 'sita.l@gmail.com', location: 'Dindigul, Tamil Nadu', totalOrders: 1, totalSpent: 4800, lastActive: 'Oct 09, 2023', status: 'New', recentPurchases: [{ orderId: 'ORD-8105', date: 'Oct 09, 2023', items: 'Gold Twinkling Stars', total: 4800 }] },
-    { id: 'CUST-013', sno: 13, name: 'Vijay Anand', phone: '+91 9098765432', email: 'vijay.a@gmail.com', location: 'Virudhunagar, Tamil Nadu', totalOrders: 8, totalSpent: 78000, lastActive: 'Oct 09, 2023', status: 'VIP', recentPurchases: [{ orderId: 'ORD-8010', date: 'Oct 09, 2023', items: 'Hydro Bomb High Sound', total: 19200 }] },
-    { id: 'CUST-014', sno: 14, name: 'Pooja Hegde', phone: '+91 8987654321', email: 'pooja.h@gmail.com', location: 'Kanyakumari, Tamil Nadu', totalOrders: 3, totalSpent: 22400, lastActive: 'Oct 08, 2023', status: 'Regular', recentPurchases: [{ orderId: 'ORD-7911', date: 'Oct 08, 2023', items: 'Tri-Color Fountain Pot', total: 11400 }] },
-    { id: 'CUST-015', sno: 15, name: 'Manoj Pillai', phone: '+91 8876543210', email: 'manoj.p@gmail.com', location: 'Thanjavur, Tamil Nadu', totalOrders: 2, totalSpent: 16800, lastActive: 'Oct 08, 2023', status: 'Regular', recentPurchases: [{ orderId: 'ORD-7812', date: 'Oct 08, 2023', items: 'Whistling Sky Rockets', total: 8600 }] },
-    { id: 'CUST-016', sno: 16, name: 'Swati Krishnan', phone: '+91 8765432109', email: 'swati.k@gmail.com', location: 'Vellore, Tamil Nadu', totalOrders: 1, totalSpent: 5200, lastActive: 'Oct 07, 2023', status: 'New', recentPurchases: [{ orderId: 'ORD-7714', date: 'Oct 07, 2023', items: 'Red & Green Ground Wheel', total: 5200 }] },
-    { id: 'CUST-017', sno: 17, name: 'Balaji Natarajan', phone: '+91 8654321098', email: 'balaji.n@gmail.com', location: 'Sivakasi, Tamil Nadu', totalOrders: 20, totalSpent: 210000, lastActive: 'Oct 07, 2023', status: 'Wholesale', recentPurchases: [{ orderId: 'ORD-7615', date: 'Oct 07, 2023', items: 'Diwali Deluxe Combo Pack', total: 35000 }] },
-    { id: 'CUST-018', sno: 18, name: 'Divya Bharathi', phone: '+91 8543210987', email: 'divya.b@gmail.com', location: 'Karur, Tamil Nadu', totalOrders: 3, totalSpent: 18300, lastActive: 'Oct 06, 2023', status: 'Regular', recentPurchases: [{ orderId: 'ORD-7516', date: 'Oct 06, 2023', items: 'Silver Flash Sparklers', total: 7300 }] },
-    { id: 'CUST-019', sno: 19, name: 'Harish Chandra', phone: '+91 8432109876', email: 'harish.c@gmail.com', location: 'Hosur, Tamil Nadu', totalOrders: 7, totalSpent: 89000, lastActive: 'Oct 06, 2023', status: 'VIP', recentPurchases: [{ orderId: 'ORD-7417', date: 'Oct 06, 2023', items: 'Garland 1000 Crackers', total: 22000 }] },
-    { id: 'CUST-020', sno: 20, name: 'Lakshmi Narayan', phone: '+91 8321098765', email: 'lakshmi.n@gmail.com', location: 'Nagapattinam, Tamil Nadu', totalOrders: 2, totalSpent: 14500, lastActive: 'Oct 05, 2023', status: 'Regular', recentPurchases: [{ orderId: 'ORD-7318', date: 'Oct 05, 2023', items: '30 Shots Peacock Sky', total: 9500 }] },
-    { id: 'CUST-021', sno: 21, name: 'Ramesh Babu', phone: '+91 8210987654', email: 'ramesh.b@gmail.com', location: 'Pudukkottai, Tamil Nadu', totalOrders: 5, totalSpent: 42000, lastActive: 'Oct 05, 2023', status: 'VIP', recentPurchases: [{ orderId: 'ORD-7219', date: 'Oct 05, 2023', items: 'Multi-Color Musical Fountain', total: 15600 }] },
-    { id: 'CUST-022', sno: 22, name: 'Nandhini Devi', phone: '+91 8109876543', email: 'nandhini.d@gmail.com', location: 'Ramanathapuram, Tamil Nadu', totalOrders: 1, totalSpent: 4350, lastActive: 'Oct 04, 2023', status: 'New', recentPurchases: [{ orderId: 'ORD-7120', date: 'Oct 04, 2023', items: 'Crackling Sparklers (10pcs)', total: 4350 }] },
-    { id: 'CUST-023', sno: 23, name: 'Srikant Acharya', phone: '+91 8098765432', email: 'srikant.a@gmail.com', location: 'Cuddalore, Tamil Nadu', totalOrders: 4, totalSpent: 36000, lastActive: 'Oct 04, 2023', status: 'Regular', recentPurchases: [{ orderId: 'ORD-7021', date: 'Oct 04, 2023', items: 'Mega Sky Thunder Bomb', total: 14400 }] },
-    { id: 'CUST-024', sno: 24, name: 'Janaki Raman', phone: '+91 7987654321', email: 'janaki.r@gmail.com', location: 'Ooty, Tamil Nadu', totalOrders: 2, totalSpent: 12900, lastActive: 'Oct 03, 2023', status: 'Regular', recentPurchases: [{ orderId: 'ORD-6922', date: 'Oct 03, 2023', items: 'Kids Safe Crackers Box', total: 8900 }] },
-    { id: 'CUST-025', sno: 25, name: 'Gokul Kannan', phone: '+91 7876543210', email: 'gokul.k@gmail.com', location: 'Kodaikanal, Tamil Nadu', totalOrders: 3, totalSpent: 29500, lastActive: 'Oct 03, 2023', status: 'VIP', recentPurchases: [{ orderId: 'ORD-6823', date: 'Oct 03, 2023', items: '120 Shots Multi-color', total: 16200 }] },
-  ]);
+  const navigate = useNavigate();
+  const [customers, setCustomers] = useState([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [successToast, setSuccessToast] = useState('');
+
+  const [newCustomer, setNewCustomer] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    location: 'Sivakasi, Tamil Nadu',
+    status: 'Regular'
+  });
+
+  const triggerSuccess = (msg) => {
+    setSuccessToast(msg);
+    setTimeout(() => setSuccessToast(''), 3000);
+  };
+
+  const [firestoreCusts, setFirestoreCusts] = useState([]);
+  const [allOrders, setAllOrders] = useState([]);
+
+  useEffect(() => {
+    const unsubCust = subscribeCustomers((custs) => setFirestoreCusts(custs || []));
+    const unsubOrd = subscribeOrders((ords) => setAllOrders(ords || []));
+    return () => {
+      unsubCust();
+      unsubOrd();
+    };
+  }, []);
+
+  useEffect(() => {
+    const customerMap = new Map();
+
+    firestoreCusts.forEach((c, idx) => {
+      const key = String(c.phone || c.id).replace(/[^\d]/g, '') || c.id;
+      customerMap.set(key, {
+        ...c,
+        id: String(c.id || key),
+        name: c.name || c.customerName || 'Valued Customer',
+        phone: c.phone || 'N/A',
+        email: c.email || 'N/A',
+        status: c.status || 'Regular',
+        totalOrders: 0,
+        totalSpent: 0,
+        lastActive: c.lastActive || (c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-IN') : 'Recently')
+      });
+    });
+
+    allOrders.forEach((o) => {
+      const phoneClean = String(o.phone || '').replace(/[^\d]/g, '');
+      const key = phoneClean || o.id;
+      const orderAmount = typeof o.grandTotal === 'number' ? o.grandTotal : (typeof o.totalAmount === 'number' ? o.totalAmount : (parseFloat(String(o.amount || 0).replace(/[^\d.]/g, '')) || 0));
+
+      if (customerMap.has(key)) {
+        const existing = customerMap.get(key);
+        existing.totalOrders += 1;
+        existing.totalSpent += orderAmount;
+      } else {
+        customerMap.set(key, {
+          id: key,
+          name: o.customerName || o.customer || 'Valued Customer',
+          phone: o.phone || 'N/A',
+          email: o.email || 'N/A',
+          status: orderAmount > 10000 ? 'VIP' : 'Regular',
+          totalOrders: 1,
+          totalSpent: orderAmount,
+          lastActive: o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-IN') : 'Recently'
+        });
+      }
+    });
+
+    const combinedList = Array.from(customerMap.values()).map((c, idx) => ({
+      ...c,
+      sno: idx + 1
+    }));
+
+    setCustomers(combinedList);
+  }, [firestoreCusts, allOrders]);
+
+  const handleCreateCustomer = async (e) => {
+    e.preventDefault();
+    if (!newCustomer.name || !newCustomer.phone) return;
+
+    const customerId = `CUST-${Math.floor(Math.random() * 900 + 100)}`;
+    const payload = {
+      id: customerId,
+      sno: customers.length + 1,
+      name: newCustomer.name,
+      phone: newCustomer.phone,
+      email: newCustomer.email || `${newCustomer.name.toLowerCase().replace(/\s+/g, '.')}@gmail.com`,
+      location: newCustomer.location || 'Sivakasi, Tamil Nadu',
+      totalOrders: 0,
+      totalSpent: 0,
+      lastActive: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      status: newCustomer.status || 'New',
+      recentPurchases: []
+    };
+
+    setCustomers([payload, ...customers]);
+    try {
+      await saveCustomerToFirestore(payload);
+    } catch (err) {
+      console.error("Error saving customer to Firestore:", err);
+    }
+
+    setShowAddModal(false);
+    setNewCustomer({ name: '', phone: '', email: '', location: 'Sivakasi, Tamil Nadu', status: 'Regular' });
+    triggerSuccess(`🎉 Customer "${payload.name}" created and saved to Firestore!`);
+  };
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -67,6 +151,16 @@ const AdminCustomers = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-10">
+      {/* Toast Notification */}
+      {successToast && (
+        <div className="fixed top-6 right-6 z-[1000005] bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-800 text-white font-black text-xs sm:text-sm px-5 py-3.5 rounded-2xl shadow-2xl border-2 border-amber-300 flex items-center gap-3 animate-in slide-in-from-top-5 duration-300">
+          <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+            <CheckCircle2 size={18} className="text-[#FFD700]" />
+          </div>
+          <span>{successToast}</span>
+        </div>
+      )}
+
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#4A0E0E] via-[#701515] to-[#4A0E0E] p-7 rounded-3xl shadow-lg text-white">
         <div>
@@ -75,14 +169,23 @@ const AdminCustomers = () => {
           </h1>
           <p className="text-amber-200/90 text-sm mt-1 font-medium">Manage buyer profiles, track festival spending, and launch WhatsApp offers.</p>
         </div>
-        <a 
-          href={`https://wa.me/?text=Hello!%20Check%20out%20special%20festive%20firecracker%20offers%20at%20Karuppa%20Crackers!`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="bg-[#25D366] hover:bg-[#1ebd53] text-white px-5 py-2.5 rounded-2xl font-bold shadow-md flex items-center gap-2"
-        >
-          <Send size={18} /> Send WhatsApp Broadcast
-        </a>
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-gradient-to-r from-[#FFD700] to-amber-500 hover:from-amber-400 hover:to-amber-600 text-[#4A0E0E] px-5 py-2.5 rounded-2xl font-black text-xs shadow-md flex items-center gap-2 transform hover:scale-105 transition-all"
+          >
+            <UserPlus size={18} strokeWidth={2.5} /> Add New Customer
+          </button>
+
+          <a 
+            href={`https://wa.me/?text=Hello!%20Check%20out%20special%20festive%20firecracker%20offers%20at%20Karuppa%20Crackers!`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-[#25D366] hover:bg-[#1ebd53] text-white px-5 py-2.5 rounded-2xl font-bold shadow-md flex items-center gap-2 text-xs"
+          >
+            <Send size={16} /> Send WhatsApp Broadcast
+          </a>
+        </div>
       </div>
 
       {/* Filter Bar & S.No Count Banner */}
@@ -113,7 +216,7 @@ const AdminCustomers = () => {
         {paginatedCustomers.map((customer) => (
           <div 
             key={customer.id} 
-            onClick={() => setSelectedCustomer(customer)}
+            onClick={() => navigate(`/admin/customers/${customer.id}`)}
             className="bg-[#FAF7F2] hover:bg-[#F3ECE0] rounded-3xl p-6 shadow-sm border-2 border-amber-900/15 hover:border-[#4A0E0E] flex flex-col justify-between transition-all duration-300 cursor-pointer transform hover:-translate-y-1 hover:shadow-md group relative overflow-hidden"
           >
             <div>
@@ -121,17 +224,17 @@ const AdminCustomers = () => {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#4A0E0E] to-amber-700 flex items-center justify-center text-white font-black text-xl shadow-md group-hover:scale-105 transition-transform">
-                    {customer.name.charAt(0)}
+                    {(customer.name || 'C').charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="font-black text-gray-900 text-base group-hover:text-[#4A0E0E] transition-colors">{customer.name}</h3>
+                    <h3 className="font-black text-gray-900 text-base group-hover:text-[#4A0E0E] transition-colors">{customer.name || 'Valued Customer'}</h3>
                     <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
                       customer.status === 'VIP' ? 'bg-purple-100 text-purple-900 border border-purple-300' :
                       customer.status === 'Wholesale' ? 'bg-blue-100 text-blue-900 border border-blue-300' :
                       customer.status === 'New' ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' :
                       'bg-gray-200 text-gray-800 border border-gray-300'
                     }`}>
-                      {customer.status}
+                      {customer.status || 'Regular'}
                     </span>
                   </div>
                 </div>
@@ -159,16 +262,16 @@ const AdminCustomers = () => {
               <div className="pt-3 border-t border-amber-900/10 flex items-center justify-between">
                 <div>
                   <p className="text-[10px] font-black text-amber-950 uppercase tracking-wider">Orders</p>
-                  <p className="font-black text-gray-900 text-base">{customer.totalOrders}</p>
+                  <p className="font-black text-gray-900 text-base">{customer.totalOrders || 0}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] font-black text-amber-950 uppercase tracking-wider">Total Spent</p>
-                  <p className="font-black text-[#c00000] text-base">₹{customer.totalSpent.toLocaleString()}</p>
+                  <p className="font-black text-[#c00000] text-base">₹{(customer.totalSpent || 0).toLocaleString('en-IN')}</p>
                 </div>
               </div>
               
               <button 
-                onClick={(e) => { e.stopPropagation(); setSelectedCustomer(customer); }}
+                onClick={(e) => { e.stopPropagation(); navigate(`/admin/customers/${customer.id}`); }}
                 className="w-full mt-4 py-2.5 bg-[#4A0E0E] text-white group-hover:bg-red-950 rounded-xl text-xs font-black transition-colors shadow-md flex items-center justify-center gap-1.5"
               >
                 View Customer Profile
@@ -347,6 +450,111 @@ const AdminCustomers = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Add New Customer Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <form onSubmit={handleCreateCustomer} className="bg-[#FAF7F2] rounded-3xl max-w-lg w-full p-7 shadow-2xl border border-amber-900/30 space-y-5 animate-in fade-in zoom-in duration-200 relative">
+            <button 
+              type="button"
+              onClick={() => setShowAddModal(false)}
+              className="absolute top-6 right-6 w-9 h-9 rounded-full bg-amber-200/80 hover:bg-amber-300 text-[#4A0E0E] flex items-center justify-center font-black"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="flex items-center gap-3 border-b border-amber-900/15 pb-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#4A0E0E] to-amber-700 flex items-center justify-center text-white font-black text-xl shadow-md">
+                <UserPlus size={22} />
+              </div>
+              <div>
+                <h3 className="text-xl font-serif font-black text-gray-900">Add New Customer Profile</h3>
+                <p className="text-xs font-bold text-gray-500">Register new customer in Firebase CRM</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 text-xs font-bold">
+              <div>
+                <label className="block text-[#4A0E0E] uppercase tracking-wider mb-1.5">Customer Full Name *</label>
+                <input 
+                  type="text"
+                  required
+                  placeholder="e.g. Senthil Kumar"
+                  value={newCustomer.name}
+                  onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
+                  className="w-full p-3 bg-white border-2 border-amber-900/20 rounded-2xl text-sm font-black text-gray-900 focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[#4A0E0E] uppercase tracking-wider mb-1.5">Phone Number *</label>
+                  <input 
+                    type="text"
+                    required
+                    placeholder="+91 9876543210"
+                    value={newCustomer.phone}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                    className="w-full p-3 bg-white border-2 border-amber-900/20 rounded-2xl text-xs font-black text-gray-900 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[#4A0E0E] uppercase tracking-wider mb-1.5">Customer Type</label>
+                  <select 
+                    value={newCustomer.status}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, status: e.target.value })}
+                    className="w-full p-3 bg-white border-2 border-amber-900/20 rounded-2xl text-xs font-black text-gray-900 focus:outline-none cursor-pointer"
+                  >
+                    <option value="New">New</option>
+                    <option value="Regular">Regular</option>
+                    <option value="VIP">VIP</option>
+                    <option value="Wholesale">Wholesale</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[#4A0E0E] uppercase tracking-wider mb-1.5">Email Address</label>
+                <input 
+                  type="email"
+                  placeholder="e.g. senthil@gmail.com"
+                  value={newCustomer.email}
+                  onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
+                  className="w-full p-3 bg-white border-2 border-amber-900/20 rounded-2xl text-xs font-bold text-gray-900 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#4A0E0E] uppercase tracking-wider mb-1.5">Location / City</label>
+                <input 
+                  type="text"
+                  placeholder="e.g. Sivakasi, Tamil Nadu"
+                  value={newCustomer.location}
+                  onChange={(e) => setNewCustomer({ ...newCustomer, location: e.target.value })}
+                  className="w-full p-3 bg-white border-2 border-amber-900/20 rounded-2xl text-xs font-bold text-gray-900 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-amber-900/15">
+              <button 
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                className="py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-2xl text-xs font-black"
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit"
+                className="py-3 bg-[#4A0E0E] hover:bg-red-950 text-white rounded-2xl text-xs font-black shadow-md flex items-center justify-center gap-2"
+              >
+                <UserPlus size={16} /> Save Customer
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>

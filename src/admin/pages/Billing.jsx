@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Search, Plus, Minus, Printer, Trash2, Send, LayoutGrid, List, ShoppingCart, Check, RefreshCw, CheckCircle2, ArrowRight, Filter, ChevronDown, Columns, X, Receipt } from 'lucide-react';
+import { Search, Plus, Minus, Printer, Trash2, Send, LayoutGrid, List, ShoppingCart, Check, RefreshCw, CheckCircle2, ArrowRight, Filter, ChevronDown, Columns, X, Receipt, Maximize2, Minimize2, Download } from 'lucide-react';
+import { saveOrderToFirestore, subscribeProducts } from '../../services/firebaseService';
 
 const AdminBilling = () => {
   const context = useOutletContext();
@@ -11,20 +12,27 @@ const AdminBilling = () => {
   const [showColMenu, setShowColMenu] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isFullscreenPos, setIsFullscreenPos] = useState(false);
 
-  // Floating Bottom Cart Receipt Drawer Modal (Works on Mobile & Desktop!)
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [showCartDrawer, setShowCartDrawer] = useState(false);
+  const [successToast, setSuccessToast] = useState('');
 
-  const [catalog, setCatalog] = useState([
-    { id: 'PRD-01', name: '120 Shots Multi-color', category: 'Fancy', price: 1200, stock: 45, icon: '🎆', showInFrontend: true },
-    { id: 'PRD-02', name: 'Giant Sparklers (50pcs)', category: 'Sparklers', price: 350, stock: 120, icon: '✨', showInFrontend: true },
-    { id: 'PRD-03', name: 'Lakshmi Bomb Deluxe', category: 'Bombs', price: 150, stock: 8, icon: '💥', showInFrontend: true },
-    { id: 'PRD-04', name: 'Flower Pots Mega', category: 'Fountains', price: 650, stock: 25, icon: '🪔', showInFrontend: true },
-    { id: 'PRD-05', name: 'Sky Lanterns Pack', category: 'Novelty', price: 400, stock: 15, icon: '🚀', showInFrontend: false },
-    { id: 'PRD-06', name: '7 Color Rockets (10pcs)', category: 'Fancy', price: 850, stock: 30, icon: '⭐', showInFrontend: true },
-    { id: 'PRD-07', name: 'Chakra Ground Spinner', category: 'Fountains', price: 280, stock: 60, icon: '🌀', showInFrontend: true },
-    { id: 'PRD-08', name: 'Electric Sparklers Gold', category: 'Sparklers', price: 450, stock: 90, icon: '⚡', showInFrontend: true },
-  ]);
+  const triggerSuccess = (msg) => {
+    setSuccessToast(msg);
+    setTimeout(() => setSuccessToast(''), 3000);
+  };
+
+  const [catalog, setCatalog] = useState([]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeProducts((firestoreProducts) => {
+      if (firestoreProducts) {
+        setCatalog(firestoreProducts);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const toggleFrontendVisibility = (id) => {
     setCatalog(catalog.map(item => item.id === id ? { ...item, showInFrontend: !item.showInFrontend } : item));
@@ -32,13 +40,9 @@ const AdminBilling = () => {
 
   const categories = ['All', 'Sparklers', 'Bombs', 'Fancy', 'Fountains', 'Novelty'];
 
-  const [cart, setCart] = useState([
-    { id: 'PRD-01', name: '120 Shots Multi-color', price: 1200, qty: 2 },
-    { id: 'PRD-02', name: 'Giant Sparklers (50pcs)', price: 350, qty: 1 }
-  ]);
-
+  const [cart, setCart] = useState([]);
   const [customerName, setCustomerName] = useState('Walk-in Customer');
-  const [customerPhone, setCustomerPhone] = useState('8825419454');
+  const [customerPhone, setCustomerPhone] = useState('');
 
   const [completedOrder, setCompletedOrder] = useState(null);
 
@@ -65,6 +69,9 @@ const AdminBilling = () => {
     setCart(cart.filter(item => item.id !== id));
   };
 
+  const [isProcessingOrder, setIsProcessingOrder] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
   const handleResetBill = () => {
     setCart([]);
     setCustomerName('Walk-in Customer');
@@ -72,9 +79,19 @@ const AdminBilling = () => {
   };
 
   const handleConfirmOrder = () => {
-    if (cart.length === 0) return;
+    if (cart.length === 0 || isProcessingOrder) return;
+    setShowConfirmModal(true);
+  };
+
+  const handleFinalConfirmSave = async () => {
+    setIsProcessingOrder(true);
+    setShowConfirmModal(false);
+    const newOrderId = `POS-${Math.floor(Math.random() * 900 + 100)}`;
+    const nowIso = new Date().toISOString();
+
     const orderData = {
-      orderId: `POS-${Math.floor(Math.random() * 900 + 100)}`,
+      id: newOrderId,
+      orderId: newOrderId,
       customer: customerName || 'Walk-in Customer',
       phone: customerPhone || '9943852902',
       items: [...cart],
@@ -82,10 +99,24 @@ const AdminBilling = () => {
       discount,
       gst,
       grandTotal,
-      date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      status: 'Delivered',
+      paymentStatus: 'PAID',
+      paymentMode: 'Cash on Counter',
+      createdAt: nowIso,
+      updatedAt: nowIso,
+      date: new Date().toLocaleDateString('en-IN')
     };
+
+    try {
+      await saveOrderToFirestore(orderData);
+    } catch (err) {
+      console.error("Error saving POS order to Firestore:", err);
+    }
+
+    triggerSuccess(`🎉 Order #${newOrderId} Saved & Confirmed Successfully!`);
     setShowCartDrawer(false);
     setCompletedOrder(orderData);
+    setIsProcessingOrder(false);
   };
 
   const handleStartNewOrder = () => {
@@ -103,14 +134,193 @@ const AdminBilling = () => {
   const gst = Math.round((subtotal - discount) * 0.18);
   const grandTotal = subtotal - discount + gst;
 
+  const handleTriggerPrint = () => {
+    setShowInvoiceModal(true);
+    triggerSuccess('Opening browser print dialog...');
+    setTimeout(() => {
+      window.print();
+    }, 300);
+  };
+
+  const handleDownloadInvoice = () => {
+    const invId = completedOrder ? completedOrder.orderId : 'POS-547';
+    const invCust = completedOrder ? completedOrder.customer : (customerName || 'Walk-in Customer');
+    const invPhone = completedOrder ? completedOrder.phone : (customerPhone || '+91 9876543210');
+    const invItems = completedOrder ? completedOrder.items : (cart.length > 0 ? cart : catalog.slice(0, 2));
+    const invSubtotal = completedOrder ? completedOrder.subtotal : subtotal;
+    const invDiscount = completedOrder ? completedOrder.discount : discount;
+    const invGst = completedOrder ? completedOrder.gst : gst;
+    const invTotal = completedOrder ? completedOrder.grandTotal : grandTotal;
+
+    triggerSuccess(`Downloading Tax Invoice for Order #${invId}...`);
+
+    const invoiceHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Karuppa Crackers POS Tax Invoice - #${invId}</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 30px; color: #111; line-height: 1.5; background: #fff; }
+    .header { display: flex; justify-content: space-between; border-bottom: 2px solid #4A0E0E; padding-bottom: 15px; margin-bottom: 20px; }
+    .company-title { color: #4A0E0E; font-size: 24px; font-weight: bold; margin: 0; }
+    .tagline { color: #701515; font-size: 12px; font-weight: bold; margin: 2px 0 6px 0; }
+    .meta-text { font-size: 11px; color: #555; margin: 0; }
+    .badge { background: #4A0E0E; color: #FFD700; padding: 5px 12px; font-weight: bold; border-radius: 4px; display: inline-block; font-size: 11px; text-transform: uppercase; }
+    .grid { display: flex; gap: 20px; border-bottom: 2px solid #4A0E0E; padding-bottom: 15px; margin-bottom: 20px; }
+    .card { flex: 1; background: #FAF7F2; padding: 12px 15px; border-radius: 8px; border: 1px solid #e2d7c5; font-size: 12px; }
+    .card h4 { margin: 0 0 6px 0; color: #4A0E0E; text-transform: uppercase; font-size: 11px; border-bottom: 1px solid #d4c5b0; padding-bottom: 4px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; border: 1px solid #333; }
+    th { background: #4A0E0E; color: #fff; padding: 10px; text-align: left; font-size: 11px; text-transform: uppercase; }
+    td { padding: 9px 10px; border-bottom: 1px solid #ddd; border-right: 1px solid #eee; }
+    .totals-wrap { display: flex; justify-content: space-between; border-bottom: 2px solid #4A0E0E; padding-bottom: 15px; margin-bottom: 20px; }
+    .totals { width: 320px; font-size: 12px; }
+    .total-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #eee; }
+    .grand-total { font-size: 16px; font-weight: bold; color: #c00000; background: #FAF7F2; padding: 8px; border-radius: 6px; border-top: 2px solid #4A0E0E; margin-top: 6px; }
+    .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; font-size: 11px; color: #444; }
+    .sign-box { text-align: center; border-top: 2px solid #4A0E0E; width: 200px; padding-top: 6px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1 class="company-title">KARUPPA CRACKERS</h1>
+      <p class="tagline">Sivakasi Premium Fireworks & Fancy Sky Shots Direct Manufacturer</p>
+      <p class="meta-text">
+        123 Main Road, Industrial Estate, Sivakasi, Tamil Nadu - 626123<br/>
+        Phone: +91 98765 43210 | Email: sales@karuppacrackers.com<br/>
+        <strong>GSTIN: 33AAACK1234F1Z9</strong> | Explosives License: E/SC/TN/22/10082
+      </p>
+    </div>
+    <div style="text-align: right;">
+      <div class="badge">OFFICIAL POS RECEIPT INVOICE</div>
+      <p style="margin: 8px 0 2px 0; font-weight: bold; font-size: 13px;">Order No: #${invId}</p>
+      <p style="margin: 0; font-size: 12px;">Date: ${new Date().toLocaleDateString()}</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; font-weight: bold; color: #065f46;">STATUS: PAID (COUNTER POS)</p>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h4>Customer Details (Billed To)</h4>
+      <strong style="font-size: 14px; color: #000;">${invCust}</strong><br/>
+      Phone: ${invPhone}<br/>
+      Mode: Over the Counter Sale
+    </div>
+    <div class="card">
+      <h4>Store Dispatch Location</h4>
+      <strong>Karuppa Crackers Retail Outlet, Sivakasi Hub</strong>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 30px; text-align: center;">#</th>
+        <th>Product Description</th>
+        <th style="text-align: center;">Category</th>
+        <th style="text-align: right;">Unit Price</th>
+        <th style="text-align: center;">Qty</th>
+        <th style="text-align: right;">Total (₹)</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${invItems.map((item, idx) => `
+        <tr>
+          <td style="text-align: center;">${idx + 1}</td>
+          <td><strong>${item.name}</strong><br/><small style="color: #666;">Code: ${item.id}</small></td>
+          <td style="text-align: center;">${item.category}</td>
+          <td style="text-align: right;">₹${item.price.toLocaleString()}</td>
+          <td style="text-align: center;"><strong>${item.qty}</strong></td>
+          <td style="text-align: right;"><strong>₹${(item.price * item.qty).toLocaleString()}</strong></td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+
+  <div class="totals-wrap">
+    <div style="flex: 1; font-size: 11px; color: #555; padding-right: 20px;">
+      <div style="background: #faf5eb; padding: 10px; border-radius: 6px; border: 1px solid #e2d7c5; margin-bottom: 10px;">
+        <strong>Payment Information:</strong><br/>
+        Mode: Cash / UPI Counter Payment<br/>
+        Cashier: Mahesh Admin
+      </div>
+      <div style="background: #fff8e6; padding: 8px; border-radius: 6px; border: 1px solid #ffd591; color: #873800;">
+        <strong>Safety Instructions:</strong> Burst crackers strictly outdoors under adult supervision.
+      </div>
+    </div>
+    <div class="totals">
+      <div class="total-row"><span>Items Subtotal:</span> <strong>₹${invSubtotal.toLocaleString()}</strong></div>
+      <div class="total-row" style="color: #047857;"><span>Special Discount:</span> <span>-₹${invDiscount.toLocaleString()}</span></div>
+      <div class="total-row"><span>CGST (9%):</span> <span>₹${(invGst / 2).toLocaleString()}</span></div>
+      <div class="total-row"><span>SGST (9%):</span> <span>₹${(invGst / 2).toLocaleString()}</span></div>
+      <div class="total-row grand-total"><span>NET BILL PAID:</span> <span>₹${invTotal.toLocaleString()}</span></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div>
+      <strong>Terms & Conditions:</strong>
+      <ol style="margin: 4px 0 0 0; padding-left: 16px; font-size: 10px;">
+        <li>Goods once sold will not be returned or exchanged.</li>
+        <li>All disputes subject to Sivakasi Jurisdiction only.</li>
+        <li>Computer generated official tax invoice receipt.</li>
+      </ol>
+    </div>
+    <div class="sign-box">
+      <strong style="color: #4A0E0E; font-size: 12px;">For KARUPPA CRACKERS</strong><br/><br/><br/>
+      <small style="text-transform: uppercase;">Authorized Signatory</small>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([invoiceHtml], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `POS_Tax_Invoice_${invId}_KaruppaCrackers.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const filteredCatalog = catalog.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.id.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCat = selectedCategory === 'All' || p.category === selectedCategory;
     return matchesSearch && matchesCat;
   });
 
+  const toggleFullscreen = () => {
+    if (!isFullscreenPos) {
+      setIsFullscreenPos(true);
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    } else {
+      setIsFullscreenPos(false);
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+  };
+
   return (
-    <div className="-mx-4 -mt-4 sm:mx-0 sm:mt-0 flex flex-col items-start max-w-[1650px] mx-auto pb-28 relative">
+    <div className={`flex flex-col items-start max-w-[1650px] mx-auto pb-28 relative ${
+      isFullscreenPos 
+        ? 'fixed inset-0 z-[999999] bg-[#F4F1EA] p-3 sm:p-6 overflow-y-auto w-full h-full max-w-none rounded-none' 
+        : '-mx-4 -mt-4 sm:mx-0 sm:mt-0'
+    }`}>
+      {/* Animated Top Toast Notification Banner */}
+      {successToast && (
+        <div className="fixed top-6 right-6 z-[1000005] bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-800 text-white font-black text-xs sm:text-sm px-5 py-3.5 rounded-2xl shadow-2xl border-2 border-amber-300 flex items-center gap-3 animate-in slide-in-from-top-5 duration-300">
+          <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+            <CheckCircle2 size={18} className="text-[#FFD700]" />
+          </div>
+          <span>{successToast}</span>
+        </div>
+      )}
+
       {/* Full-Width Product Catalog Workspace */}
       <div className="w-full bg-[#FAF7F2] rounded-none sm:rounded-3xl shadow-sm border-x-0 sm:border border-amber-900/20 overflow-hidden">
         {/* Header Bar */}
@@ -122,21 +332,21 @@ const AdminBilling = () => {
             </h2>
 
             {/* Toolbar Controls */}
-            <div className="flex items-center justify-between md:justify-end gap-2.5 w-full md:w-auto">
+            <div className="flex items-center justify-between md:justify-end gap-2.5 w-full md:w-auto flex-wrap sm:flex-nowrap">
               {/* Category Filter Selector */}
               <div className="relative flex-1 md:flex-initial">
                 <select 
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full md:w-auto pl-8 pr-8 py-2 bg-black/40 border border-white/20 rounded-2xl text-xs font-black text-amber-200 focus:outline-none appearance-none cursor-pointer hover:bg-black/60 transition-all shadow-sm"
+                  className="w-full md:w-auto pl-9 pr-9 py-2.5 bg-black/40 border border-white/20 rounded-2xl text-sm font-black text-amber-200 focus:outline-none appearance-none cursor-pointer hover:bg-black/60 transition-all shadow-sm"
                 >
                   <option value="All" className="bg-[#4A0E0E] text-white">All Categories</option>
                   {categories.filter(c => c !== 'All').map(cat => (
                     <option key={cat} value={cat} className="bg-[#4A0E0E] text-white">{cat}</option>
                   ))}
                 </select>
-                <Filter size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#FFD700] pointer-events-none stroke-[2.5]" />
-                <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-amber-200 pointer-events-none stroke-[2.5]" />
+                <Filter size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#FFD700] pointer-events-none stroke-[2.5]" />
+                <ChevronDown size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-200 pointer-events-none stroke-[2.5]" />
               </div>
 
               {/* Dynamic Columns per Row Icon Selector */}
@@ -144,20 +354,20 @@ const AdminBilling = () => {
                 <div className="relative">
                   <button 
                     onClick={() => setShowColMenu(!showColMenu)}
-                    className="px-3.5 py-2 bg-black/40 border border-white/20 rounded-2xl text-xs font-black text-amber-200 hover:bg-black/60 transition-all flex items-center gap-1.5 shadow-sm shrink-0"
+                    className="px-4 py-2.5 bg-black/40 border border-white/20 rounded-2xl text-sm font-black text-amber-200 hover:bg-black/60 transition-all flex items-center gap-2 shadow-sm shrink-0"
                     title="Change Cards Per Row"
                   >
-                    <Columns size={14} className="text-[#FFD700] stroke-[2.5]" />
+                    <Columns size={16} className="text-[#FFD700] stroke-[2.5]" />
                     <span>{gridCols}x Per Row</span>
-                    <ChevronDown size={12} className={`transition-transform stroke-[2.5] ${showColMenu ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={14} className={`transition-transform stroke-[2.5] ${showColMenu ? 'rotate-180' : ''}`} />
                   </button>
 
                   {/* Columns Selection Dropdown */}
                   {showColMenu && (
-                    <div className="absolute right-0 top-full mt-2 w-48 bg-[#3B0B0B] border-2 border-amber-400/40 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95">
-                      <p className="text-[10px] font-black uppercase text-amber-300 px-3 py-1 border-b border-amber-900/60 flex items-center justify-between">
+                    <div className="absolute right-0 top-full mt-2 w-52 bg-[#3B0B0B] border-2 border-amber-400/40 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95">
+                      <p className="text-xs font-black uppercase text-amber-300 px-3 py-1.5 border-b border-amber-900/60 flex items-center justify-between">
                         <span>Cards Per Row</span>
-                        <Columns size={12} />
+                        <Columns size={14} />
                       </p>
                       <div className="space-y-1 pt-1">
                         {[1, 2, 3, 4, 5, 6].map(cols => (
@@ -182,21 +392,45 @@ const AdminBilling = () => {
               <div className="flex items-center gap-1 bg-black/40 p-1 rounded-2xl border border-white/20 shrink-0">
                 <button 
                   onClick={() => setViewMode('grid')}
-                  className={`px-3 py-1 rounded-xl text-xs font-black transition-all flex items-center gap-1 ${
+                  className={`px-3.5 py-1.5 rounded-xl text-sm font-black transition-all flex items-center gap-1.5 ${
                     viewMode === 'grid' ? 'bg-[#FFD700] text-[#4A0E0E] shadow-sm' : 'text-amber-200 hover:text-white'
                   }`}
                 >
-                  <LayoutGrid size={13} /> Grid
+                  <LayoutGrid size={15} /> Grid
                 </button>
                 <button 
                   onClick={() => setViewMode('list')}
-                  className={`px-3 py-1 rounded-xl text-xs font-black transition-all flex items-center gap-1 ${
+                  className={`px-3.5 py-1.5 rounded-xl text-sm font-black transition-all flex items-center gap-1.5 ${
                     viewMode === 'list' ? 'bg-[#FFD700] text-[#4A0E0E] shadow-sm' : 'text-amber-200 hover:text-white'
                   }`}
                 >
-                  <List size={13} /> List
+                  <List size={15} /> List
                 </button>
               </div>
+
+              {/* Full Screen POS Toggle Button */}
+              <button 
+                type="button"
+                onClick={toggleFullscreen}
+                className={`px-4 py-2.5 rounded-2xl text-sm font-black transition-all flex items-center gap-2 shadow-sm shrink-0 border ${
+                  isFullscreenPos 
+                    ? 'bg-[#FFD700] text-[#4A0E0E] border-amber-300 shadow-md transform scale-105 font-black' 
+                    : 'bg-black/40 border-white/20 text-amber-200 hover:text-white hover:bg-black/60'
+                }`}
+                title={isFullscreenPos ? "Exit Full Screen POS" : "Full Screen POS Mode (Hide Sidebar & Topbar)"}
+              >
+                {isFullscreenPos ? (
+                  <>
+                    <Minimize2 size={16} className="stroke-[2.5]" />
+                    <span>Exit Full Screen</span>
+                  </>
+                ) : (
+                  <>
+                    <Maximize2 size={16} className="text-[#FFD700] stroke-[2.5]" />
+                    <span>Full Screen POS</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
 
@@ -268,28 +502,6 @@ const AdminBilling = () => {
                       <span className="text-lg sm:text-xl font-black text-[#c00000]">₹{product.price}</span>
                     </div>
 
-                    {/* Show in Frontend Toggle Switch */}
-                    <div className="flex items-center justify-between bg-amber-100/60 px-3 py-1.5 rounded-xl border border-amber-900/15">
-                      <span className="text-[10px] sm:text-xs font-black text-[#4A0E0E] flex items-center gap-1">
-                        <span>Frontend:</span>
-                        <span className={product.showInFrontend ? "text-emerald-700 font-extrabold" : "text-gray-500 font-extrabold"}>
-                          {product.showInFrontend ? "ON" : "OFF"}
-                        </span>
-                      </span>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); toggleFrontendVisibility(product.id); }}
-                        className={`w-9 h-5 rounded-full p-0.5 transition-colors relative flex items-center shrink-0 ${
-                          product.showInFrontend ? 'bg-emerald-600' : 'bg-gray-400'
-                        }`}
-                        title={product.showInFrontend ? "Disable on Frontend" : "Enable on Frontend"}
-                      >
-                        <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform ${
-                          product.showInFrontend ? 'translate-x-4' : 'translate-x-0'
-                        }`} />
-                      </button>
-                    </div>
-
                     {/* Full-Width Button Row */}
                     <div className="pt-1">
                       {isInCart ? (
@@ -357,21 +569,6 @@ const AdminBilling = () => {
                     <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 border-t sm:border-t-0 pt-2 sm:pt-0">
                       <span className="font-black text-[#4A0E0E] text-sm sm:text-base">₹{product.price}</span>
 
-                      {/* Frontend Toggle Switch */}
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); toggleFrontendVisibility(product.id); }}
-                        className={`px-3 py-1 rounded-xl text-[10px] font-black border transition-all flex items-center gap-1.5 ${
-                          product.showInFrontend 
-                            ? 'bg-emerald-100 text-emerald-900 border-emerald-300' 
-                            : 'bg-gray-200 text-gray-700 border-gray-300'
-                        }`}
-                        title="Toggle Frontend Visibility"
-                      >
-                        <span className={`w-2 h-2 rounded-full ${product.showInFrontend ? 'bg-emerald-600' : 'bg-gray-500'}`}></span>
-                        {product.showInFrontend ? 'Frontend: ON' : 'Frontend: OFF'}
-                      </button>
-
                       {isInCart ? (
                         <div className="flex items-center bg-[#4A0E0E] text-white rounded-xl overflow-hidden shadow-sm">
                           <button onClick={() => updateQty(product.id, -1)} className="p-1.5 hover:bg-red-950"><Minus size={13}/></button>
@@ -395,10 +592,12 @@ const AdminBilling = () => {
         </div>
       </div>
 
-      {/* UNIVERSAL STICKY FLOATING BILL BAR (Works on BOTH Mobile & Desktop Screens with Sidebar Animation!) */}
+      {/* UNIVERSAL STICKY FLOATING BILL BAR */}
       {cart.length > 0 && (
-        <div className={`fixed bottom-0 right-0 z-40 bg-[#3B0B0B] border-t-4 border-[#FFD700] px-4 sm:px-8 py-3.5 shadow-2xl flex items-center justify-between text-white transition-all duration-300 left-0 ${
-          isDesktopSidebarExpanded ? 'lg:left-72' : 'lg:left-20'
+        <div className={`fixed bottom-0 right-0 px-4 sm:px-8 py-3.5 shadow-2xl flex items-center justify-between text-white transition-all duration-300 bg-[#3B0B0B] border-t-4 border-[#FFD700] ${
+          isFullscreenPos 
+            ? 'left-0 z-[1000000]' 
+            : `left-0 z-40 ${isDesktopSidebarExpanded ? 'lg:left-72' : 'lg:left-20'}`
         }`}>
           {/* Cart Live Counter */}
           <div onClick={() => setShowCartDrawer(true)} className="cursor-pointer flex items-center gap-3">
@@ -528,6 +727,60 @@ const AdminBilling = () => {
         </div>
       )}
 
+      {/* Step 1: Pre-Save Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-[#FAF7F2] rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-amber-900/30 text-center relative space-y-5 animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 flex items-center justify-center text-[#4A0E0E] shadow-lg">
+              <CheckCircle2 size={36} strokeWidth={2.5} />
+            </div>
+
+            <div>
+              <h3 className="text-xl sm:text-2xl font-serif font-black text-gray-900">Confirm & Complete POS Sale?</h3>
+              <p className="text-xs font-bold text-amber-800 mt-1">Review bill summary before saving to database:</p>
+            </div>
+
+            {/* Bill Summary Card */}
+            <div className="bg-[#EFEAE1] p-4 rounded-2xl border border-amber-900/15 text-left text-xs font-bold space-y-2">
+              <div className="flex justify-between border-b border-amber-900/10 pb-1.5">
+                <span className="text-gray-600 uppercase text-[10px] font-black">Customer Name:</span>
+                <span className="text-gray-900 font-black">{customerName || 'Walk-in Customer'}</span>
+              </div>
+              <div className="flex justify-between border-b border-amber-900/10 pb-1.5">
+                <span className="text-gray-600 uppercase text-[10px] font-black">Total Items:</span>
+                <span className="text-gray-900 font-black">{cart.reduce((sum, item) => sum + item.qty, 0)} Items</span>
+              </div>
+              <div className="flex justify-between border-b border-amber-900/10 pb-1.5">
+                <span className="text-gray-600 uppercase text-[10px] font-black">Payment Mode:</span>
+                <span className="text-emerald-800 font-black">Cash on Counter</span>
+              </div>
+              <div className="flex justify-between items-center pt-1 text-sm">
+                <span className="text-gray-900 font-black">Net Payable:</span>
+                <span className="text-[#c00000] font-black text-xl">₹{grandTotal.toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowConfirmModal(false)}
+                className="flex-1 py-3 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 font-bold text-xs rounded-2xl transition-all shadow-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleFinalConfirmSave}
+                className="flex-1 py-3 bg-gradient-to-r from-[#FFD700] to-amber-500 hover:from-amber-400 hover:to-amber-600 text-[#4A0E0E] font-black text-xs rounded-2xl shadow-md transition-all flex items-center justify-center gap-1.5"
+              >
+                <CheckCircle2 size={16} strokeWidth={2.5} /> Yes, Save & Complete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Order Confirmation Dialog Modal */}
       {completedOrder && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -549,7 +802,7 @@ const AdminBilling = () => {
 
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <button 
-                  onClick={() => alert(`Printing Tax Receipt Invoice for Order #${completedOrder.orderId}...`)}
+                  onClick={handleTriggerPrint}
                   className="py-2.5 sm:py-3 bg-[#4A0E0E] hover:bg-red-950 text-white rounded-xl font-black text-xs shadow-sm flex items-center justify-center gap-1.5"
                 >
                   <Printer size={15} /> Print Receipt
@@ -577,6 +830,320 @@ const AdminBilling = () => {
           </div>
         </div>
       )}
+
+      {/* Official Tax Invoice Modal & Print View for POS */}
+      {showInvoiceModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[1000001] flex items-center justify-center p-4 sm:p-6 overflow-y-auto no-print">
+          <div className="bg-white rounded-3xl max-w-4xl w-full shadow-2xl border border-gray-300 relative overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+            {/* Modal Top Header Controls */}
+            <div className="p-4 bg-gradient-to-r from-[#4A0E0E] to-[#2B0808] text-white flex justify-between items-center shrink-0 border-b-2 border-amber-400">
+              <div className="flex items-center gap-2">
+                <Printer className="text-[#FFD700]" size={20} />
+                <h3 className="font-serif font-black text-lg text-white">
+                  Official POS Tax Invoice — #{completedOrder ? completedOrder.orderId : 'POS-547'}
+                </h3>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleDownloadInvoice}
+                  className="px-4 py-2 bg-white/15 hover:bg-white/25 text-white font-bold text-xs rounded-xl border border-white/20 transition-all flex items-center gap-1.5 transform hover:scale-105"
+                >
+                  <Download size={15} /> Download Invoice
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerSuccess('Opening browser print dialog...');
+                    setTimeout(() => window.print(), 200);
+                  }}
+                  className="px-5 py-2 bg-gradient-to-r from-[#FFD700] to-amber-500 hover:from-amber-400 hover:to-amber-600 text-[#4A0E0E] font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-2 transform hover:scale-105"
+                >
+                  <Printer size={16} strokeWidth={2.5} /> Print Invoice Now
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowInvoiceModal(false)}
+                  className="p-2 text-gray-300 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all"
+                  title="Close Invoice Preview"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+
+            {/* Scrollable Printable Invoice Content */}
+            <div className="p-8 overflow-y-auto flex-1 bg-white text-gray-900 printable-invoice-document">
+              {/* Document Header */}
+              <div className="flex justify-between items-start border-b-2 border-gray-900 pb-6 mb-6">
+                <div className="flex items-center gap-4">
+                  <img 
+                    src="https://res.cloudinary.com/vf0fqhwo/image/upload/v1786363324/logo_q7lezq.jpg" 
+                    alt="Karuppa Crackers" 
+                    className="w-16 h-16 rounded-xl border border-gray-300 object-contain shrink-0" 
+                  />
+                  <div>
+                    <h1 className="text-2xl font-serif font-black text-[#4A0E0E] uppercase tracking-wide">KARUPPA CRACKERS</h1>
+                    <p className="text-xs font-bold text-amber-900">Sivakasi Premium Fireworks & Fancy Sky Shots Direct Manufacturer</p>
+                    <p className="text-[11px] text-gray-600 mt-1 leading-tight">
+                      123 Main Road, Industrial Estate, Sivakasi, Tamil Nadu - 626123<br />
+                      Phone: +91 98765 43210 | Email: sales@karuppacrackers.com | Web: www.karuppacrackers.com
+                    </p>
+                    <p className="text-[10px] font-bold text-gray-800 mt-1">
+                      GSTIN: <span className="font-black">33AAACK1234F1Z9</span> | Explosives License: <span className="font-black">E/SC/TN/22/10082</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="inline-block px-4 py-1.5 bg-[#4A0E0E] text-[#FFD700] font-black text-xs uppercase tracking-widest rounded-md mb-2">
+                    OFFICIAL POS TAX INVOICE
+                  </span>
+                  <p className="text-xs font-bold text-gray-800">Order No: <span className="font-black text-gray-900">#{completedOrder ? completedOrder.orderId : 'POS-547'}</span></p>
+                  <p className="text-xs text-gray-600">Date: <span className="font-bold text-gray-800">{new Date().toLocaleDateString()}</span></p>
+                  <p className="text-xs text-gray-600">Payment Status: <span className="font-black text-emerald-800 uppercase">PAID (COUNTER POS)</span></p>
+                </div>
+              </div>
+
+              {/* Billed To & Store Grid */}
+              <div className="grid grid-cols-2 gap-6 border-b-2 border-gray-900 pb-6 mb-6 text-xs">
+                <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-900/15">
+                  <h3 className="font-black uppercase text-[#4A0E0E] text-xs border-b border-amber-900/20 pb-1 mb-2">CUSTOMER DETAILS (BILLED TO)</h3>
+                  <p className="font-black text-sm text-gray-900">{completedOrder ? completedOrder.customer : (customerName || 'Walk-in Customer')}</p>
+                  <p className="text-gray-700 font-bold mt-1">Phone: {completedOrder ? completedOrder.phone : (customerPhone || '+91 9876543210')}</p>
+                  <p className="text-gray-700 font-medium">Billing Mode: Over the Counter POS Sale</p>
+                </div>
+
+                <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-900/15">
+                  <h3 className="font-black uppercase text-[#4A0E0E] text-xs border-b border-amber-900/20 pb-1 mb-2">STORE DISPATCH LOCATION</h3>
+                  <p className="text-gray-900 font-bold leading-relaxed">Karuppa Crackers Main Retail Store & Warehouse Hub, Sivakasi</p>
+                </div>
+              </div>
+
+              {/* Itemized Table */}
+              <table className="w-full text-left text-xs border-collapse border border-gray-900 mb-6">
+                <thead>
+                  <tr className="bg-[#4A0E0E] text-white font-black uppercase tracking-wider text-[11px]">
+                    <th className="p-3 border border-gray-900 w-12 text-center">S.No</th>
+                    <th className="p-3 border border-gray-900">Product Item Description</th>
+                    <th className="p-3 border border-gray-900 text-center">Category</th>
+                    <th className="p-3 border border-gray-900 text-right">Unit Price</th>
+                    <th className="p-3 border border-gray-900 text-center">Qty</th>
+                    <th className="p-3 border border-gray-900 text-right">Total (₹)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-300">
+                  {(completedOrder ? completedOrder.items : (cart.length > 0 ? cart : catalog.slice(0, 2))).map((item, idx) => (
+                    <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-amber-50/20'}>
+                      <td className="p-3 border border-gray-300 text-center font-bold">{idx + 1}</td>
+                      <td className="p-3 border border-gray-300">
+                        <p className="font-black text-gray-900">{item.name}</p>
+                        <p className="text-[10px] text-gray-500 font-bold">Code: {item.id}</p>
+                      </td>
+                      <td className="p-3 border border-gray-300 text-center font-bold text-gray-700">{item.category}</td>
+                      <td className="p-3 border border-gray-300 text-right font-bold">₹{item.price.toLocaleString()}</td>
+                      <td className="p-3 border border-gray-300 text-center font-black">{item.qty}</td>
+                      <td className="p-3 border border-gray-300 text-right font-black">₹{(item.price * item.qty).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Calculation & Summary Grid */}
+              <div className="flex justify-between items-start gap-6 border-b-2 border-gray-900 pb-6 mb-6">
+                <div className="flex-1 space-y-3 text-xs">
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-300 space-y-1">
+                    <p className="font-black text-gray-900 uppercase text-[10px]">Payment Information</p>
+                    <p className="text-gray-700">Payment Mode: <span className="font-bold">Cash / UPI Counter Payment</span></p>
+                    <p className="text-gray-700">Counter Cashier: <span className="font-bold">Mahesh Admin</span></p>
+                  </div>
+
+                  <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-gray-700 font-medium">
+                    <p className="font-black text-gray-900 mb-0.5">Safety Instructions:</p>
+                    Burst crackers strictly outdoors under adult supervision. Keep water nearby.
+                  </div>
+                </div>
+
+                <div className="w-80 space-y-1.5 text-xs font-bold text-gray-800">
+                  <div className="flex justify-between py-1 border-b border-gray-200">
+                    <span>Items Subtotal:</span>
+                    <span className="font-black text-gray-900">₹{(completedOrder ? completedOrder.subtotal : subtotal).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-gray-200 text-emerald-700">
+                    <span>Special Discount:</span>
+                    <span>-₹{(completedOrder ? completedOrder.discount : discount).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-gray-200">
+                    <span>CGST (9%):</span>
+                    <span>₹{((completedOrder ? completedOrder.gst : gst) / 2).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-gray-200">
+                    <span>SGST (9%):</span>
+                    <span>₹{((completedOrder ? completedOrder.gst : gst) / 2).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-t-2 border-gray-900 text-base font-black text-gray-900 bg-amber-100/70 px-3 rounded-lg mt-2">
+                    <span>NET BILL PAID:</span>
+                    <span className="text-[#c00000]">₹{(completedOrder ? completedOrder.grandTotal : grandTotal).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Terms & Authorized Signatory Footer */}
+              <div className="flex justify-between items-end text-[11px] text-gray-700 pt-2">
+                <div>
+                  <p className="font-black text-gray-900 uppercase">Terms & Conditions:</p>
+                  <ol className="list-decimal list-inside space-y-0.5 mt-1 text-[10px] text-gray-600">
+                    <li>Goods once sold will not be returned or exchanged.</li>
+                    <li>All disputes subject to Sivakasi Jurisdiction only.</li>
+                    <li>This is a computer-generated tax invoice receipt.</li>
+                  </ol>
+                </div>
+
+                <div className="text-center w-56 border-t-2 border-gray-900 pt-2 mt-8">
+                  <p className="font-serif font-black text-[#4A0E0E] text-xs">For KARUPPA CRACKERS</p>
+                  <div className="h-10"></div>
+                  <p className="font-bold text-[10px] uppercase text-gray-600">Authorized Signatory</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DEDICATED PRINTABLE TAX INVOICE FOR POS (Visible ONLY in browser print dialog) */}
+      <div className="hidden print:block print-area bg-white text-gray-900 p-8 font-sans w-full leading-normal">
+        {/* Document Header */}
+        <div className="flex justify-between items-start border-b-2 border-gray-900 pb-6 mb-6">
+          <div className="flex items-center gap-4">
+            <img 
+              src="https://res.cloudinary.com/vf0fqhwo/image/upload/v1786363324/logo_q7lezq.jpg" 
+              alt="Karuppa Crackers" 
+              className="w-16 h-16 rounded-xl border border-gray-300 object-contain shrink-0" 
+            />
+            <div>
+              <h1 className="text-2xl font-serif font-black text-[#4A0E0E] uppercase tracking-wide">KARUPPA CRACKERS</h1>
+              <p className="text-xs font-bold text-amber-900">Sivakasi Premium Fireworks & Fancy Sky Shots Direct Manufacturer</p>
+              <p className="text-[11px] text-gray-600 mt-1 leading-tight">
+                123 Main Road, Industrial Estate, Sivakasi, Tamil Nadu - 626123<br />
+                Phone: +91 98765 43210 | Email: sales@karuppacrackers.com | Web: www.karuppacrackers.com
+              </p>
+              <p className="text-[10px] font-bold text-gray-800 mt-1">
+                GSTIN: <span className="font-black">33AAACK1234F1Z9</span> | Explosives License: <span className="font-black">E/SC/TN/22/10082</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="text-right">
+            <span className="inline-block px-4 py-1.5 bg-[#4A0E0E] text-[#FFD700] font-black text-xs uppercase tracking-widest rounded-md mb-2">
+              OFFICIAL POS TAX INVOICE
+            </span>
+            <p className="text-xs font-bold text-gray-800">Order No: <span className="font-black text-gray-900">#{completedOrder ? completedOrder.orderId : 'POS-547'}</span></p>
+            <p className="text-xs text-gray-600">Date: <span className="font-bold text-gray-800">{new Date().toLocaleDateString()}</span></p>
+            <p className="text-xs text-gray-600">Payment Status: <span className="font-black text-emerald-800 uppercase">PAID (COUNTER POS)</span></p>
+          </div>
+        </div>
+
+        {/* Billed To & Store Grid */}
+        <div className="grid grid-cols-2 gap-6 border-b-2 border-gray-900 pb-6 mb-6 text-xs">
+          <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-900/15">
+            <h3 className="font-black uppercase text-[#4A0E0E] text-xs border-b border-amber-900/20 pb-1 mb-2">CUSTOMER DETAILS (BILLED TO)</h3>
+            <p className="font-black text-sm text-gray-900">{completedOrder ? completedOrder.customer : (customerName || 'Walk-in Customer')}</p>
+            <p className="text-gray-700 font-bold mt-1">Phone: {completedOrder ? completedOrder.phone : (customerPhone || '+91 9876543210')}</p>
+            <p className="text-gray-700 font-medium">Billing Mode: Over the Counter POS Sale</p>
+          </div>
+
+          <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-900/15">
+            <h3 className="font-black uppercase text-[#4A0E0E] text-xs border-b border-amber-900/20 pb-1 mb-2">STORE DISPATCH LOCATION</h3>
+            <p className="text-gray-900 font-bold leading-relaxed">Karuppa Crackers Main Retail Store & Warehouse Hub, Sivakasi</p>
+          </div>
+        </div>
+
+        {/* Itemized Table */}
+        <table className="w-full text-left text-xs border-collapse border border-gray-900 mb-6">
+          <thead>
+            <tr className="bg-[#4A0E0E] text-white font-black uppercase tracking-wider text-[11px]">
+              <th className="p-3 border border-gray-900 w-12 text-center">S.No</th>
+              <th className="p-3 border border-gray-900">Product Item Description</th>
+              <th className="p-3 border border-gray-900 text-center">Category</th>
+              <th className="p-3 border border-gray-900 text-right">Unit Price</th>
+              <th className="p-3 border border-gray-900 text-center">Qty</th>
+              <th className="p-3 border border-gray-900 text-right">Total (₹)</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-300">
+            {(completedOrder ? completedOrder.items : (cart.length > 0 ? cart : catalog.slice(0, 2))).map((item, idx) => (
+              <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-amber-50/20'}>
+                <td className="p-3 border border-gray-300 text-center font-bold">{idx + 1}</td>
+                <td className="p-3 border border-gray-300">
+                  <p className="font-black text-gray-900">{item.name}</p>
+                  <p className="text-[10px] text-gray-500 font-bold">Code: {item.id}</p>
+                </td>
+                <td className="p-3 border border-gray-300 text-center font-bold text-gray-700">{item.category}</td>
+                <td className="p-3 border border-gray-300 text-right font-bold">₹{item.price.toLocaleString()}</td>
+                <td className="p-3 border border-gray-300 text-center font-black">{item.qty}</td>
+                <td className="p-3 border border-gray-300 text-right font-black">₹{(item.price * item.qty).toLocaleString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Calculation & Summary Grid */}
+        <div className="flex justify-between items-start gap-6 border-b-2 border-gray-900 pb-6 mb-6">
+          <div className="flex-1 space-y-3 text-xs">
+            <div className="bg-gray-50 p-4 rounded-xl border border-gray-300 space-y-1">
+              <p className="font-black text-gray-900 uppercase text-[10px]">Payment Information</p>
+              <p className="text-gray-700">Payment Mode: <span className="font-bold">Cash / UPI Counter Payment</span></p>
+              <p className="text-gray-700">Counter Cashier: <span className="font-bold">Mahesh Admin</span></p>
+            </div>
+
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-gray-700 font-medium">
+              <p className="font-black text-gray-900 mb-0.5">Safety Instructions:</p>
+              Burst crackers strictly outdoors under adult supervision. Keep water nearby.
+            </div>
+          </div>
+
+          <div className="w-80 space-y-1.5 text-xs font-bold text-gray-800">
+            <div className="flex justify-between py-1 border-b border-gray-200">
+              <span>Items Subtotal:</span>
+              <span className="font-black text-gray-900">₹{(completedOrder ? completedOrder.subtotal : subtotal).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-gray-200 text-emerald-700">
+              <span>Special Discount:</span>
+              <span>-₹{(completedOrder ? completedOrder.discount : discount).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-gray-200">
+              <span>CGST (9%):</span>
+              <span>₹{((completedOrder ? completedOrder.gst : gst) / 2).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-gray-200">
+              <span>SGST (9%):</span>
+              <span>₹{((completedOrder ? completedOrder.gst : gst) / 2).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between py-2 border-t-2 border-gray-900 text-base font-black text-gray-900 bg-amber-100/70 px-3 rounded-lg mt-2">
+              <span>NET BILL PAID:</span>
+              <span className="text-[#c00000]">₹{(completedOrder ? completedOrder.grandTotal : grandTotal).toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Terms & Authorized Signatory Footer */}
+        <div className="flex justify-between items-end text-[11px] text-gray-700 pt-2">
+          <div>
+            <p className="font-black text-gray-900 uppercase">Terms & Conditions:</p>
+            <ol className="list-decimal list-inside space-y-0.5 mt-1 text-[10px] text-gray-600">
+              <li>Goods once sold will not be returned or exchanged.</li>
+              <li>All disputes subject to Sivakasi Jurisdiction only.</li>
+              <li>This is a computer-generated tax invoice receipt.</li>
+            </ol>
+          </div>
+
+          <div className="text-center w-56 border-t-2 border-gray-900 pt-2 mt-8">
+            <p className="font-serif font-black text-[#4A0E0E] text-xs">For KARUPPA CRACKERS</p>
+            <div className="h-10"></div>
+            <p className="font-bold text-[10px] uppercase text-gray-600">Authorized Signatory</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

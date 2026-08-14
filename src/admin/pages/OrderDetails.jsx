@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { ArrowLeft, Phone, Printer, Send, Truck, CheckCircle2, Clock, MapPin, User, Calendar, PackageCheck, Check, AlertCircle, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, Phone, Printer, Send, Truck, CheckCircle2, Clock, MapPin, User, Calendar, PackageCheck, Check, AlertCircle, X, Download } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
+import { subscribeOrders, updateOrderStatusInFirestore } from '../../services/firebaseService';
 
 const AdminOrderDetails = () => {
   const { id } = useParams();
@@ -24,6 +25,35 @@ const AdminOrderDetails = () => {
     ]
   });
 
+  useEffect(() => {
+    const unsub = subscribeOrders((firestoreOrders) => {
+      if (Array.isArray(firestoreOrders)) {
+        const found = firestoreOrders.find(o => String(o.id) === String(id));
+        if (found) {
+          setOrder({
+            id: String(found.id),
+            customer: found.customerName || found.customer || 'Valued Customer',
+            phone: found.phone || 'N/A',
+            email: found.email || 'N/A',
+            date: found.createdAt ? new Date(found.createdAt).toLocaleString('en-IN') : (found.date || 'Today'),
+            status: found.status || 'Pending',
+            paymentMethod: 'WhatsApp / Online Order',
+            paymentStatus: 'Confirmed',
+            address: found.address || 'Direct Order',
+            items: (found.items || []).map(i => ({
+              id: i.id || `ITEM-${Math.floor(Math.random() * 100)}`,
+              name: i.name || 'Firework Item',
+              category: i.category || 'Fireworks',
+              price: typeof i.price === 'number' ? i.price : parseInt(String(i.price).replace(/[^\d]/g, ''), 10) || 0,
+              qty: i.quantity || i.qty || 1
+            }))
+          });
+        }
+      }
+    });
+    return () => unsub();
+  }, [id]);
+
   // Action Confirmation Modal State
   const [confirmConfig, setConfirmConfig] = useState(null);
   // Success Toast Message State
@@ -31,9 +61,15 @@ const AdminOrderDetails = () => {
   // Tax Invoice Modal State
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
-  const updateStatus = (newStatus) => {
+  const updateStatus = async (newStatus) => {
     setOrder(prev => ({ ...prev, status: newStatus }));
-    triggerSuccess(`Order ${order.id} status updated to "${newStatus}"!`);
+    try {
+      await updateOrderStatusInFirestore(order.id, newStatus);
+      triggerSuccess(`Order ${order.id} status updated to "${newStatus}" in Backend Database!`);
+    } catch (err) {
+      console.error("Error updating order status in Firestore:", err);
+      triggerSuccess(`Order ${order.id} status updated to "${newStatus}"!`);
+    }
   };
 
   const triggerSuccess = (msg) => {
@@ -58,6 +94,141 @@ const AdminOrderDetails = () => {
   const gst = Math.round((subtotal - discount) * 0.18);
   const deliveryFee = 150;
   const grandTotal = subtotal - discount + gst + deliveryFee;
+
+  const handleDownloadInvoice = () => {
+    triggerSuccess(`Downloading Tax Invoice for Order ${order.id}...`);
+    
+    const invoiceHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Karuppa Crackers Tax Invoice - ${order.id}</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 30px; color: #111; line-height: 1.5; background: #fff; }
+    .header { display: flex; justify-content: space-between; border-bottom: 2px solid #4A0E0E; padding-bottom: 15px; margin-bottom: 20px; }
+    .company-title { color: #4A0E0E; font-size: 24px; font-weight: bold; margin: 0; }
+    .tagline { color: #701515; font-size: 12px; font-weight: bold; margin: 2px 0 6px 0; }
+    .meta-text { font-size: 11px; color: #555; margin: 0; }
+    .badge { background: #4A0E0E; color: #FFD700; padding: 5px 12px; font-weight: bold; border-radius: 4px; display: inline-block; font-size: 11px; text-transform: uppercase; }
+    .grid { display: flex; gap: 20px; border-bottom: 2px solid #4A0E0E; padding-bottom: 15px; margin-bottom: 20px; }
+    .card { flex: 1; background: #FAF7F2; padding: 12px 15px; border-radius: 8px; border: 1px solid #e2d7c5; font-size: 12px; }
+    .card h4 { margin: 0 0 6px 0; color: #4A0E0E; text-transform: uppercase; font-size: 11px; border-bottom: 1px solid #d4c5b0; padding-bottom: 4px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; border: 1px solid #333; }
+    th { background: #4A0E0E; color: #fff; padding: 10px; text-align: left; font-size: 11px; text-transform: uppercase; }
+    td { padding: 9px 10px; border-bottom: 1px solid #ddd; border-right: 1px solid #eee; }
+    .totals-wrap { display: flex; justify-content: space-between; border-bottom: 2px solid #4A0E0E; padding-bottom: 15px; margin-bottom: 20px; }
+    .totals { width: 320px; font-size: 12px; }
+    .total-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #eee; }
+    .grand-total { font-size: 16px; font-weight: bold; color: #c00000; background: #FAF7F2; padding: 8px; border-radius: 6px; border-top: 2px solid #4A0E0E; margin-top: 6px; }
+    .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; font-size: 11px; color: #444; }
+    .sign-box { text-align: center; border-top: 2px solid #4A0E0E; width: 200px; padding-top: 6px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1 class="company-title">KARUPPA CRACKERS</h1>
+      <p class="tagline">Sivakasi Premium Fireworks & Fancy Sky Shots Direct Manufacturer</p>
+      <p class="meta-text">
+        123 Main Road, Industrial Estate, Sivakasi, Tamil Nadu - 626123<br/>
+        Phone: +91 98765 43210 | Email: sales@karuppacrackers.com<br/>
+        <strong>GSTIN: 33AAACK1234F1Z9</strong> | Explosives License: E/SC/TN/22/10082
+      </p>
+    </div>
+    <div style="text-align: right;">
+      <div class="badge">OFFICIAL TAX INVOICE</div>
+      <p style="margin: 8px 0 2px 0; font-weight: bold; font-size: 13px;">Invoice No: ${order.id}</p>
+      <p style="margin: 0; font-size: 12px;">Date: ${order.date}</p>
+      <p style="margin: 4px 0 0 0; font-size: 12px; font-weight: bold; color: #065f46;">STATUS: PAID (UPI)</p>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h4>Customer Details (Billed To)</h4>
+      <strong style="font-size: 14px; color: #000;">${order.customer}</strong><br/>
+      Phone: ${order.phone}<br/>
+      Email: ${order.email}
+    </div>
+    <div class="card">
+      <h4>Dispatch & Shipping Address</h4>
+      <strong>${order.address}</strong>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 30px; text-align: center;">#</th>
+        <th>Product Description</th>
+        <th style="text-align: center;">Category</th>
+        <th style="text-align: right;">Unit Price</th>
+        <th style="text-align: center;">Qty</th>
+        <th style="text-align: right;">Total (₹)</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${order.items.map((item, idx) => `
+        <tr>
+          <td style="text-align: center;">${idx + 1}</td>
+          <td><strong>${item.name}</strong><br/><small style="color: #666;">Code: ${item.id}</small></td>
+          <td style="text-align: center;">${item.category}</td>
+          <td style="text-align: right;">₹${item.price.toLocaleString()}</td>
+          <td style="text-align: center;"><strong>${item.qty}</strong></td>
+          <td style="text-align: right;"><strong>₹${(item.price * item.qty).toLocaleString()}</strong></td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+
+  <div class="totals-wrap">
+    <div style="flex: 1; font-size: 11px; color: #555; padding-right: 20px;">
+      <div style="background: #faf5eb; padding: 10px; border-radius: 6px; border: 1px solid #e2d7c5; margin-bottom: 10px;">
+        <strong>Payment Information:</strong><br/>
+        Mode: ${order.paymentMethod}<br/>
+        Dispatch Origin: Sivakasi Central Warehouse
+      </div>
+      <div style="background: #fff8e6; padding: 8px; border-radius: 6px; border: 1px solid #ffd591; color: #873800;">
+        <strong>Safety Instructions:</strong> Burst crackers strictly outdoors under adult supervision.
+      </div>
+    </div>
+    <div class="totals">
+      <div class="total-row"><span>Items Subtotal:</span> <strong>₹${subtotal.toLocaleString()}</strong></div>
+      <div class="total-row" style="color: #047857;"><span>Festive Offer Discount (5%):</span> <span>-₹${discount.toLocaleString()}</span></div>
+      <div class="total-row"><span>CGST (9%):</span> <span>₹${(gst / 2).toLocaleString()}</span></div>
+      <div class="total-row"><span>SGST (9%):</span> <span>₹${(gst / 2).toLocaleString()}</span></div>
+      <div class="total-row"><span>Transport & Freight:</span> <span>₹${deliveryFee}</span></div>
+      <div class="total-row grand-total"><span>NET AMOUNT PAID:</span> <span>₹${grandTotal.toLocaleString()}</span></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div>
+      <strong>Terms & Conditions:</strong>
+      <ol style="margin: 4px 0 0 0; padding-left: 16px; font-size: 10px;">
+        <li>Goods once sold will not be returned or exchanged.</li>
+        <li>All disputes subject to Sivakasi Jurisdiction only.</li>
+        <li>Computer generated official tax invoice receipt.</li>
+      </ol>
+    </div>
+    <div class="sign-box">
+      <strong style="color: #4A0E0E; font-size: 12px;">For KARUPPA CRACKERS</strong><br/><br/><br/>
+      <small style="text-transform: uppercase;">Authorized Signatory</small>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([invoiceHtml], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Tax_Invoice_${order.id.replace('#', '')}_KaruppaCrackers.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <>
@@ -156,6 +327,13 @@ const AdminOrderDetails = () => {
             className="px-4 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-[#4A0E0E] rounded-2xl font-black text-xs shadow-md transition-all flex items-center gap-1.5 transform hover:scale-105"
           >
             <Printer size={15} /> Print Invoice
+          </button>
+
+          <button 
+            onClick={handleDownloadInvoice}
+            className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-2xl font-bold text-xs backdrop-blur-md transition-all flex items-center gap-1.5 transform hover:scale-105"
+          >
+            <Download size={15} /> Download Invoice
           </button>
 
           <button 
@@ -365,6 +543,13 @@ const AdminOrderDetails = () => {
                 <h3 className="font-serif font-black text-lg text-white">Official Tax Invoice Preview — {order.id}</h3>
               </div>
               <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleDownloadInvoice}
+                  className="px-4 py-2 bg-white/15 hover:bg-white/25 text-white font-bold text-xs rounded-xl border border-white/20 transition-all flex items-center gap-1.5 transform hover:scale-105"
+                >
+                  <Download size={15} /> Download Invoice
+                </button>
                 <button
                   type="button"
                   onClick={() => {

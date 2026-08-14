@@ -1,36 +1,18 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Edit2, Trash2, Tag, Search, FolderPlus, Check, CheckCircle2, ArrowRight, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { subscribeCategories, saveCategoryToFirestore, deleteCategoryFromFirestore } from '../../services/firebaseService';
 
 const AdminCategories = () => {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState([
-    { id: 1, name: 'Sparklers', description: 'Electric and color sparklers for kids and family.', count: 12, icon: '✨' },
-    { id: 2, name: 'Bombs', description: 'Sound crackers and thunder bombs.', count: 8, icon: '💥' },
-    { id: 3, name: 'Fancy Sky Shots', description: 'Multi-shot aerial repeaters and display fireworks.', count: 15, icon: '🎆' },
-    { id: 4, name: 'Fountains & Pots', description: 'Flower pots, peacock fountains, and ground spinners.', count: 10, icon: '🪔' },
-    { id: 5, name: 'Novelty & Rockets', description: 'Whistling rockets and novelty sky lanterns.', count: 6, icon: '🚀' },
-    { id: 6, name: 'Ground Chakkars', description: 'High speed spinning ground wheels.', count: 14, icon: '⚡' },
-    { id: 7, name: 'Garland Crackers', description: '100 to 10,000 continuous noise garlands.', count: 9, icon: '💥' },
-    { id: 8, name: 'Color Smoke Grenades', description: 'Daytime multi-color smoke fountains.', count: 5, icon: '✨' },
-    { id: 9, name: 'Kid Safe Sparklers', description: 'Non-heat chemical sparklers for young children.', count: 11, icon: '⭐' },
-    { id: 10, name: 'Peacock Fountains', description: 'Multi-stage colorful dancing fountains.', count: 8, icon: '🪔' },
-    { id: 11, name: 'Night Aerial Shells', description: 'High explosion night sky shells with stars.', count: 18, icon: '🎆' },
-    { id: 12, name: 'Whistling Rockets', description: 'Sound rockets with high altitude trail.', count: 7, icon: '🚀' },
-    { id: 13, name: 'Gift Combo Boxes', description: 'Festive family gift packages and assortments.', count: 15, icon: '🎁' },
-    { id: 14, name: 'Flash Sparklers', description: 'High brightness silver & gold flashers.', count: 10, icon: '✨' },
-    { id: 15, name: 'Mega Thunder Bombs', description: 'Heavy vibration loud sound crackers.', count: 6, icon: '💥' },
-    { id: 16, name: 'Multi-Color Fountains', description: '7-in-1 color changing ground pots.', count: 12, icon: '🪔' },
-    { id: 17, name: 'Sky Paper Lanterns', description: 'Eco-friendly biodegradable night lanterns.', count: 4, icon: '🚀' },
-    { id: 18, name: 'Deluxe Sound Garlands', description: 'Premium quality continuous firecrackers.', count: 13, icon: '💥' },
-    { id: 19, name: '30 Shots Sky Display', description: 'Quick-firing aerial colorful shot tubes.', count: 9, icon: '🎆' },
-    { id: 20, name: 'Musical Fountains', description: 'Fountains emitting crackling sound effects.', count: 7, icon: '🪔' },
-    { id: 21, name: 'Twinkling Stars', description: 'Long burning handheld twinkling sticks.', count: 16, icon: '⭐' },
-    { id: 22, name: 'Atom Bombs', description: 'Medium loudness festive sound crackers.', count: 10, icon: '💥' },
-    { id: 23, name: 'Tri-Color Pots', description: 'Red, green, and gold fountain bursts.', count: 8, icon: '🪔' },
-    { id: 24, name: '60 Shots Multi-color', category: 'Fancy', description: '60 shots high altitude aerial burst.', count: 11, icon: '🎆' },
-    { id: 25, name: 'Safety Sparklers Gold', description: 'Low smoke sparklers approved for indoor use.', count: 15, icon: '✨' },
-  ]);
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeCategories((firestoreCategories) => {
+      setCategories(firestoreCategories || []);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const [newCatName, setNewCatName] = useState('');
   const [newCatDesc, setNewCatDesc] = useState('');
@@ -64,27 +46,29 @@ const AdminCategories = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [lastCreatedCat, setLastCreatedCat] = useState('');
 
-  const handleAddCategory = (e) => {
+  const handleAddCategory = async (e) => {
     e.preventDefault();
-    if (!newCatName.trim()) return;
-    setCategories([
-      ...categories,
-      {
-        id: Date.now(),
-        name: newCatName,
-        description: newCatDesc || 'General fireworks category.',
-        count: 0,
-        icon: newCatIcon || '✨'
-      }
-    ]);
+    if (!newCatName) return;
+    const catPayload = {
+      id: Date.now(),
+      name: newCatName,
+      description: newCatDesc || 'General fireworks category.',
+      count: 0,
+      icon: newCatIcon || '✨'
+    };
+
+    setCategories([...categories, catPayload]);
+    await saveCategoryToFirestore(catPayload);
+
     setLastCreatedCat(newCatName);
     setShowConfirmModal(true);
     setNewCatName('');
     setNewCatDesc('');
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     setCategories(categories.filter(c => c.id !== id));
+    await deleteCategoryFromFirestore(id);
   };
 
   const handleStartEdit = (cat) => {
@@ -93,8 +77,13 @@ const AdminCategories = () => {
     setEditDesc(cat.description);
   };
 
-  const handleSaveEdit = (id) => {
-    setCategories(categories.map(c => c.id === id ? { ...c, name: editName, description: editDesc } : c));
+  const handleSaveEdit = async (id) => {
+    const target = categories.find(c => c.id === id);
+    if (target) {
+      const updated = { ...target, name: editName, description: editDesc };
+      setCategories(categories.map(c => c.id === id ? updated : c));
+      await saveCategoryToFirestore(updated);
+    }
     setEditingId(null);
   };
 

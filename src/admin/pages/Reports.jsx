@@ -1,41 +1,72 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, DollarSign, PieChart, Download, Calendar, ArrowUpRight, Award, ShieldCheck, FileText, CheckCircle2, Flame } from 'lucide-react';
+import { subscribeOrders, subscribeExpenses, subscribeProducts } from '../../services/firebaseService';
 
 const AdminReports = () => {
   const [dateRange, setDateRange] = useState('This Month');
   const [showExportModal, setShowExportModal] = useState(false);
 
-  // Financial Metrics
-  const grossRevenue = 485200;
-  const totalExpenses = 194800;
+  const [orders, setOrders] = useState([]);
+  const [expenses, setExpenses] = useState([]);
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    const unsubOrders = subscribeOrders((data) => setOrders(data || []));
+    const unsubExpenses = subscribeExpenses((data) => setExpenses(data || []));
+    const unsubProducts = subscribeProducts((data) => setProducts(data || []));
+
+    return () => {
+      unsubOrders();
+      unsubExpenses();
+      unsubProducts();
+    };
+  }, []);
+
+  // Helper to extract numeric amount from any order object
+  const getOrderAmount = (o) => {
+    if (typeof o.grandTotal === 'number') return o.grandTotal;
+    if (typeof o.totalAmount === 'number') return o.totalAmount;
+    if (typeof o.amount === 'number') return o.amount;
+    const str = String(o.grandTotal || o.totalAmount || o.amount || 0);
+    return parseFloat(str.replace(/[^\d.]/g, '')) || 0;
+  };
+
+  // Compute Live Financial Metrics from Firestore
+  const grossRevenue = orders.reduce((sum, o) => sum + getOrderAmount(o), 0);
+  const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
   const netProfit = grossRevenue - totalExpenses;
-  const profitMarginPercent = ((netProfit / grossRevenue) * 100).toFixed(1);
+  const profitMarginPercent = grossRevenue > 0 ? ((netProfit / grossRevenue) * 100).toFixed(1) : '0.0';
 
-  // Top Selling Products
-  const topProducts = [
-    { sku: 'PRD-01', name: '120 Shots Multi-color', category: 'Fancy', unitsSold: 145, revenue: 174000, profitMargin: '62%' },
-    { sku: 'PRD-02', name: 'Giant Sparklers (50pcs)', category: 'Sparklers', unitsSold: 320, revenue: 112000, profitMargin: '58%' },
-    { sku: 'PRD-04', name: 'Flower Pots Mega', category: 'Fountains', unitsSold: 110, revenue: 71500, profitMargin: '54%' },
-    { sku: 'PRD-03', name: 'Lakshmi Bomb Deluxe', category: 'Bombs', unitsSold: 280, revenue: 42000, profitMargin: '48%' },
-    { sku: 'PRD-06', name: '7 Color Rockets (10pcs)', category: 'Fancy', unitsSold: 95, revenue: 80750, profitMargin: '60%' },
-  ];
+  // Compute Top Performing Products from live Firestore Orders & Products
+  const topProducts = products.map(p => {
+    let unitsSold = 0;
+    let productRevenue = 0;
 
-  // Category Sales Split
-  const categorySplit = [
-    { category: 'Fancy Sky Shots', percent: 42, amount: 203784, color: 'bg-gradient-to-r from-amber-500 to-yellow-400' },
-    { category: 'Sparklers & Lights', percent: 26, amount: 126152, color: 'bg-gradient-to-r from-red-600 to-rose-500' },
-    { category: 'Fountains & Pots', percent: 16, amount: 77632, color: 'bg-gradient-to-r from-emerald-600 to-teal-500' },
-    { category: 'Sound Crackers & Bombs', percent: 11, amount: 53372, color: 'bg-gradient-to-r from-purple-600 to-indigo-500' },
-    { category: 'Novelty & Gift Packs', percent: 5, amount: 24260, color: 'bg-gradient-to-r from-blue-600 to-cyan-500' },
-  ];
+    orders.forEach(o => {
+      const items = Array.isArray(o.items) ? o.items : [];
+      items.forEach(item => {
+        if (item.id === p.id || item.name === p.name) {
+          const qty = item.quantity || item.qty || 1;
+          const price = typeof item.price === 'number' ? item.price : (parseFloat(String(item.price || 0).replace(/[^\d.]/g, '')) || p.price || 0);
+          unitsSold += qty;
+          productRevenue += (qty * price);
+        }
+      });
+    });
 
-  // Payment Mode Split
-  const paymentModes = [
-    { mode: 'UPI / GooglePay / PhonePe', percent: '58%', amount: '₹281,416', icon: '📱' },
-    { mode: 'Cash on POS Billing', percent: '28%', amount: '₹135,856', icon: '💵' },
-    { mode: 'Credit / Debit Cards', percent: '10%', amount: '₹48,520', icon: '💳' },
-    { mode: 'Direct Bank Transfer', percent: '4%', amount: '₹19,408', icon: '🏦' },
-  ];
+    const cost = p.costPrice || p.cost || Math.round((p.price || 0) * 0.6);
+    const profitPerUnit = (p.price || 0) - cost;
+    const profitPct = cost > 0 ? ((profitPerUnit / cost) * 100).toFixed(0) + '%' : '0%';
+
+    return {
+      sku: p.id,
+      name: p.name,
+      category: p.category || 'General',
+      unitsSold: unitsSold,
+      revenue: productRevenue > 0 ? productRevenue : (unitsSold * (p.price || 0)),
+      profitMargin: profitPct
+    };
+  }).sort((a, b) => b.unitsSold - a.unitsSold || b.revenue - a.revenue);
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-12">
@@ -43,13 +74,12 @@ const AdminReports = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#4A0E0E] via-[#701515] to-[#4A0E0E] p-7 rounded-3xl shadow-lg text-white">
         <div>
           <h1 className="text-3xl font-serif font-black tracking-wide text-white flex items-center gap-2">
-            <TrendingUp className="text-[#FFD700]" /> Profit & Loss Report Analytics
+            <TrendingUp className="text-[#FFD700]" /> Profit & Loss Report Analytics (Firestore)
           </h1>
-          <p className="text-amber-200/90 text-sm mt-1 font-medium">Detailed financial intelligence, profit margins, sales split, and expense analysis.</p>
+          <p className="text-amber-200/90 text-sm mt-1 font-medium">Real-time financial intelligence calculated live from backend orders & expenses.</p>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Date Selector */}
           <div className="relative">
             <select 
               value={dateRange}
@@ -58,7 +88,7 @@ const AdminReports = () => {
             >
               <option value="Today" className="bg-[#4A0E0E] text-white">Today</option>
               <option value="This Week" className="bg-[#4A0E0E] text-white">This Week</option>
-              <option value="This Month" className="bg-[#4A0E0E] text-white">This Month (Diwali Peak)</option>
+              <option value="This Month" className="bg-[#4A0E0E] text-white">This Month</option>
               <option value="This Year" className="bg-[#4A0E0E] text-white">Financial Year 2023-24</option>
             </select>
             <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#FFD700]" />
@@ -73,7 +103,7 @@ const AdminReports = () => {
         </div>
       </div>
 
-      {/* Financial Overview Stat Cards (Clean, High-Contrast Light Styling!) */}
+      {/* Financial Overview Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Gross Revenue */}
         <div className="bg-[#FAF7F2] p-6 rounded-3xl border-2 border-amber-900/15 shadow-sm space-y-3 relative overflow-hidden">
@@ -86,7 +116,7 @@ const AdminReports = () => {
           <p className="text-3xl font-black text-gray-900">₹{grossRevenue.toLocaleString()}</p>
           <div className="flex items-center gap-1 text-emerald-700 text-xs font-bold">
             <ArrowUpRight size={16} />
-            <span>+24.5% vs last month</span>
+            <span>Calculated from {orders.length} orders</span>
           </div>
         </div>
 
@@ -100,11 +130,11 @@ const AdminReports = () => {
           </div>
           <p className="text-3xl font-black text-rose-700">₹{totalExpenses.toLocaleString()}</p>
           <div className="flex items-center gap-1 text-gray-600 text-xs font-bold">
-            <span>Stock Freight & Admin Ops</span>
+            <span>Calculated from {expenses.length} expenses</span>
           </div>
         </div>
 
-        {/* Net Profit (Warm Cream Gold Card for High Contrast & Visual Comfort!) */}
+        {/* Net Profit */}
         <div className="bg-gradient-to-br from-amber-100 via-amber-50 to-orange-100 p-6 rounded-3xl border-2 border-amber-400 shadow-md space-y-3 relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-xs font-black text-[#4A0E0E] uppercase tracking-wider">Net Realized Profit</span>
@@ -130,75 +160,22 @@ const AdminReports = () => {
           <p className="text-3xl font-black text-gray-900">{profitMarginPercent}%</p>
           <div className="flex items-center gap-1 text-emerald-700 text-xs font-bold">
             <CheckCircle2 size={16} />
-            <span>High Profit Performance</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Category Sales Breakdown & Payment Split Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Category Share Progress */}
-        <div className="lg:col-span-2 bg-[#FAF7F2] p-7 rounded-3xl border-2 border-amber-900/15 shadow-sm space-y-6">
-          <div className="flex items-center justify-between border-b border-amber-900/10 pb-4">
-            <h3 className="text-lg font-serif font-black text-gray-900 flex items-center gap-2">
-              <PieChart className="text-[#4A0E0E]" /> Sales Breakdown by Product Category
-            </h3>
-            <span className="text-xs font-black text-[#4A0E0E] bg-amber-200/90 px-3 py-1 rounded-full border border-amber-300">
-              Diwali Season
-            </span>
-          </div>
-
-          <div className="space-y-4">
-            {categorySplit.map((cat) => (
-              <div key={cat.category} className="space-y-1.5">
-                <div className="flex justify-between text-xs font-black text-gray-900">
-                  <span>{cat.category}</span>
-                  <span className="text-[#4A0E0E]">₹{cat.amount.toLocaleString()} ({cat.percent}%)</span>
-                </div>
-                <div className="w-full h-3.5 bg-amber-200/40 rounded-full overflow-hidden p-0.5 border border-amber-300/60 shadow-inner">
-                  <div className={`h-full ${cat.color} rounded-full transition-all duration-500 shadow-sm`} style={{ width: `${cat.percent}%` }}></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Payment Methods Split */}
-        <div className="bg-[#FAF7F2] p-7 rounded-3xl border-2 border-amber-900/15 shadow-sm space-y-6">
-          <div className="border-b border-amber-900/10 pb-4">
-            <h3 className="text-lg font-serif font-black text-gray-900">Payment Modes Split</h3>
-            <p className="text-xs text-gray-600 font-bold mt-0.5">Revenue collection methods</p>
-          </div>
-
-          <div className="space-y-3.5">
-            {paymentModes.map((pm) => (
-              <div key={pm.mode} className="bg-white p-3.5 rounded-2xl border border-amber-900/10 flex items-center justify-between shadow-sm hover:border-amber-400 transition-colors">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{pm.icon}</span>
-                  <div>
-                    <p className="text-xs font-black text-gray-900">{pm.mode}</p>
-                    <p className="text-[10px] font-bold text-gray-500">{pm.percent} of total collection</p>
-                  </div>
-                </div>
-                <span className="font-black text-xs text-[#4A0E0E]">{pm.amount}</span>
-              </div>
-            ))}
+            <span>Live Firestore Financial Sync</span>
           </div>
         </div>
       </div>
 
       {/* Top Performing Firecrackers Product Table */}
       <div className="bg-[#FAF7F2] rounded-3xl border-2 border-amber-900/15 overflow-hidden shadow-sm">
-        {/* Table Title Section (Sidebar Burgundy Gradient!) */}
         <div className="p-6 bg-gradient-to-r from-[#4A0E0E] via-[#5C1212] to-[#3B0B0B] border-b-2 border-amber-400/40 text-white flex items-center justify-between">
           <div>
             <h3 className="text-xl font-serif font-black text-white flex items-center gap-2">
-              <Flame className="text-[#FFD700]" /> Top Performing Fireworks Products
+              <Flame className="text-[#FFD700]" /> Top Performing Fireworks Products (Firestore)
             </h3>
-            <p className="text-amber-200 font-medium text-xs mt-0.5">Highest grossing items ranked by profit contribution</p>
+            <p className="text-amber-200 font-medium text-xs mt-0.5">Live store catalog items synced from backend database</p>
           </div>
           <span className="bg-[#FFD700] text-[#4A0E0E] text-xs font-black px-3.5 py-1.5 rounded-full shadow-md">
-            Top 5 Bestsellers
+            Catalog Items ({products.length})
           </span>
         </div>
 
@@ -215,7 +192,7 @@ const AdminReports = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-amber-900/10">
-              {topProducts.map((p, idx) => (
+              {topProducts.length > 0 ? topProducts.map((p, idx) => (
                 <tr key={p.sku} className={`hover:bg-amber-100/70 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-[#FAF7F2]'}`}>
                   <td className="py-4 px-6 font-black text-[#4A0E0E] text-xs">{p.sku}</td>
                   <td className="py-4 px-6 font-black text-gray-900 text-sm">{p.name}</td>
@@ -232,7 +209,13 @@ const AdminReports = () => {
                     </span>
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-xs font-bold text-gray-500">
+                    No products found in Firestore catalog.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -252,10 +235,10 @@ const AdminReports = () => {
             </div>
 
             <div className="p-4 bg-amber-100/60 rounded-2xl border border-amber-900/15 text-xs text-left font-bold space-y-1.5 text-gray-800">
-              <div className="flex justify-between"><span>Gross Revenue:</span><span className="font-black">₹485,200</span></div>
-              <div className="flex justify-between"><span>Total Expenses:</span><span className="font-black text-rose-700">₹194,800</span></div>
+              <div className="flex justify-between"><span>Gross Revenue:</span><span className="font-black">₹{grossRevenue.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Total Expenses:</span><span className="font-black text-rose-700">₹{totalExpenses.toLocaleString()}</span></div>
               <div className="flex justify-between border-t border-amber-900/15 pt-1 text-sm font-black text-[#4A0E0E]">
-                <span>Net Realized Profit:</span><span>₹290,400</span>
+                <span>Net Realized Profit:</span><span>₹{netProfit.toLocaleString()}</span>
               </div>
             </div>
 

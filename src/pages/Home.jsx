@@ -3,116 +3,33 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Star, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import { subscribeProducts } from '../services/firebaseService';
 
 const Home = () => {
   const [activeFaq, setActiveFaq] = useState(null);
   const [isBestSellersHovered, setIsBestSellersHovered] = useState(false);
   const bestSellersRef = useRef(null);
 
-  const scrollBestSellers = (direction) => {
-    if (bestSellersRef.current) {
-      const container = bestSellersRef.current;
-      const firstCard = container.firstElementChild;
-      if (firstCard) {
-        const stepWidth = firstCard.getBoundingClientRect().width + 24; // card width + gap-6
-        const { scrollLeft, scrollWidth, clientWidth } = container;
-        if (direction === 'right') {
-          if (scrollLeft + clientWidth >= scrollWidth - 15) {
-            container.scrollTo({ left: 0, behavior: 'smooth' });
-          } else {
-            container.scrollTo({ left: scrollLeft + stepWidth, behavior: 'smooth' });
-          }
-        } else {
-          if (scrollLeft <= 15) {
-            container.scrollTo({ left: scrollWidth - clientWidth, behavior: 'smooth' });
-          } else {
-            container.scrollTo({ left: scrollLeft - stepWidth, behavior: 'smooth' });
-          }
-        }
-      }
-    }
-  };
+  const [dbProducts, setDbProducts] = useState([]);
 
-  // Automatic 1-Card Step Left-to-Right Scrolling (1-4 -> 2-5 -> 3-6 -> 4-7 -> 5-8 -> 1-4)
   useEffect(() => {
-    if (isBestSellersHovered) return;
-    const interval = setInterval(() => {
-      if (bestSellersRef.current) {
-        const container = bestSellersRef.current;
-        const firstCard = container.firstElementChild;
-        if (firstCard) {
-          const stepWidth = firstCard.getBoundingClientRect().width + 24; // 1-card step width
-          const { scrollLeft, scrollWidth, clientWidth } = container;
-          if (scrollLeft + clientWidth >= scrollWidth - 15) {
-            container.scrollTo({ left: 0, behavior: 'smooth' });
-          } else {
-            container.scrollTo({ left: scrollLeft + stepWidth, behavior: 'smooth' });
-          }
-        }
+    const unsub = subscribeProducts((firestoreProducts) => {
+      if (firestoreProducts) {
+        const active = firestoreProducts.filter(p => p.showInFrontend !== false);
+        const mapped = active.map(p => ({
+          id: p.id,
+          name: p.name,
+          price: `₹${Number(p.price || 0).toLocaleString('en-IN')}`,
+          tag: p.wholesalePrice ? 'Special Offer' : 'Best Seller',
+          img: p.img || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80"
+        }));
+        setDbProducts(mapped);
       }
-    }, 3000);
+    });
+    return () => unsub();
+  }, []);
 
-    return () => clearInterval(interval);
-  }, [isBestSellersHovered]);
-
-  const bestSellers = [
-    {
-      id: 1,
-      name: "Golden Sparklers (50 pcs)",
-      price: "₹349",
-      tag: "Best Seller",
-      img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80"
-    },
-    {
-      id: 2,
-      name: "2000 Shots Rocket",
-      price: "₹1,299",
-      tag: "Best Seller",
-      img: "https://images.unsplash.com/photo-1531685250784-756995259372?w=1000&q=80"
-    },
-    {
-      id: 3,
-      name: "Lakshmi Flower Pot",
-      price: "₹499",
-      tag: "Best Seller",
-      img: "https://images.unsplash.com/photo-1498931299472-f7a63a5a1cfa?w=800&q=80"
-    },
-    {
-      id: 4,
-      name: "Kids Fun Pack",
-      price: "₹699",
-      tag: "Best Seller",
-      img: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80"
-    },
-    {
-      id: 5,
-      name: "Deluxe Gift Hamper",
-      price: "₹2,499",
-      tag: "Best Seller",
-      img: "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=1000&q=80"
-    },
-    {
-      id: 6,
-      name: "Sky Thunder Bombs",
-      price: "₹899",
-      tag: "Best Seller",
-      img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80"
-    },
-    {
-      id: 7,
-      name: "Mega Peacock Fountain",
-      price: "₹749",
-      tag: "Best Seller",
-      img: "https://images.unsplash.com/photo-1498931299472-f7a63a5a1cfa?w=800&q=80"
-    },
-    {
-      id: 8,
-      name: "Multi-Color Sky Shots",
-      price: "₹1,599",
-      tag: "Best Seller",
-      img: "https://images.unsplash.com/photo-1531685250784-756995259372?w=1000&q=80"
-    }
-  ];
+  const bestSellers = dbProducts;
 
   const categoryBanners = [
     {

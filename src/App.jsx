@@ -16,6 +16,7 @@ import AdminInventory from './admin/pages/Inventory';
 import AdminOrders from './admin/pages/Orders';
 import AdminBilling from './admin/pages/Billing';
 import AdminCustomers from './admin/pages/Customers';
+import AdminCustomerDetails from './admin/pages/CustomerDetails';
 import AdminSettings from './admin/pages/Settings';
 import AdminAddProduct from './admin/pages/AddProduct';
 import AdminCategories from './admin/pages/Categories';
@@ -65,6 +66,7 @@ function App() {
             <Route path="expenses" element={<AdminExpenses />} />
             <Route path="website" element={<AdminWebsiteCMS />} />
             <Route path="customers" element={<AdminCustomers />} />
+            <Route path="customers/:id" element={<AdminCustomerDetails />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
         </Routes>

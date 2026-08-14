@@ -1,38 +1,56 @@
 import { useState, useEffect } from 'react';
 import { Search, Eye, Phone, CheckCircle, Clock, Truck, PackageCheck, Check, ChevronDown, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { subscribeOrders, updateOrderStatusInFirestore, deleteOrderFromFirestore } from '../../services/firebaseService';
 
 const AdminOrders = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const urlStatus = searchParams.get('status');
 
-  const [orders, setOrders] = useState([
-    { id: 'ORD-092', customer: 'Rahul Sharma', phone: '+91 9876543210', amount: 14500, date: 'Oct 15, 2023', status: 'Pending', address: '123 Main St, Sivakasi, TN', items: [{ name: '120 Shots Multi-color', qty: 2, price: 1200 }] },
-    { id: 'ORD-091', customer: 'Priya Patel', phone: '+91 9123456789', amount: 8200, date: 'Oct 15, 2023', status: 'Accepted', address: '45 Gandhi Nagar, Madurai, TN', items: [{ name: 'Giant Sparklers (50pcs)', qty: 10, price: 350 }] },
-    { id: 'ORD-090', customer: 'Vikram Singh', phone: '+91 9988776655', amount: 22000, date: 'Oct 14, 2023', status: 'Shipped', address: '88 Circular Rd, Chennai, TN', items: [{ name: '120 Shots Multi-color', qty: 15, price: 1200 }] },
-    { id: 'ORD-089', customer: 'Arun Kumar', phone: '+91 9876512345', amount: 5400, date: 'Oct 13, 2023', status: 'Delivered', address: '12 Temple Street, Kovilpatti, TN', items: [{ name: 'Sky Lanterns Pack', qty: 10, price: 400 }] },
-    { id: 'ORD-088', customer: 'Kavitha Nathan', phone: '+91 9443322110', amount: 12600, date: 'Oct 13, 2023', status: 'Pending', address: '66 West Car St, Sivakasi, TN', items: [{ name: 'Flower Pots Mega', qty: 8, price: 650 }] },
-    { id: 'ORD-087', customer: 'Senthil Raj', phone: '+91 9789012345', amount: 9800, date: 'Oct 12, 2023', status: 'Accepted', address: '99 Main Bazaar, Tirunelveli, TN', items: [{ name: '7 Color Sky Rockets', qty: 12, price: 850 }] },
-    { id: 'ORD-086', customer: 'Meena Sundaram', phone: '+91 9655443322', amount: 18500, date: 'Oct 12, 2023', status: 'Shipped', address: '23 Anna Salai, Trichy, TN', items: [{ name: 'Chakra Ground Spinner', qty: 25, price: 280 }] },
-    { id: 'ORD-085', customer: 'Ganesh Ram', phone: '+91 9543210987', amount: 3400, date: 'Oct 11, 2023', status: 'Delivered', address: '5 Cross St, Salem, TN', items: [{ name: 'Electric Sparklers Gold', qty: 8, price: 450 }] },
-    { id: 'ORD-084', customer: 'Anitha Ramesh', phone: '+91 9412345678', amount: 15800, date: 'Oct 11, 2023', status: 'Pending', address: '78 High Rd, Coimbatore, TN', items: [{ name: 'Peacock Fountain Large', qty: 14, price: 520 }] },
-    { id: 'ORD-083', customer: 'Karthik Subramanian', phone: '+91 9321098765', amount: 27500, date: 'Oct 10, 2023', status: 'Accepted', address: '14 GST Rd, Chennai, TN', items: [{ name: '240 Shots Night Display', qty: 10, price: 2400 }] },
-    { id: 'ORD-082', customer: 'Deepak Varma', phone: '+91 9210987654', amount: 6900, date: 'Oct 10, 2023', status: 'Shipped', address: '30 North St, Erode, TN', items: [{ name: 'Color Smoke Grenade', qty: 15, price: 320 }] },
-    { id: 'ORD-081', customer: 'Sita Lakshmi', phone: '+91 9109876543', amount: 4800, date: 'Oct 09, 2023', status: 'Delivered', address: '50 South Car St, Dindigul, TN', items: [{ name: 'Gold Twinkling Stars', qty: 20, price: 180 }] },
-    { id: 'ORD-080', customer: 'Vijay Anand', phone: '+91 9098765432', amount: 19200, date: 'Oct 09, 2023', status: 'Pending', address: '88 Bypass Rd, Virudhunagar, TN', items: [{ name: 'Hydro Bomb High Sound', qty: 30, price: 300 }] },
-    { id: 'ORD-079', customer: 'Pooja Hegde', phone: '+91 8987654321', amount: 11400, date: 'Oct 08, 2023', status: 'Accepted', address: '12 Beach Rd, Kanyakumari, TN', items: [{ name: 'Tri-Color Fountain Pot', qty: 18, price: 420 }] },
-    { id: 'ORD-078', customer: 'Manoj Pillai', phone: '+91 8876543210', amount: 8600, date: 'Oct 08, 2023', status: 'Shipped', address: '44 Station Rd, Thanjavur, TN', items: [{ name: 'Whistling Sky Rockets', qty: 12, price: 650 }] },
-    { id: 'ORD-077', customer: 'Swati Krishnan', phone: '+91 8765432109', amount: 5200, date: 'Oct 07, 2023', status: 'Delivered', address: '77 College Rd, Vellore, TN', items: [{ name: 'Red & Green Ground Wheel', qty: 20, price: 210 }] },
-    { id: 'ORD-076', customer: 'Balaji Natarajan', phone: '+91 8654321098', amount: 35000, date: 'Oct 07, 2023', status: 'Pending', address: '100 Industrial Estate, Sivakasi, TN', items: [{ name: 'Diwali Deluxe Combo Pack', qty: 10, price: 3500 }] },
-    { id: 'ORD-075', customer: 'Divya Bharathi', phone: '+91 8543210987', amount: 7300, date: 'Oct 06, 2023', status: 'Accepted', address: '19 Market St, Karur, TN', items: [{ name: 'Silver Flash Sparklers', qty: 25, price: 260 }] },
-    { id: 'ORD-074', customer: 'Harish Chandra', phone: '+91 8432109876', amount: 22000, date: 'Oct 06, 2023', status: 'Shipped', address: '33 Trunk Rd, Hosur, TN', items: [{ name: 'Garland 1000 Crackers', qty: 20, price: 1100 }] },
-    { id: 'ORD-073', customer: 'Lakshmi Narayan', phone: '+91 8321098765', amount: 9500, date: 'Oct 05, 2023', status: 'Delivered', address: '61 Cross Rd, Nagapattinam, TN', items: [{ name: '30 Shots Peacock Sky', qty: 10, price: 950 }] },
-    { id: 'ORD-072', customer: 'Ramesh Babu', phone: '+91 8210987654', amount: 15600, date: 'Oct 05, 2023', status: 'Pending', address: '85 Old Bus Stand, Pudukkottai, TN', items: [{ name: 'Multi-Color Musical Fountain', qty: 20, price: 780 }] },
-    { id: 'ORD-071', customer: 'Nandhini Devi', phone: '+91 8109876543', amount: 4350, date: 'Oct 04, 2023', status: 'Accepted', address: '22 School St, Ramanathapuram, TN', items: [{ name: 'Crackling Sparklers (10pcs)', qty: 15, price: 290 }] },
-    { id: 'ORD-070', customer: 'Srikant Acharya', phone: '+91 8098765432', amount: 14400, date: 'Oct 04, 2023', status: 'Shipped', address: '9 North Street, Cuddalore, TN', items: [{ name: 'Mega Sky Thunder Bomb', qty: 30, price: 480 }] },
-    { id: 'ORD-069', customer: 'Janaki Raman', phone: '+91 7987654321', amount: 8900, date: 'Oct 03, 2023', status: 'Delivered', address: '4 Park Rd, Ooty, TN', items: [{ name: 'Kids Safe Crackers Box', qty: 10, price: 890 }] },
-    { id: 'ORD-068', customer: 'Gokul Kannan', phone: '+91 7876543210', amount: 16200, date: 'Oct 03, 2023', status: 'Pending', address: '17 Lake View, Kodaikanal, TN', items: [{ name: '120 Shots Multi-color', qty: 13, price: 1200 }] },
-  ]);
+  const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeOrders((firestoreOrders) => {
+      const normalized = (firestoreOrders || []).map(o => {
+        const rawAmount = o.totalAmount !== undefined ? o.totalAmount : (o.grandTotal !== undefined ? o.grandTotal : o.amount);
+        const amountNum = typeof rawAmount === 'number' ? rawAmount : parseFloat(String(rawAmount || 0).replace(/[^\d.]/g, '')) || 0;
+        const rawItems = Array.isArray(o.items) ? o.items : [];
+        const itemsCount = o.itemsCount || (rawItems.length > 0 ? rawItems.reduce((sum, item) => sum + (item.quantity || item.qty || 1), 0) : 0);
+
+        let dateStr = 'Today';
+        const rawDate = o.createdAt || o.updatedAt || o.date;
+        if (rawDate) {
+          if (typeof rawDate?.toDate === 'function') {
+            dateStr = rawDate.toDate().toLocaleDateString('en-IN');
+          } else if (typeof rawDate === 'object' && rawDate?.seconds) {
+            dateStr = new Date(rawDate.seconds * 1000).toLocaleDateString('en-IN');
+          } else {
+            const parsed = new Date(rawDate);
+            dateStr = !isNaN(parsed.getTime()) ? parsed.toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN');
+          }
+        } else {
+          dateStr = new Date().toLocaleDateString('en-IN');
+        }
+
+        const isOfflineOrder = String(o.id).includes('POS') || o.paymentMode === 'Cash on Counter' || o.customer === 'Walk-in Customer' || o.orderType === 'Offline';
+
+        return {
+          ...o,
+          id: String(o.id || `ORD-${Math.floor(Math.random() * 9000 + 1000)}`),
+          customer: o.customerName || o.customer || 'Valued Customer',
+          phone: o.phone || 'N/A',
+          amount: amountNum,
+          items: rawItems,
+          itemsCount: itemsCount,
+          date: dateStr,
+          status: o.status || 'Pending',
+          isOffline: isOfflineOrder
+        };
+      });
+      setOrders(normalized);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const [confirmConfig, setConfirmConfig] = useState(null);
   const [successToast, setSuccessToast] = useState('');
@@ -86,8 +104,9 @@ const AdminOrders = () => {
     setCurrentPage(newPage);
   };
 
-  const updateOrderStatus = (orderId, newStatus) => {
+  const updateOrderStatus = async (orderId, newStatus) => {
     setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+    await updateOrderStatusInFirestore(orderId, newStatus);
     triggerSuccess(`Order #${orderId} status changed to ${newStatus}!`);
   };
 
@@ -120,6 +139,8 @@ const AdminOrders = () => {
       matchesStatus = o.status === 'Pending';
     } else if (statusFilter === 'Processing') {
       matchesStatus = o.status === 'Accepted' || o.status === 'Shipped' || o.status === 'Processing';
+    } else if (statusFilter === 'Offline') {
+      matchesStatus = Boolean(o.isOffline);
     } else {
       matchesStatus = o.status === statusFilter;
     }
@@ -221,6 +242,7 @@ const AdminOrders = () => {
             <option value="Delivered">Complete Orders ({orders.filter(o => o.status === 'Delivered').length})</option>
             <option value="Pending">Pending Orders ({orders.filter(o => o.status === 'Pending').length})</option>
             <option value="Processing">Processing Orders ({orders.filter(o => o.status === 'Accepted' || o.status === 'Shipped').length})</option>
+            <option value="Offline">Offline Orders / Counter POS ({orders.filter(o => o.isOffline).length})</option>
           </select>
           <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#4A0E0E] pointer-events-none stroke-[2.5]" />
         </div>
@@ -253,8 +275,8 @@ const AdminOrders = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <p className="text-sm font-black text-[#4A0E0E]">₹{order.amount.toLocaleString()}</p>
-                    <p className="text-xs font-bold text-gray-500">{order.items.reduce((acc, item) => acc + item.qty, 0)} Items</p>
+                    <p className="text-sm font-black text-[#4A0E0E]">₹{(order.amount || 0).toLocaleString('en-IN')}</p>
+                    <p className="text-xs font-bold text-gray-500">{order.itemsCount || (Array.isArray(order.items) ? order.items.reduce((acc, item) => acc + (item.quantity || item.qty || 1), 0) : 0)} Items</p>
                   </td>
                   <td className="px-6 py-4">
                     {getStatusBadge(order.status)}
