@@ -69,3 +69,9 @@ export const generateCustomerId = (existingCustomers = []) => {
   const next = max + 1;
   return `KC-CUST-${String(next).padStart(4, '0')}`;
 };
+
+export const generateGalleryId = (existingGallery = []) => {
+  const max = extractMaxNumericId(existingGallery, 'KC-GAL-');
+  const next = max + 1;
+  return `KC-GAL-${String(next).padStart(4, '0')}`;
+};

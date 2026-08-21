@@ -7,6 +7,7 @@ import {
   subscribeExpenseCategories
 } from '../../services/firebaseService';
 import { useToast } from '../../context/ToastContext';
+import { isWithinDateRange } from '../../utils/dateFilterUtil';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 import ExpenseStatsWidget from '../components/expenses/ExpenseStatsWidget';
@@ -22,6 +23,11 @@ const AdminExpenses = () => {
   const [orders, setOrders] = useState([]);
   const [customCategories, setCustomCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Date Filter State
+  const [dateFilter, setDateFilter] = useState('all');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
 
   useEffect(() => {
     const unsubExpenses = subscribeExpenses((firestoreExpenses) => {
@@ -89,8 +95,12 @@ const AdminExpenses = () => {
   const allCategoryNames = customCategories.map(c => c.name || c.id);
   const categories = ['All', ...allCategoryNames];
 
+  // Dynamic Date-filtered orders & expenses for Metrics & Table
+  const filteredOrders = orders.filter(o => isWithinDateRange(o.createdAt || o.date, dateFilter, customStartDate, customEndDate));
+  const dateFilteredExpenses = expenses.filter(e => isWithinDateRange(e.date || e.createdAt, dateFilter, customStartDate, customEndDate));
+
   // Financial Net Profit Calculations
-  const grossSalesRevenue = orders.reduce((sum, o) => {
+  const grossSalesRevenue = filteredOrders.reduce((sum, o) => {
     if (typeof o.grandTotal === 'number') return sum + o.grandTotal;
     if (typeof o.totalAmount === 'number') return sum + o.totalAmount;
     if (typeof o.amount === 'number') return sum + o.amount;
@@ -98,7 +108,7 @@ const AdminExpenses = () => {
     return sum + (parseFloat(str.replace(/[^\d.]/g, '')) || 0);
   }, 0);
 
-  const totalExpenseSum = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  const totalExpenseSum = dateFilteredExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
   const netProfitMargin = grossSalesRevenue - totalExpenseSum;
   const profitPercentage = grossSalesRevenue > 0 ? ((netProfitMargin / grossSalesRevenue) * 100).toFixed(1) : 0;
 
@@ -150,7 +160,7 @@ const AdminExpenses = () => {
           totalExpenseSum={totalExpenseSum}
           netProfitMargin={netProfitMargin}
           profitPercentage={profitPercentage}
-          expenseCount={expenses.length}
+          expenseCount={dateFilteredExpenses.length}
         />
 
         {/* Itemized Table Component / Loading State */}
@@ -158,10 +168,16 @@ const AdminExpenses = () => {
           <LoadingSpinner message="Fetching expense records from database..." />
         ) : (
           <ExpenseTable
-            expenses={expenses}
+            expenses={dateFilteredExpenses}
             categories={categories}
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
+            dateFilter={dateFilter}
+            setDateFilter={setDateFilter}
+            customStartDate={customStartDate}
+            setCustomStartDate={setCustomStartDate}
+            customEndDate={customEndDate}
+            setCustomEndDate={setCustomEndDate}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             sortField={sortField}

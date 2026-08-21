@@ -16,7 +16,8 @@ export const generateReportPdf = ({
   productPerformanceList = [],
   customerReportList = [],
   invoiceReportList = [],
-  storeSettings = {}
+  storeSettings = {},
+  dateRangeLabel = 'All Time'
 }) => {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const primaryMaroon = [74, 14, 14]; // #4A0E0E
@@ -36,7 +37,7 @@ export const generateReportPdf = ({
   doc.setFont("helvetica", "normal");
   doc.setTextColor(71, 85, 105);
   doc.setFontSize(8.5);
-  doc.text(`Official Business Analytics & Financial Audit Statement • ${address}`, 14, 18.5);
+  doc.text(`Official Business Analytics & Financial Audit Statement • Period: ${dateRangeLabel}`, 14, 18.5);
   doc.text(`Generated: ${nowStr}`, 196, 18.5, { align: 'right' });
 
   // Divider Line below Header

@@ -18,15 +18,23 @@ const AdminReports = () => {
   const [showReportTypeDropdown, setShowReportTypeDropdown] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Date Filter States
+  const [dateFilter, setDateFilter] = useState('all'); // 'all' | 'today' | 'yesterday' | 'last7days' | 'thisMonth' | 'lastMonth' | 'custom'
+  const [showDateDropdown, setShowDateDropdown] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+  const [appliedCustomDates, setAppliedCustomDates] = useState({ start: '', end: '' });
+
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [reportType]);
+  }, [reportType, dateFilter, appliedCustomDates]);
 
   const reportDropdownRef = useRef(null);
+  const dateDropdownRef = useRef(null);
 
   // Firestore Real-time Collections
   const [orders, setOrders] = useState([]);
@@ -57,10 +65,75 @@ const AdminReports = () => {
       if (reportDropdownRef.current && !reportDropdownRef.current.contains(event.target)) {
         setShowReportTypeDropdown(false);
       }
+      if (dateDropdownRef.current && !dateDropdownRef.current.contains(event.target)) {
+        setShowDateDropdown(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Helper to check if item timestamp matches the date filter
+  const isWithinDateRange = (itemDate) => {
+    if (dateFilter === 'all') return true;
+    if (!itemDate) return false;
+
+    let d = null;
+    if (typeof itemDate?.toDate === 'function') {
+      d = itemDate.toDate();
+    } else if (itemDate?.seconds) {
+      d = new Date(itemDate.seconds * 1000);
+    } else {
+      d = new Date(itemDate);
+    }
+
+    if (isNaN(d.getTime())) return true;
+
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+    if (dateFilter === 'today') {
+      return d >= todayStart && d <= todayEnd;
+    }
+
+    if (dateFilter === 'yesterday') {
+      const yestStart = new Date(todayStart);
+      yestStart.setDate(yestStart.getDate() - 1);
+      const yestEnd = new Date(todayEnd);
+      yestEnd.setDate(yestEnd.getDate() - 1);
+      return d >= yestStart && d <= yestEnd;
+    }
+
+    if (dateFilter === 'last7days') {
+      const sevenDaysAgo = new Date(todayStart);
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+      return d >= sevenDaysAgo && d <= todayEnd;
+    }
+
+    if (dateFilter === 'thisMonth') {
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+      return d >= monthStart && d <= todayEnd;
+    }
+
+    if (dateFilter === 'lastMonth') {
+      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
+      const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+      return d >= lastMonthStart && d <= lastMonthEnd;
+    }
+
+    if (dateFilter === 'custom' && appliedCustomDates.start && appliedCustomDates.end) {
+      const start = new Date(appliedCustomDates.start + 'T00:00:00');
+      const end = new Date(appliedCustomDates.end + 'T23:59:59');
+      return d >= start && d <= end;
+    }
+
+    return true;
+  };
+
+  // Filter orders & expenses based on active date range
+  const filteredOrders = orders.filter(o => isWithinDateRange(o.createdAt || o.date));
+  const filteredExpenses = expenses.filter(e => isWithinDateRange(e.date || e.createdAt));
 
   // Helper to extract numeric amount from order
   const getOrderAmount = (o) => {
@@ -73,8 +146,8 @@ const AdminReports = () => {
   };
 
   // 1. FINANCIAL PROFIT & LOSS METRICS
-  const grossRevenue = orders.reduce((sum, o) => sum + getOrderAmount(o), 0);
-  const totalExpenses = expenses.reduce((sum, e) => sum + Number(e?.amount || 0), 0);
+  const grossRevenue = filteredOrders.reduce((sum, o) => sum + getOrderAmount(o), 0);
+  const totalExpenses = filteredExpenses.reduce((sum, e) => sum + Number(e?.amount || 0), 0);
   const netProfit = grossRevenue - totalExpenses;
   const profitMarginPercent = grossRevenue > 0 ? ((netProfit / grossRevenue) * 100).toFixed(1) : '0.0';
 
@@ -83,7 +156,7 @@ const AdminReports = () => {
     let unitsSold = 0;
     let productRevenue = 0;
 
-    (orders || []).forEach(o => {
+    filteredOrders.forEach(o => {
       const items = Array.isArray(o.items) ? o.items : [];
       items.forEach(item => {
         if (item.id === p.id || item.name === p.name) {
@@ -115,7 +188,7 @@ const AdminReports = () => {
   const customerReportList = (() => {
     const custMap = new Map();
 
-    (orders || []).forEach(o => {
+    filteredOrders.forEach(o => {
       const phoneStr = String(o.phone || o.whatsapp || o.customerPhone || '9943852902').trim();
       const nameStr = String(o.customer || o.customerName || 'Valued Customer');
       const amount = getOrderAmount(o);
@@ -144,33 +217,30 @@ const AdminReports = () => {
       }
     });
 
-    (customers || []).forEach(c => {
-      const phoneStr = String(c.phone || c.id || 'Customer').trim();
-      const addressStr = String(c.location || c.address || c.city || 'Sivakasi, Tamil Nadu');
-      if (!custMap.has(phoneStr)) {
-        custMap.set(phoneStr, {
-          id: String(c.id || `CUST-${phoneStr.length > 4 ? phoneStr.slice(-4) : '1001'}`),
-          name: String(c.name || c.customerName || 'Store Customer'),
-          phone: phoneStr,
-          totalOrders: Number(c.totalOrders || 0),
-          totalSpent: Number(c.totalSpent || 0),
-          lastOrderDate: c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-IN') : 'Registered Customer',
-          address: addressStr,
-          type: 'Registered Member'
-        });
-      } else {
-        const existing = custMap.get(phoneStr);
-        if (addressStr && !existing.address) {
-          existing.address = addressStr;
+    if (dateFilter === 'all') {
+      (customers || []).forEach(c => {
+        const phoneStr = String(c.phone || c.id || 'Customer').trim();
+        const addressStr = String(c.location || c.address || c.city || 'Sivakasi, Tamil Nadu');
+        if (!custMap.has(phoneStr)) {
+          custMap.set(phoneStr, {
+            id: String(c.id || `CUST-${phoneStr.length > 4 ? phoneStr.slice(-4) : '1001'}`),
+            name: String(c.name || c.customerName || 'Store Customer'),
+            phone: phoneStr,
+            totalOrders: Number(c.totalOrders || 0),
+            totalSpent: Number(c.totalSpent || 0),
+            lastOrderDate: c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-IN') : 'Registered Customer',
+            address: addressStr,
+            type: 'Registered Member'
+          });
         }
-      }
-    });
+      });
+    }
 
     return Array.from(custMap.values()).sort((a, b) => Number(b.totalSpent || 0) - Number(a.totalSpent || 0));
   })();
 
   // 4. INVOICE HISTORY REPORT DATA
-  const invoiceReportList = (orders || []).map(o => {
+  const invoiceReportList = filteredOrders.map(o => {
     const invId = String(o.id || o.orderId || 'ORD-000');
     const amount = getOrderAmount(o);
     const estCost = Math.round(amount * 0.6);
@@ -200,6 +270,38 @@ const AdminReports = () => {
       isOffline: Boolean(o.isOffline)
     };
   }).sort((a, b) => b.id.localeCompare(a.id));
+
+  // Date Filter Range Options
+  const dateFilterOptions = [
+    { id: 'all', label: 'All Time' },
+    { id: 'today', label: 'Today' },
+    { id: 'yesterday', label: 'Yesterday' },
+    { id: 'last7days', label: 'Last 7 Days' },
+    { id: 'thisMonth', label: 'This Month' },
+    { id: 'lastMonth', label: 'Last Month' },
+    { id: 'custom', label: 'Custom Date Range' }
+  ];
+
+  const currentDateFilterObj = dateFilterOptions.find(d => d.id === dateFilter) || dateFilterOptions[0];
+  const dateRangeLabel = dateFilter === 'custom' && appliedCustomDates.start && appliedCustomDates.end 
+    ? `${appliedCustomDates.start} to ${appliedCustomDates.end}` 
+    : currentDateFilterObj.label;
+
+  // Apply custom date range
+  const handleApplyCustomDates = () => {
+    if (!customStartDate || !customEndDate) {
+      showToast('Please select both Start Date and End Date', 'error');
+      return;
+    }
+    if (new Date(customStartDate) > new Date(customEndDate)) {
+      showToast('Start Date cannot be after End Date', 'error');
+      return;
+    }
+    setAppliedCustomDates({ start: customStartDate, end: customEndDate });
+    setDateFilter('custom');
+    setShowDateDropdown(false);
+    showToast(`Filter applied: ${customStartDate} to ${customEndDate}`, 'success');
+  };
 
   // Paginated Data Slices for All 4 Tables
   const pnlStartIndex = (currentPage - 1) * itemsPerPage;
@@ -293,11 +395,12 @@ const AdminReports = () => {
         totalExpenses,
         netProfit,
         profitMarginPercent,
-        ordersCount: orders.length,
-        expensesCount: expenses.length,
+        ordersCount: filteredOrders.length,
+        expensesCount: filteredExpenses.length,
         productPerformanceList,
         customerReportList,
-        invoiceReportList
+        invoiceReportList,
+        dateRangeLabel
       });
       const reportNames = {
         pnl: 'Profit & Loss Statement',
@@ -305,7 +408,7 @@ const AdminReports = () => {
         products: 'Product Sales Performance Report',
         invoices: 'Invoice Audit Log'
       };
-      showToast(`🎉 ${reportNames[reportType] || 'Business Report'} downloaded successfully!`, 'success');
+      showToast(`🎉 ${reportNames[reportType] || 'Business Report'} (${dateRangeLabel}) downloaded successfully!`, 'success');
     } catch (err) {
       console.error("PDF Export error:", err);
       showToast("Failed to generate PDF report", "error");
@@ -316,7 +419,7 @@ const AdminReports = () => {
     { id: 'pnl', label: 'Profit & Loss & Sales Revenue', shortLabel: 'Profit & Loss', icon: TrendingUp, count: `₹${netProfit.toLocaleString()}` },
     { id: 'customers', label: 'Customer Details & Directory', shortLabel: 'Customer Directory', icon: Users, count: `${customerReportList.length} Customers` },
     { id: 'products', label: 'Product Sales Performance', shortLabel: 'Product Catalog', icon: Package, count: `${products.length} Products` },
-    { id: 'invoices', label: 'Invoice & Profit Audit Log', shortLabel: 'Invoice Audit Log', icon: Receipt, count: `${orders.length} Invoices` }
+    { id: 'invoices', label: 'Invoice & Profit Audit Log', shortLabel: 'Invoice Audit Log', icon: Receipt, count: `${filteredOrders.length} Invoices` }
   ];
 
   const currentReportObj = reportTypeOptions.find(r => r.id === reportType) || reportTypeOptions[0];
@@ -333,14 +436,96 @@ const AdminReports = () => {
             <span>Business Analytics & Reports</span>
           </h1>
           <p className="text-amber-200/90 text-xs sm:text-sm mt-1 font-medium leading-snug">
-            Select report view, inspect live metrics, and download official PDF statements.
+            Filter by date period, inspect live metrics, and download official PDF statements.
           </p>
         </div>
 
         {/* Action Controls for Mobile & Desktop */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full md:w-auto">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full md:w-auto">
+          
+          {/* Date Filter Dropdown */}
+          <div ref={dateDropdownRef} className="relative flex-1 sm:flex-none">
+            <button
+              type="button"
+              onClick={() => setShowDateDropdown(!showDateDropdown)}
+              className="w-full sm:w-auto px-3.5 sm:px-4 py-2.5 bg-white border-2 border-amber-900/20 hover:border-[#FFD700] rounded-xl sm:rounded-2xl font-black text-gray-900 text-xs shadow-sm transition-all flex items-center justify-between gap-2 cursor-pointer"
+            >
+              <div className="flex items-center gap-2 truncate">
+                <Calendar size={15} className="text-[#4A0E0E] shrink-0" />
+                <span className="truncate">{dateRangeLabel}</span>
+              </div>
+              <ChevronDown size={15} className={`text-[#4A0E0E] shrink-0 transition-transform stroke-[2.5] ${showDateDropdown ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showDateDropdown && (
+              <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-72 bg-white border-2 border-amber-900/20 rounded-2xl shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 space-y-2">
+                <div className="px-2 py-1 border-b border-gray-100 flex items-center justify-between text-[#4A0E0E] font-black text-xs uppercase tracking-wider">
+                  <span>Date Range</span>
+                  <Calendar size={14} className="text-[#4A0E0E]" />
+                </div>
+                
+                <div className="space-y-1">
+                  {dateFilterOptions.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => {
+                        if (opt.id !== 'custom') {
+                          setDateFilter(opt.id);
+                          setShowDateDropdown(false);
+                          showToast(`Filter: ${opt.label}`, 'info');
+                        } else {
+                          setDateFilter('custom');
+                        }
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-between ${
+                        dateFilter === opt.id
+                          ? 'bg-[#4A0E0E] text-[#FFD700] shadow-sm'
+                          : 'text-gray-800 hover:bg-amber-100/60'
+                      }`}
+                    >
+                      <span>{opt.label}</span>
+                      {dateFilter === opt.id && <Check size={14} strokeWidth={3} className="shrink-0" />}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Custom Date Pickers */}
+                {dateFilter === 'custom' && (
+                  <div className="pt-2 border-t border-amber-900/10 space-y-2">
+                    <div>
+                      <label className="block text-[10px] font-black text-[#4A0E0E] uppercase mb-1">From Date</label>
+                      <input
+                        type="date"
+                        value={customStartDate}
+                        onChange={(e) => setCustomStartDate(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-gray-50 border border-amber-900/20 rounded-lg text-xs font-bold text-gray-900 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-[#4A0E0E] uppercase mb-1">To Date</label>
+                      <input
+                        type="date"
+                        value={customEndDate}
+                        onChange={(e) => setCustomEndDate(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-gray-50 border border-amber-900/20 rounded-lg text-xs font-bold text-gray-900 focus:outline-none"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleApplyCustomDates}
+                      className="w-full py-2 bg-[#4A0E0E] text-[#FFD700] hover:bg-[#380808] rounded-xl text-xs font-black shadow-sm mt-1 transition-transform hover:scale-[1.02] cursor-pointer"
+                    >
+                      Apply Custom Range
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Report Type Selector Dropdown */}
-          <div ref={reportDropdownRef} className="relative w-full sm:w-auto">
+          <div ref={reportDropdownRef} className="relative flex-1 sm:flex-none">
             <button
               type="button"
               onClick={() => setShowReportTypeDropdown(!showReportTypeDropdown)}

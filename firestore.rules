@@ -2,11 +2,97 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Global read & write access for Karuppa Crackers Store & Admin Portal
-    match /{document=**} {
-      allow read, write: if true;
+
+    // Helper function: Checks if the user is an authenticated Admin
+    function isAdmin() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    // ==========================================
+    // 1. SENSITIVE FINANCIAL & EXPENSE RECORDS
+    // ==========================================
+    // Strictly restricted to authenticated Admins only.
+    // Public / Third parties CANNOT read or write any financial logs.
+    match /expenses/{expenseId} {
+      allow read, write: if isAdmin();
     }
     
+    match /expense_categories/{catId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ==========================================
+    // 2. CUSTOMER ORDERS & INVOICE HISTORY
+    // ==========================================
+    // - Customers can only SUBMIT/CREATE an order from checkout.
+    // - Only authenticated Admins can view order lists, read history, update status, or delete.
+    match /orders/{orderId} {
+      allow create: if request.resource.data.customer != null 
+                    && request.resource.data.grandTotal != null;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ==========================================
+    // 3. REGISTERED CUSTOMER PROFILES
+    // ==========================================
+    // - Public can only submit their own customer profile during checkout.
+    // - Only authenticated Admins can browse customer directory, contact info, or edit.
+    match /customers/{customerId} {
+      allow create: if request.resource.data.name != null 
+                    && request.resource.data.phone != null;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ==========================================
+    // 4. PRODUCTS CATALOG & CATEGORIES
+    // ==========================================
+    // - Public can VIEW products and categories on the store website.
+    // - Only authenticated Admins can ADD, EDIT stock/price, or DELETE products/categories.
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ==========================================
+    // 5. GALLERY & SHOWCASE IMAGES
+    // ==========================================
+    // - Public can VIEW gallery photos on the website.
+    // - Only authenticated Admins can upload or remove gallery photos.
+    match /gallery/{imageId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ==========================================
+    // 6. STORE SETTINGS & WEBSITE CMS
+    // ==========================================
+    // - Public can read store info (phone, address, GST, discount rules).
+    // - Only authenticated Admins can update store details or logo.
+    match /storeSettings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /websiteCMS/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /counters/{counterId} {
+      allow read, write: if true;
+    }
+
+    // ==========================================
+    // 7. DEFAULT CATCH-ALL PROTECTION
+    // ==========================================
+    // Disallow everything else not explicitly permitted above.
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }

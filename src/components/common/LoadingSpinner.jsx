@@ -21,7 +21,7 @@ const LoadingSpinner = ({ message = "Loading live data from database...", size =
       </div>
       <div className="text-center space-y-1">
         <p className="font-serif font-black text-[#4A0E0E] text-base sm:text-lg">{message}</p>
-        <p className="text-xs font-bold text-gray-500">Connecting to real-time Firebase services...</p>
+        <p className="text-xs font-bold text-gray-500">Connecting to secure store services...</p>
       </div>
     </div>
   );

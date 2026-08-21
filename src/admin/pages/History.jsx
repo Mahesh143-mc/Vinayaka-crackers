@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, Eye, Phone, CheckCircle, Clock, Truck, PackageCheck, Check, ChevronDown, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Filter, Loader2, History as HistoryIcon, Download } from 'lucide-react';
+import { Search, Eye, Phone, CheckCircle, Clock, Truck, PackageCheck, Check, ChevronDown, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Filter, Loader2, History as HistoryIcon, Download, Calendar } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { subscribeOrders, updateOrderStatusInFirestore, deleteOrderFromFirestore } from '../../services/firebaseService';
 import { useToast } from '../../context/ToastContext';
+import { isWithinDateRange } from '../../utils/dateFilterUtil';
+import DateRangeFilterDropdown from '../components/common/DateRangeFilterDropdown';
 
 const AdminHistory = () => {
   const { showToast } = useToast();
@@ -10,6 +12,9 @@ const AdminHistory = () => {
   const urlStatus = searchParams.get('status');
 
   const [orders, setOrders] = useState([]);
+  const [dateFilter, setDateFilter] = useState('all');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
 
   useEffect(() => {
     const unsubscribe = subscribeOrders((firestoreOrders) => {
@@ -55,6 +60,7 @@ const AdminHistory = () => {
           items: rawItems,
           itemsCount: itemsCount,
           date: dateStr,
+          rawCreatedAt: o.createdAt || o.updatedAt || o.date,
           status: o.status || 'Pending',
           isOffline: isOfflineOrder
         };
@@ -172,7 +178,9 @@ const AdminHistory = () => {
       matchesStatus = Boolean(o.isOffline);
     }
 
-    return matchesSearch && matchesStatus;
+    const matchesDate = isWithinDateRange(o.rawCreatedAt || o.date || o.createdAt, dateFilter, customStartDate, customEndDate);
+
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   const sortedOrders = [...filteredOrders].sort((a, b) => {
@@ -186,7 +194,7 @@ const AdminHistory = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, dateFilter, customStartDate, customEndDate]);
 
   const totalPages = Math.ceil(sortedOrders.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -241,7 +249,7 @@ const AdminHistory = () => {
 
       {/* Filter and Search */}
       <div className="bg-[#EFEAE1] p-4 rounded-3xl border border-amber-900/10 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
-        <div className="relative w-full md:w-96">
+        <div className="relative w-full md:w-80">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-800" size={19} />
           <input 
             type="text" 
@@ -251,20 +259,36 @@ const AdminHistory = () => {
             className="w-full pl-11 pr-4 py-3 bg-white border-2 border-amber-900/20 rounded-2xl focus:outline-none focus:border-[#4A0E0E] text-sm font-black text-gray-900 shadow-sm"
           />
         </div>
-        <div ref={dropdownRef} className="relative w-full md:w-auto">
-          <button
-            type="button"
-            onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-            className="w-full md:w-auto pl-5 pr-10 py-3 bg-white border-2 border-amber-900/20 hover:border-[#4A0E0E] rounded-2xl font-black text-gray-900 text-sm shadow-sm transition-all flex items-center justify-between gap-3 cursor-pointer"
-          >
-            <span className="flex items-center gap-2">
-              <Filter size={16} className="text-[#4A0E0E]" />
-              {statusFilter === 'All' && `All Records (${orders.length})`}
-              {statusFilter === 'Online' && `Online Orders (${orders.filter(o => !o.isOffline).length})`}
-              {statusFilter === 'Offline' && `Counter Billing / POS (${orders.filter(o => o.isOffline).length})`}
-            </span>
-            <ChevronDown size={18} className={`text-[#4A0E0E] transition-transform stroke-[2.5] ${showStatusDropdown ? 'rotate-180' : ''}`} />
-          </button>
+
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+          {/* Date Filter Dropdown */}
+          <DateRangeFilterDropdown
+            selectedFilter={dateFilter}
+            onFilterChange={(val) => setDateFilter(val)}
+            customStartDate={customStartDate}
+            customEndDate={customEndDate}
+            onCustomDatesChange={(start, end) => {
+              setCustomStartDate(start);
+              setCustomEndDate(end);
+            }}
+            className="w-full sm:w-auto"
+          />
+
+          {/* Type Selector Dropdown */}
+          <div ref={dropdownRef} className="relative w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+              className="w-full sm:w-auto px-4 py-3 bg-white border-2 border-amber-900/20 hover:border-[#4A0E0E] rounded-2xl font-black text-gray-900 text-xs sm:text-sm shadow-sm transition-all flex items-center justify-between gap-3 cursor-pointer whitespace-nowrap"
+            >
+              <span className="flex items-center gap-2">
+                <Filter size={16} className="text-[#4A0E0E]" />
+                {statusFilter === 'All' && `All Records (${orders.length})`}
+                {statusFilter === 'Online' && `Online Orders (${orders.filter(o => !o.isOffline).length})`}
+                {statusFilter === 'Offline' && `Counter POS (${orders.filter(o => o.isOffline).length})`}
+              </span>
+              <ChevronDown size={17} className={`text-gray-500 transition-transform stroke-[2.5] ${showStatusDropdown ? 'rotate-180 text-[#4A0E0E]' : ''}`} />
+            </button>
 
           {showStatusDropdown && (
             <div className="absolute right-0 top-full mt-2 w-72 bg-white border-2 border-amber-900/20 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 space-y-1">
@@ -299,6 +323,7 @@ const AdminHistory = () => {
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
 

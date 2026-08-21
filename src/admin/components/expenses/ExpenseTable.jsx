@@ -1,14 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Search, Filter, ChevronDown, Check, FolderPlus, ArrowUp, ArrowDown, ArrowUpDown, 
-  Edit3, Trash2, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight 
+  Edit3, Trash2, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Calendar 
 } from 'lucide-react';
+import DateRangeFilterDropdown from '../common/DateRangeFilterDropdown';
 
 const ExpenseTable = ({ 
   expenses, 
   categories, 
   selectedCategory, 
   setSelectedCategory, 
+  dateFilter = 'all',
+  setDateFilter,
+  customStartDate = '',
+  setCustomStartDate,
+  customEndDate = '',
+  setCustomEndDate,
   searchQuery, 
   setSearchQuery, 
   sortField, 
@@ -100,8 +107,8 @@ const ExpenseTable = ({
   return (
     <div className="space-y-6">
       {/* Filter & Search Bar */}
-      <div className="bg-[#EFEAE1] p-4 rounded-3xl border border-amber-900/10 shadow-sm flex flex-col sm:flex-row gap-4 justify-between items-center">
-        <div className="relative w-full sm:w-96">
+      <div className="bg-[#EFEAE1] p-4 rounded-3xl border border-amber-900/10 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
+        <div className="relative w-full md:w-80">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-800" size={19} />
           <input
             type="text"
@@ -112,19 +119,38 @@ const ExpenseTable = ({
           />
         </div>
 
-        {/* Category Dropdown Filter */}
-        <div ref={dropdownRef} className="relative w-full sm:w-64">
-          <button
-            type="button"
-            onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-            className="w-full pl-4 pr-10 py-2.5 bg-white border border-amber-900/10 hover:border-[#4A0E0E] rounded-2xl font-black text-gray-900 text-xs sm:text-sm shadow-sm transition-all flex items-center justify-between gap-2.5 cursor-pointer"
-          >
-            <span className="flex items-center gap-2 truncate">
-              <Filter size={15} className="text-[#4A0E0E] shrink-0" />
-              <span className="truncate">{selectedCategory === 'All' ? `All Categories (${categories.length - 1})` : selectedCategory}</span>
-            </span>
-            <ChevronDown size={17} className={`text-[#4A0E0E] transition-transform shrink-0 stroke-[2.5] ${showCategoryDropdown ? 'rotate-180' : ''}`} />
-          </button>
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+          {/* Date Filter Dropdown */}
+          {setDateFilter && (
+            <DateRangeFilterDropdown
+              selectedFilter={dateFilter}
+              onFilterChange={(val) => {
+                setDateFilter(val);
+                setCurrentPage(1);
+              }}
+              customStartDate={customStartDate}
+              customEndDate={customEndDate}
+              onCustomDatesChange={(start, end) => {
+                setCustomStartDate(start);
+                setCustomEndDate(end);
+              }}
+              className="w-full sm:w-auto"
+            />
+          )}
+
+          {/* Category Dropdown Filter */}
+          <div ref={dropdownRef} className="relative w-full sm:w-64">
+            <button
+              type="button"
+              onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+              className="w-full pl-4 pr-10 py-3 bg-white border-2 border-amber-900/20 hover:border-[#4A0E0E] rounded-2xl font-black text-gray-900 text-xs sm:text-sm shadow-sm transition-all flex items-center justify-between gap-2.5 cursor-pointer"
+            >
+              <span className="flex items-center gap-2 truncate">
+                <Filter size={15} className="text-[#4A0E0E] shrink-0" />
+                <span className="truncate">{selectedCategory === 'All' ? `All Categories (${categories.length - 1})` : selectedCategory}</span>
+              </span>
+              <ChevronDown size={17} className={`text-[#4A0E0E] transition-transform shrink-0 stroke-[2.5] ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+            </button>
 
           {showCategoryDropdown && (
             <div className="absolute right-0 top-full mt-2 w-72 bg-white border-2 border-amber-900/20 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 space-y-1">
@@ -155,6 +181,7 @@ const ExpenseTable = ({
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
 

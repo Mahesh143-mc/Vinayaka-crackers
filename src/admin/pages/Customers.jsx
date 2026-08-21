@@ -4,6 +4,8 @@ import { Search, MessageCircle, Calendar, Users, Send, X, ShoppingBag, Phone, Ma
 import { subscribeCustomers, subscribeOrders, saveCustomerToFirestore } from '../../services/firebaseService';
 import { useToast } from '../../context/ToastContext';
 import { generateCustomerId } from '../../utils/idGenerator';
+import { isWithinDateRange } from '../../utils/dateFilterUtil';
+import DateRangeFilterDropdown from '../components/common/DateRangeFilterDropdown';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 const AdminCustomers = () => {
@@ -13,6 +15,11 @@ const AdminCustomers = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Date Filter State
+  const [dateFilter, setDateFilter] = useState('all');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
 
   const [newCustomer, setNewCustomer] = useState({
     name: '',
@@ -107,6 +114,7 @@ const AdminCustomers = () => {
           totalOrders: 1,
           totalSpent: orderAmt,
           lastActive: orderDate,
+          rawCreatedAt: o.createdAt || o.date,
           channels: new Set([isPos ? 'POS Counter' : 'Website Order'])
         });
       } else {
@@ -147,6 +155,7 @@ const AdminCustomers = () => {
           totalOrders: Number(c.totalOrders || 0),
           totalSpent: Number(c.totalSpent || 0),
           lastActive: regDate,
+          rawCreatedAt: c.createdAt || c.lastActive,
           channels: new Set(['Registered Member'])
         });
       } else {
@@ -188,6 +197,8 @@ const AdminCustomers = () => {
       totalOrders: 0,
       totalSpent: 0,
       lastActive: new Date().toLocaleDateString('en-IN'),
+      createdAt: new Date().toISOString(),
+      rawCreatedAt: new Date().toISOString(),
       status: newCustomer.status || 'New',
       recentPurchases: []
     };
@@ -229,13 +240,16 @@ const AdminCustomers = () => {
     setCurrentPage(newPage);
   };
 
-  const filteredCustomers = customers.filter(c => 
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.phone.includes(searchQuery)
-  );
+  const filteredCustomers = customers.filter(c => {
+    const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.phone.includes(searchQuery);
+    if (!matchesSearch) return false;
+    const matchesDate = isWithinDateRange(c.rawCreatedAt || c.createdAt || c.lastActive, dateFilter, customStartDate, customEndDate);
+    return matchesDate;
+  });
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery]);
+  }, [searchQuery, dateFilter, customStartDate, customEndDate]);
 
   const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -271,8 +285,8 @@ const AdminCustomers = () => {
       </div>
 
       {/* Filter Bar & S.No Count Banner */}
-      <div className="bg-[#EFEAE1] p-4 rounded-3xl border border-amber-900/10 shadow-sm flex flex-col sm:flex-row gap-4 justify-between items-center">
-        <div className="relative w-full sm:w-96">
+      <div className="bg-[#EFEAE1] p-4 rounded-3xl border border-amber-900/10 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
+        <div className="relative w-full md:w-80">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-800" size={19} />
           <input 
             type="text" 
@@ -283,13 +297,28 @@ const AdminCustomers = () => {
           />
         </div>
 
-        {/* Total Customer S.No Counter */}
-        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl border border-amber-900/10 shadow-sm">
-          <Award size={18} className="text-[#4A0E0E]" />
-          <span className="text-xs font-black text-gray-900">Total Registered Customers:</span>
-          <span className="bg-[#FFD700] text-[#4A0E0E] font-black text-xs px-2.5 py-0.5 rounded-full border border-amber-400">
-            {filteredCustomers.length} Total
-          </span>
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+          {/* Date Filter Dropdown */}
+          <DateRangeFilterDropdown
+            selectedFilter={dateFilter}
+            onFilterChange={(val) => setDateFilter(val)}
+            customStartDate={customStartDate}
+            customEndDate={customEndDate}
+            onCustomDatesChange={(start, end) => {
+              setCustomStartDate(start);
+              setCustomEndDate(end);
+            }}
+            className="w-full sm:w-auto"
+          />
+
+          {/* Total Customer S.No Counter */}
+          <div className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-2xl border border-amber-900/10 shadow-sm whitespace-nowrap">
+            <Award size={18} className="text-[#4A0E0E]" />
+            <span className="text-xs font-black text-gray-900">Registered:</span>
+            <span className="bg-[#FFD700] text-[#4A0E0E] font-black text-xs px-2.5 py-0.5 rounded-full border border-amber-400">
+              {filteredCustomers.length}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -557,7 +586,7 @@ const AdminCustomers = () => {
               </div>
               <div>
                 <h3 className="text-xl font-serif font-black text-gray-900">Add New Customer Profile</h3>
-                <p className="text-xs font-bold text-gray-500">Register new customer in Firebase CRM</p>
+                <p className="text-xs font-bold text-gray-500">Register new customer in store database</p>
               </div>
             </div>
 

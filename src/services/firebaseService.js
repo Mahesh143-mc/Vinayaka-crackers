@@ -287,3 +287,40 @@ export const saveStoreSettingsToFirestore = async (settingsData) => {
     updatedAt: serverTimestamp()
   }, { merge: true });
 };
+
+// =========================================================================
+// 7. GALLERY FIRESTORE SERVICE
+// =========================================================================
+export const subscribeGallery = (callback) => {
+  const galleryRef = collection(db, 'gallery');
+  return onSnapshot(galleryRef, (snapshot) => {
+    const items = [];
+    snapshot.forEach((docSnap) => {
+      items.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    // Sort newest first
+    items.sort((a, b) => {
+      const timeA = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : new Date(a.createdAt || 0).getTime();
+      const timeB = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : new Date(b.createdAt || 0).getTime();
+      return timeB - timeA;
+    });
+    callback(items);
+  }, (error) => {
+    console.error("Firestore Gallery subscription error:", error);
+    callback([]);
+  });
+};
+
+export const saveGalleryItemToFirestore = async (galleryItem) => {
+  const docRef = doc(db, 'gallery', String(galleryItem.id));
+  await setDoc(docRef, {
+    ...galleryItem,
+    updatedAt: serverTimestamp(),
+    createdAt: galleryItem.createdAt || serverTimestamp()
+  }, { merge: true });
+};
+
+export const deleteGalleryItemFromFirestore = async (id) => {
+  const docRef = doc(db, 'gallery', String(id));
+  await deleteDoc(docRef);
+};

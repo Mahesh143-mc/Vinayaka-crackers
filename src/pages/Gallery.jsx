@@ -1,25 +1,48 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Maximize2, X, Sparkles } from 'lucide-react';
+import { Maximize2, X, Sparkles, Image as ImageIcon } from 'lucide-react';
+import { subscribeGallery } from '../services/firebaseService';
+
+const DEFAULT_GALLERY_IMAGES = [
+  { id: 'DEF-1', type: 'Festivals', category: 'Festivals', title: 'Grand Diwali Celebrations', src: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", span: "md:col-span-2 md:row-span-2" },
+  { id: 'DEF-2', type: 'Shop & Outlet', category: 'Shop & Outlet', title: 'Sivakasi Direct Outlet', src: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", span: "md:col-span-1 md:row-span-1" },
+  { id: 'DEF-3', type: 'Products Showcase', category: 'Products Showcase', title: 'Premium Sky Shots Lineup', src: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", span: "md:col-span-1 md:row-span-1" },
+  { id: 'DEF-4', type: 'Happy Customers', category: 'Happy Customers', title: 'Customer Festive Delight', src: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", span: "md:col-span-1 md:row-span-2" },
+  { id: 'DEF-5', type: 'Sky Shots & Aerials', category: 'Sky Shots & Aerials', title: 'Midnight 120 Shots Night Sky', src: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", span: "md:col-span-2 md:row-span-1" },
+  { id: 'DEF-6', type: 'Festivals', category: 'Festivals', title: 'Flower Pots & Ground Chakkars', src: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", span: "md:col-span-1 md:row-span-1" },
+  { id: 'DEF-7', type: 'Shop & Outlet', category: 'Shop & Outlet', title: 'Wholesale Dispatch Hub', src: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", span: "md:col-span-1 md:row-span-2" },
+  { id: 'DEF-8', type: 'Happy Customers', category: 'Happy Customers', title: 'Diwali Family Gifting Memories', src: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", span: "md:col-span-1 md:row-span-1" },
+];
 
 const Gallery = () => {
   const [activeTab, setActiveTab] = useState('All');
   const [selectedImg, setSelectedImg] = useState(null);
+  const [firestoreGallery, setFirestoreGallery] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const tabs = ['All', 'Shop', 'Festivals', 'Products', 'Customers'];
+  // Subscribe to live gallery uploads from Admin
+  useEffect(() => {
+    const unsubscribe = subscribeGallery((items) => {
+      setFirestoreGallery(items || []);
+      setIsLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
-  const images = [
-    { id: 1, type: 'Festivals', src: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", span: "md:col-span-2 md:row-span-2" },
-    { id: 2, type: 'Shop', src: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", span: "md:col-span-1 md:row-span-1" },
-    { id: 3, type: 'Products', src: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", span: "md:col-span-1 md:row-span-1" },
-    { id: 4, type: 'Customers', src: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", span: "md:col-span-1 md:row-span-2" },
-    { id: 5, type: 'Products', src: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", span: "md:col-span-2 md:row-span-1" },
-    { id: 6, type: 'Festivals', src: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", span: "md:col-span-1 md:row-span-1" },
-    { id: 7, type: 'Shop', src: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", span: "md:col-span-1 md:row-span-2" },
-    { id: 8, type: 'Customers', src: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", span: "md:col-span-1 md:row-span-1" },
-  ];
+  const activeImages = firestoreGallery.length > 0 ? firestoreGallery.map((item, idx) => ({
+    id: item.id || `GAL-${idx+1}`,
+    title: item.title || 'Diwali Fireworks Celebration',
+    type: item.category || item.type || 'Festivals',
+    category: item.category || item.type || 'Festivals',
+    src: item.imageUrl || item.src || "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg",
+    span: item.span || (idx % 5 === 0 ? "md:col-span-2 md:row-span-2" : (idx % 3 === 0 ? "md:col-span-1 md:row-span-2" : "md:col-span-1 md:row-span-1")),
+    description: item.description || ''
+  })) : DEFAULT_GALLERY_IMAGES;
 
-  const filteredImages = activeTab === 'All' ? images : images.filter(img => img.type === activeTab);
+  // Build dynamic categories list
+  const uniqueCategories = ['All', ...Array.from(new Set(activeImages.map(img => img.category || img.type).filter(Boolean)))];
+
+  const filteredImages = activeTab === 'All' ? activeImages : activeImages.filter(img => (img.category === activeTab || img.type === activeTab));
 
   return (
     <div className="bg-cream-light min-h-screen pt-32 pb-24 relative overflow-hidden">
@@ -47,11 +70,11 @@ const Gallery = () => {
           
           {/* Filter Tabs */}
           <div className="flex gap-3 md:gap-5 mt-10 pb-4 overflow-x-auto hide-scrollbar md:justify-center px-2 sm:px-0">
-            {tabs.map((tab) => (
+            {uniqueCategories.map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-8 py-3 rounded-full font-bold text-sm md:text-base transition-all duration-300 shadow-md whitespace-nowrap shrink-0 ${
+                className={`px-8 py-3 rounded-full font-bold text-sm md:text-base transition-all duration-300 shadow-md whitespace-nowrap shrink-0 cursor-pointer ${
                   activeTab === tab 
                     ? 'bg-gradient-to-tr from-[#D32F2F] to-[#8B1E1E] text-white shadow-[0_4px_20px_rgba(211,47,47,0.4)] scale-105' 
                     : 'bg-white text-brown hover:bg-gold/10 hover:text-charcoal hover:scale-105'
@@ -79,17 +102,22 @@ const Gallery = () => {
               >
                 <img 
                   src={img.src} 
-                  alt={img.type} 
+                  alt={img.title || img.type} 
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" 
                 />
                 
                 {/* Premium Hover Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-8">
-                  <div className="translate-y-8 group-hover:translate-y-0 transition-transform duration-500 ease-out flex items-center justify-between">
-                    <span className="text-white font-bold text-lg tracking-wider uppercase drop-shadow-md">
-                      {img.type}
-                    </span>
-                    <div className="w-12 h-12 bg-gold/90 backdrop-blur text-charcoal rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,179,0,0.5)] transform scale-50 group-hover:scale-100 transition-transform duration-500 delay-100">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-6 sm:p-8">
+                  <div className="translate-y-6 group-hover:translate-y-0 transition-transform duration-500 ease-out flex items-center justify-between">
+                    <div>
+                      <span className="text-amber-300 font-bold text-xs tracking-wider uppercase drop-shadow-md block mb-1">
+                        {img.type}
+                      </span>
+                      <h3 className="text-white font-serif font-black text-base sm:text-lg leading-tight">
+                        {img.title || 'Diwali Fireworks'}
+                      </h3>
+                    </div>
+                    <div className="w-11 h-11 bg-gold/90 backdrop-blur text-charcoal rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,179,0,0.5)] transform scale-75 group-hover:scale-100 transition-transform duration-500 shrink-0 ml-3">
                       <Maximize2 className="w-5 h-5" />
                     </div>
                   </div>

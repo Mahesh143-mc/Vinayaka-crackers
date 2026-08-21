@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, Eye, Phone, MessageCircle, Clock, Truck, PackageCheck, Check, ChevronDown, AlertCircle, CheckCircle, CheckCircle2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, Loader2, ShoppingBag, MapPin, FileText, XCircle, Edit3 } from 'lucide-react';
+import { Search, Eye, Phone, MessageCircle, Clock, Truck, PackageCheck, Check, ChevronDown, AlertCircle, CheckCircle, CheckCircle2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, Loader2, ShoppingBag, MapPin, FileText, XCircle, Edit3, Calendar } from 'lucide-react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { subscribeOrders, updateOrderStatusInFirestore, deleteOrderFromFirestore } from '../../services/firebaseService';
 import { useToast } from '../../context/ToastContext';
+import { isWithinDateRange } from '../../utils/dateFilterUtil';
+import DateRangeFilterDropdown from '../components/common/DateRangeFilterDropdown';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 const AdminOrders = () => {
@@ -15,6 +17,9 @@ const AdminOrders = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState(urlStatus || 'All');
+  const [dateFilter, setDateFilter] = useState('all');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
   const [updatingOrderId, setUpdatingOrderId] = useState(null);
   const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
   const [confirmConfig, setConfirmConfig] = useState(null);
@@ -74,6 +79,7 @@ const AdminOrders = () => {
             items: rawItems,
             itemsCount: itemsCount,
             date: dateStr,
+            rawCreatedAt: o.createdAt || o.date,
             status: o.status || 'Pending',
             isOffline: false
           };
@@ -93,7 +99,7 @@ const AdminOrders = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, dateFilter, customStartDate, customEndDate]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     setUpdatingOrderId(orderId);
@@ -110,7 +116,7 @@ const AdminOrders = () => {
     }
   };
 
-  // Filter orders by status & search query
+  // Filter orders by status, date & search query
   const filteredOrders = orders.filter(o => {
     const matchesSearch = 
       o.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -119,6 +125,9 @@ const AdminOrders = () => {
       o.address.toLowerCase().includes(searchQuery.toLowerCase());
 
     if (!matchesSearch) return false;
+
+    const matchesDate = isWithinDateRange(o.rawCreatedAt || o.date || o.createdAt, dateFilter, customStartDate, customEndDate);
+    if (!matchesDate) return false;
 
     if (statusFilter === 'All') return true;
     if (statusFilter === 'Website') return !o.isOffline;
@@ -131,7 +140,7 @@ const AdminOrders = () => {
   const paginatedOrders = filteredOrders.slice(startIndex, startIndex + itemsPerPage);
 
   const getStatusStyle = (status) => {
-    switch(status) {
+    switch (status) {
       case 'Pending': 
         return { badge: 'bg-amber-100 text-amber-900 border-amber-300', icon: <Clock size={14} /> };
       case 'Accepted': 
@@ -203,9 +212,9 @@ const AdminOrders = () => {
         ))}
       </div>
 
-      {/* Search Input */}
-      <div className="bg-[#EFEAE1] p-4 rounded-3xl border border-amber-900/10 shadow-sm flex items-center gap-3">
-        <div className="relative flex-1">
+      {/* Search Input & Date Filter */}
+      <div className="bg-[#EFEAE1] p-4 rounded-3xl border border-amber-900/10 shadow-sm flex flex-col sm:flex-row items-center gap-3">
+        <div className="relative flex-1 w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-800" size={19} />
           <input 
             type="text" 
@@ -215,6 +224,18 @@ const AdminOrders = () => {
             className="w-full pl-11 pr-4 py-3 bg-white border-2 border-amber-900/20 rounded-2xl focus:outline-none focus:border-[#4A0E0E] text-xs sm:text-sm font-black text-gray-900 shadow-sm"
           />
         </div>
+
+        <DateRangeFilterDropdown
+          selectedFilter={dateFilter}
+          onFilterChange={(val) => setDateFilter(val)}
+          customStartDate={customStartDate}
+          customEndDate={customEndDate}
+          onCustomDatesChange={(start, end) => {
+            setCustomStartDate(start);
+            setCustomEndDate(end);
+          }}
+          className="w-full sm:w-auto shrink-0"
+        />
       </div>
 
       {/* Orders Cards List / Loading State */}

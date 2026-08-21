@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Package, 
@@ -17,17 +17,23 @@ import {
   Bell,
   TrendingUp,
   DollarSign,
-  Globe,
+  Camera,
   Layers,
   Maximize2,
   Minimize2,
-  History
+  History,
+  ShieldCheck
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { subscribeOrders } from '../../services/firebaseService';
 import { useStoreSettings } from '../../context/StoreSettingsContext';
+import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 const AdminLayout = () => {
+  const navigate = useNavigate();
+  const { logout, currentUser } = useAuth();
+  const { showToast } = useToast();
   const { storeSettings } = useStoreSettings();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isDesktopSidebarExpanded, setIsDesktopSidebarExpanded] = useState(true);
@@ -35,8 +41,20 @@ const AdminLayout = () => {
   const [isOrdersSubmenuOpen, setIsOrdersSubmenuOpen] = useState(true);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
   const [isFullscreenPos, setIsFullscreenPos] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const location = useLocation();
   const mainRef = useRef(null);
+
+  const handleConfirmLogout = async () => {
+    setShowLogoutModal(false);
+    try {
+      await logout();
+      showToast('Signed out of admin session successfully.', 'info');
+      navigate('/admin/login');
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  };
 
   const isBillingPage = location.pathname.startsWith('/admin/billing');
 
@@ -115,7 +133,7 @@ const AdminLayout = () => {
     { name: 'Customers', path: '/admin/customers', icon: <Users size={22} /> },
     { name: 'Expenses Tracker', path: '/admin/expenses', icon: <DollarSign size={22} /> },
     { name: 'Reports & Analytics', path: '/admin/reports', icon: <TrendingUp size={22} /> },
-    { name: 'Website Management', path: '/admin/website', icon: <Globe size={22} /> },
+    { name: 'Gallery Management', path: '/admin/gallery', icon: <Camera size={22} /> },
     { name: 'Settings', path: '/admin/settings', icon: <Settings size={22} /> },
   ];
 
@@ -128,14 +146,14 @@ const AdminLayout = () => {
           lg:translate-x-0 lg:static lg:inset-0 ${isDesktopSidebarExpanded ? 'lg:w-72' : 'lg:w-20'}
         `}
       >
-        <div className="flex items-center justify-between h-20 px-6 border-b border-red-900/30 shrink-0">
-          <Link to="/admin" className={`flex items-center gap-3 overflow-hidden ${!isDesktopSidebarExpanded && 'lg:hidden'}`}>
+        <div className={`flex items-center ${isDesktopSidebarExpanded ? 'justify-between px-6' : 'justify-center px-2'} h-20 border-b border-red-900/30 shrink-0`}>
+          <Link to="/admin" className="flex items-center gap-3 overflow-hidden">
             <img 
               src={storeSettings?.logo || storeSettings?.companyLogo || "https://res.cloudinary.com/vf0fqhwo/image/upload/v1786363324/logo_q7lezq.jpg"} 
               alt={storeSettings?.companyName || "Karuppa Crackers"} 
-              className="w-9 h-9 rounded-xl object-contain border border-amber-400/40 shadow-sm shrink-0 bg-white" 
+              className="w-10 h-10 rounded-xl object-contain border border-amber-400/40 shadow-sm shrink-0 bg-white" 
             />
-            <span className="font-serif font-extrabold text-white text-xl tracking-tight whitespace-nowrap">
+            <span className={`font-serif font-extrabold text-white text-xl tracking-tight whitespace-nowrap transition-opacity duration-300 ${!isDesktopSidebarExpanded ? 'lg:hidden' : 'block'}`}>
               {storeSettings?.companyName || 'Karuppa Crackers'}
             </span>
           </Link>
@@ -190,14 +208,20 @@ const AdminLayout = () => {
           })}
         </nav>
 
-        {/* User / Logout Section */}
-        <div className="p-4 border-t border-red-900/30 shrink-0">
-          <button className={`flex items-center gap-4 px-4 py-3 text-red-200 hover:text-white hover:bg-black/20 rounded-2xl transition-all duration-300 w-full group overflow-hidden`}
-                  title={!isDesktopSidebarExpanded ? "Logout" : ""}>
-            <div className="shrink-0 group-hover:rotate-12 transition-transform">
-              <LogOut size={22} />
+        {/* Distinctive User / Logout Section */}
+        <div className="p-4 border-t border-red-900/40 shrink-0 bg-black/10">
+          <button 
+            type="button"
+            onClick={() => setShowLogoutModal(true)}
+            className={`flex items-center ${isDesktopSidebarExpanded ? 'gap-3.5 px-4 py-3' : 'justify-center p-3'} rounded-2xl transition-all duration-300 w-full group overflow-hidden cursor-pointer bg-gradient-to-r from-rose-950/80 via-red-950/90 to-rose-950/80 hover:from-rose-700 hover:to-red-800 border-2 border-rose-500/30 hover:border-rose-400 text-rose-200 hover:text-white shadow-sm hover:shadow-[0_4px_18px_rgba(225,29,72,0.4)] hover:scale-[1.02] active:scale-[0.98]`}
+            title={!isDesktopSidebarExpanded ? "Logout / Sign Out" : ""}
+          >
+            <div className="shrink-0 text-rose-400 group-hover:text-white group-hover:rotate-12 transition-transform duration-300">
+              <LogOut size={20} strokeWidth={2.5} />
             </div>
-            <span className={`font-bold whitespace-nowrap ${!isDesktopSidebarExpanded ? 'lg:opacity-0 lg:w-0 lg:hidden' : 'opacity-100'}`}>Logout</span>
+            <span className={`font-black uppercase text-xs tracking-wider whitespace-nowrap transition-opacity duration-300 ${!isDesktopSidebarExpanded ? 'lg:hidden' : 'block'}`}>
+              Logout
+            </span>
           </button>
         </div>
       </aside>
@@ -209,7 +233,7 @@ const AdminLayout = () => {
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setIsMobileSidebarOpen(true)}
-              className="lg:hidden text-red-200 hover:text-white p-2 bg-red-950/40 rounded-xl"
+              className="lg:hidden text-red-200 hover:text-white p-2 bg-red-950/40 rounded-xl cursor-pointer"
             >
               <Menu size={22} />
             </button>
@@ -219,11 +243,11 @@ const AdminLayout = () => {
           </div>
 
           <div className="flex items-center gap-3 sm:gap-4">
-            {/* Fullscreen Toggle Navbar Button (Available on ALL Admin pages) */}
+            {/* Fullscreen Toggle Navbar Button (Icon on Mobile, Icon + Label on Desktop) */}
             <button
               type="button"
               onClick={toggleFullscreen}
-              className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-1.5 shadow-sm border-2 cursor-pointer ${
+              className={`p-2 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-1.5 shadow-sm border-2 cursor-pointer ${
                 isFullscreenPos
                   ? 'bg-[#FFD700] text-[#4A0E0E] border-amber-300 shadow-md'
                   : 'bg-white/10 hover:bg-white/20 border-white/20 text-white hover:border-amber-300'
@@ -238,18 +262,33 @@ const AdminLayout = () => {
               ) : (
                 <>
                   <Maximize2 size={16} className="text-[#FFD700] stroke-[2.5]" />
-                  <span>Full Screen</span>
+                  <span className="hidden sm:inline">Full Screen</span>
                 </>
               )}
             </button>
 
-            <div className="flex items-center gap-3 sm:gap-4">
+            {/* Top Navbar Logout Action Button (Desktop / Tablet only, in mobile it's accessible via Sidebar) */}
+            <button
+              type="button"
+              onClick={() => setShowLogoutModal(true)}
+              className="hidden sm:flex px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-black transition-all items-center gap-1.5 shadow-sm border-2 bg-red-950/60 hover:bg-red-900 border-red-800/40 text-red-200 hover:text-white cursor-pointer"
+              title="Sign Out of Admin Portal"
+            >
+              <LogOut size={16} className="text-red-300 stroke-[2.5]" />
+              <span className="hidden md:inline">Logout</span>
+            </button>
+
+            <div className="flex items-center gap-3 sm:gap-4 pl-1 sm:border-l sm:border-red-900/40">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-bold text-white leading-tight">Mahesh Admin</p>
-                <p className="text-[11px] font-medium text-red-200">admin@karuppacrackers.com</p>
+                <p className="text-sm font-bold text-white leading-tight">
+                  {currentUser?.displayName || 'Mahesh Admin'}
+                </p>
+                <p className="text-[11px] font-medium text-red-200">
+                  {currentUser?.email || 'admin@karuppacrackers.com'}
+                </p>
               </div>
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#FFD700] to-amber-500 flex items-center justify-center text-[#4A0E0E] font-black text-base shadow-sm">
-                M
+                {(currentUser?.email?.charAt(0) || 'M').toUpperCase()}
               </div>
             </div>
           </div>
@@ -279,6 +318,41 @@ const AdminLayout = () => {
         >
           <ChevronUp size={24} strokeWidth={3} className="group-hover:-translate-y-0.5 transition-transform" />
         </button>
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border-2 border-amber-900/20 text-center space-y-4 animate-in zoom-in-95">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-100 text-[#4A0E0E] flex items-center justify-center font-black">
+              <LogOut size={26} />
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-serif font-black text-gray-900">Confirm Admin Logout</h3>
+              <p className="text-xs font-bold text-gray-600 mt-1 leading-relaxed">
+                Are you sure you want to end your current session and sign out from Karuppa Crackers Admin Control Panel?
+              </p>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowLogoutModal(false)}
+                className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-bold text-xs hover:bg-gray-100 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmLogout}
+                className="flex-1 py-3 bg-[#4A0E0E] hover:bg-[#3B0B0B] text-[#FFD700] rounded-xl font-black text-xs shadow-md transition-all cursor-pointer"
+              >
+                Yes, Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

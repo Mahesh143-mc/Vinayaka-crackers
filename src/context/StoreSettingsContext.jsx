@@ -43,6 +43,14 @@ export const StoreSettingsProvider = ({ children }) => {
           email: firestoreData.email || firestoreData.supportEmail || defaultStoreSettings.email,
           supportEmail: firestoreData.supportEmail || firestoreData.email || defaultStoreSettings.supportEmail
         }));
+
+        const logoUrl = firestoreData.logo || firestoreData.companyLogo;
+        if (logoUrl) {
+          let link = document.querySelector("link[rel~='icon']");
+          if (link) {
+            link.href = logoUrl;
+          }
+        }
       }
       setIsLoading(false);
     });
@@ -56,11 +64,13 @@ export const StoreSettingsProvider = ({ children }) => {
         ...storeSettings,
         ...newSettings
       };
+      // Preserve existing logo if not explicitly in newSettings
+      if (!newSettings.logo && storeSettings.logo) {
+        merged.logo = storeSettings.logo;
+        merged.companyLogo = storeSettings.companyLogo || storeSettings.logo;
+      }
       setStoreSettings(merged);
       await saveStoreSettingsToFirestore(merged);
-      if (showToast) {
-        showToast('🎉 Company Information & Store Settings saved successfully!', 'success');
-      }
       return { success: true };
     } catch (err) {
       console.error("Error saving store settings:", err);
