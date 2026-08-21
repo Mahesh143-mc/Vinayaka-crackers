@@ -2,211 +2,17 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Phone, Mail, MapPin, Calendar, ShoppingBag, Award, Send, Printer, Download, Eye, FileText, CheckCircle2, X, ChevronRight } from 'lucide-react';
 import { subscribeCustomers, subscribeOrders } from '../../services/firebaseService';
-
-const mockCustomerDatabase = {
-  'CUST-001': {
-    id: 'CUST-001',
-    sno: 1,
-    name: 'Rahul Sharma',
-    phone: '+91 9876543210',
-    email: 'rahul.sharma@gmail.com',
-    location: 'Sivakasi, Tamil Nadu',
-    status: 'VIP',
-    totalOrders: 5,
-    totalSpent: 45500,
-    avgOrderValue: 9100,
-    registeredDate: 'Jan 12, 2023',
-    lastActive: 'Oct 15, 2023',
-    orders: [
-      {
-        orderId: 'ORD-9842',
-        date: 'Oct 15, 2023',
-        paymentMode: 'UPI / GPay',
-        paymentStatus: 'PAID',
-        items: [
-          { name: '120 Shots Multi-color', id: 'PRD-01', category: 'Fancy', price: 1200, qty: 5 },
-          { name: 'Giant Sparklers (50pcs)', id: 'PRD-02', category: 'Sparklers', price: 350, qty: 10 },
-          { name: 'Flower Pots Mega', id: 'PRD-04', category: 'Fountains', price: 650, qty: 4 }
-        ],
-        subtotal: 12100,
-        discount: 1210,
-        gst: 1960,
-        grandTotal: 12850
-      },
-      {
-        orderId: 'ORD-9104',
-        date: 'Sep 28, 2023',
-        paymentMode: 'Cash on Counter',
-        paymentStatus: 'PAID',
-        items: [
-          { name: '7 Color Rockets (10pcs)', id: 'PRD-06', category: 'Fancy', price: 850, qty: 8 },
-          { name: 'Chakra Ground Spinner', id: 'PRD-07', category: 'Fountains', price: 280, qty: 10 }
-        ],
-        subtotal: 9600,
-        discount: 960,
-        gst: 1555,
-        grandTotal: 10195
-      },
-      {
-        orderId: 'ORD-8512',
-        date: 'Aug 14, 2023',
-        paymentMode: 'Bank Transfer',
-        paymentStatus: 'PAID',
-        items: [
-          { name: 'Lakshmi Bomb Deluxe', id: 'PRD-03', category: 'Bombs', price: 150, qty: 20 },
-          { name: 'Electric Sparklers Gold', id: 'PRD-08', category: 'Sparklers', price: 450, qty: 15 }
-        ],
-        subtotal: 9750,
-        discount: 975,
-        gst: 1580,
-        grandTotal: 10355
-      },
-      {
-        orderId: 'ORD-7810',
-        date: 'Jul 02, 2023',
-        paymentMode: 'UPI / PhonePe',
-        paymentStatus: 'PAID',
-        items: [
-          { name: 'Sky Lanterns Pack', id: 'PRD-05', category: 'Novelty', price: 400, qty: 10 },
-          { name: 'Flower Pots Mega', id: 'PRD-04', category: 'Fountains', price: 650, qty: 6 }
-        ],
-        subtotal: 7900,
-        discount: 790,
-        gst: 1280,
-        grandTotal: 8390
-      },
-      {
-        orderId: 'ORD-6540',
-        date: 'Feb 10, 2023',
-        paymentMode: 'Cash',
-        paymentStatus: 'PAID',
-        items: [
-          { name: 'Giant Sparklers (50pcs)', id: 'PRD-02', category: 'Sparklers', price: 350, qty: 10 }
-        ],
-        subtotal: 3500,
-        discount: 350,
-        gst: 567,
-        grandTotal: 3717
-      }
-    ]
-  },
-  'CUST-002': {
-    id: 'CUST-002',
-    sno: 2,
-    name: 'Priya Patel',
-    phone: '+91 9123456789',
-    email: 'priya.patel@gmail.com',
-    location: 'Madurai, Tamil Nadu',
-    status: 'New',
-    totalOrders: 1,
-    totalSpent: 8200,
-    avgOrderValue: 8200,
-    registeredDate: 'Oct 15, 2023',
-    lastActive: 'Oct 15, 2023',
-    orders: [
-      {
-        orderId: 'ORD-8761',
-        date: 'Oct 15, 2023',
-        paymentMode: 'UPI',
-        paymentStatus: 'PAID',
-        items: [
-          { name: 'Flower Pots Mega', id: 'PRD-04', category: 'Fountains', price: 650, qty: 8 },
-          { name: 'Sky Lanterns Pack', id: 'PRD-05', category: 'Novelty', price: 400, qty: 7 }
-        ],
-        subtotal: 8000,
-        discount: 800,
-        gst: 1296,
-        grandTotal: 8496
-      }
-    ]
-  },
-  'CUST-003': {
-    id: 'CUST-003',
-    sno: 3,
-    name: 'Vikram Singh',
-    phone: '+91 9988776655',
-    email: 'vikram.singh@gmail.com',
-    location: 'Chennai, Tamil Nadu',
-    status: 'Wholesale',
-    totalOrders: 12,
-    totalSpent: 122000,
-    avgOrderValue: 10166,
-    registeredDate: 'Mar 05, 2023',
-    lastActive: 'Oct 14, 2023',
-    orders: [
-      {
-        orderId: 'ORD-9901',
-        date: 'Oct 14, 2023',
-        paymentMode: 'Bank Transfer',
-        paymentStatus: 'PAID',
-        items: [
-          { name: '7 Color Rockets (100pcs Bulk)', id: 'PRD-06', category: 'Fancy', price: 850, qty: 40 },
-          { name: '120 Shots Multi-color', id: 'PRD-01', category: 'Fancy', price: 1200, qty: 10 }
-        ],
-        subtotal: 46000,
-        discount: 4600,
-        gst: 7452,
-        grandTotal: 48852
-      }
-    ]
-  }
-};
-
-const generateFallbackCustomer = (id) => {
-  return {
-    id: id || 'CUST-001',
-    sno: 1,
-    name: 'Rahul Sharma',
-    phone: '+91 9876543210',
-    email: 'rahul.sharma@gmail.com',
-    location: 'Sivakasi, Tamil Nadu',
-    status: 'VIP',
-    totalOrders: 3,
-    totalSpent: 34500,
-    avgOrderValue: 11500,
-    registeredDate: 'Feb 18, 2023',
-    lastActive: 'Oct 15, 2023',
-    orders: [
-      {
-        orderId: `ORD-${Math.floor(Math.random() * 9000 + 1000)}`,
-        date: 'Oct 15, 2023',
-        paymentMode: 'UPI / Online',
-        paymentStatus: 'PAID',
-        items: [
-          { name: '120 Shots Multi-color', id: 'PRD-01', category: 'Fancy', price: 1200, qty: 6 },
-          { name: 'Giant Sparklers (50pcs)', id: 'PRD-02', category: 'Sparklers', price: 350, qty: 12 },
-          { name: 'Flower Pots Mega', id: 'PRD-04', category: 'Fountains', price: 650, qty: 5 }
-        ],
-        subtotal: 14650,
-        discount: 1465,
-        gst: 2373,
-        grandTotal: 15558
-      },
-      {
-        orderId: `ORD-${Math.floor(Math.random() * 9000 + 1000)}`,
-        date: 'Sep 12, 2023',
-        paymentMode: 'Cash',
-        paymentStatus: 'PAID',
-        items: [
-          { name: '7 Color Rockets (10pcs)', id: 'PRD-06', category: 'Fancy', price: 850, qty: 10 },
-          { name: 'Chakra Ground Spinner', id: 'PRD-07', category: 'Fountains', price: 280, qty: 15 }
-        ],
-        subtotal: 12700,
-        discount: 1270,
-        gst: 2057,
-        grandTotal: 13487
-      }
-    ]
-  };
-};
+import { useToast } from '../../context/ToastContext';
 
 const AdminCustomerDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
-  const [customer, setCustomer] = useState(() => mockCustomerDatabase[id] || generateFallbackCustomer(id));
+  const [customer, setCustomer] = useState(null);
   const [allOrders, setAllOrders] = useState([]);
   const [firestoreCustomers, setFirestoreCustomers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const unsubCust = subscribeCustomers((custs) => {
@@ -222,16 +28,16 @@ const AdminCustomerDetails = () => {
   }, []);
 
   useEffect(() => {
-    const foundCust = firestoreCustomers.find(c => String(c.id) === String(id) || String(c.phone).includes(String(id)));
+    const foundCust = firestoreCustomers.find(c => String(c.id) === String(id) || String(c.phone).replace(/[^\d]/g, '') === String(id).replace(/[^\d]/g, ''));
     const custPhone = foundCust?.phone || id;
     const cleanPhone = String(custPhone).replace(/[^\d]/g, '');
 
     // Match all orders for this customer by phone, id, or customerName
     const userOrders = allOrders.filter(o => {
-      const oPhoneClean = String(o.phone || '').replace(/[^\d]/g, '');
-      const phoneMatch = cleanPhone && oPhoneClean && (cleanPhone.endsWith(oPhoneClean) || oPhoneClean.endsWith(cleanPhone));
+      const oPhoneClean = String(o.phone || o.whatsapp || o.customerPhone || '').replace(/[^\d]/g, '');
+      const phoneMatch = cleanPhone && oPhoneClean && cleanPhone.length >= 6 && oPhoneClean.length >= 6 && (cleanPhone === oPhoneClean || cleanPhone.endsWith(oPhoneClean) || oPhoneClean.endsWith(cleanPhone));
       const idMatch = String(o.id) === String(id) || String(o.customerPhone) === String(id) || String(o.phone) === String(id);
-      const nameMatch = foundCust?.name && o.customerName && foundCust.name.toLowerCase().trim() === o.customerName.toLowerCase().trim();
+      const nameMatch = foundCust?.name && o.customer && foundCust.name.toLowerCase().trim() === String(o.customer || o.customerName || '').toLowerCase().trim();
       return phoneMatch || idMatch || nameMatch;
     });
 
@@ -239,7 +45,7 @@ const AdminCustomerDetails = () => {
       const subtotal = o.subtotal || o.totalAmount || o.grandTotal || o.amount || 0;
       const discount = o.discount || 0;
       const gst = o.gst || 0;
-      const grandTotal = o.grandTotal || o.totalAmount || o.amount || subtotal;
+      const grandTotal = typeof o.grandTotal === 'number' ? o.grandTotal : (typeof o.totalAmount === 'number' ? o.totalAmount : (parseFloat(String(o.amount || 0).replace(/[^\d.]/g, '')) || subtotal));
       const rawDate = o.createdAt || o.date;
       let dateStr = 'Today';
       if (rawDate) {
@@ -254,7 +60,7 @@ const AdminCustomerDetails = () => {
       return {
         orderId: String(o.id || o.orderId),
         date: dateStr,
-        paymentMode: o.paymentMode || 'Online / WhatsApp',
+        paymentMode: o.paymentMode || (o.isOffline ? 'Counter Cash' : 'Online / UPI'),
         paymentStatus: o.paymentStatus || 'PAID',
         items: (o.items || []).map(i => ({
           name: i.name || 'Firework Item',
@@ -267,42 +73,38 @@ const AdminCustomerDetails = () => {
         discount: discount,
         gst: gst,
         grandTotal: grandTotal,
-        status: o.status || 'Pending'
+        status: o.status || 'Delivered'
       };
     });
 
     const totalSpentSum = computedOrders.reduce((sum, o) => sum + o.grandTotal, 0);
     const totalOrdersCount = computedOrders.length;
 
-    if (foundCust || computedOrders.length > 0) {
-      const targetOrder = allOrders.find(o => String(o.id) === String(id) || String(o.phone).includes(String(id)));
-      const baseName = foundCust?.name || (targetOrder ? (targetOrder.customerName || targetOrder.customer) : 'Valued Customer');
-      setCustomer({
-        id: String(id),
-        sno: foundCust?.sno || 1,
-        name: baseName || 'Valued Customer',
-        phone: foundCust?.phone || (targetOrder?.phone || id),
-        email: foundCust?.email || 'N/A',
-        location: foundCust?.location || 'Sivakasi, Tamil Nadu',
-        status: foundCust?.status || (totalSpentSum > 10000 ? 'VIP' : 'Regular'),
-        totalOrders: totalOrdersCount,
-        totalSpent: totalSpentSum,
-        avgOrderValue: totalOrdersCount > 0 ? Math.round(totalSpentSum / totalOrdersCount) : 0,
-        registeredDate: foundCust?.createdAt ? new Date(foundCust.createdAt).toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN'),
-        lastActive: computedOrders[0]?.date || 'Today',
-        orders: computedOrders
-      });
-    } else if (mockCustomerDatabase[id]) {
-      setCustomer(mockCustomerDatabase[id]);
-    }
+    const targetOrder = allOrders.find(o => String(o.id) === String(id) || String(o.phone || '').replace(/[^\d]/g, '') === cleanPhone);
+    const baseName = foundCust?.name || (targetOrder ? (targetOrder.customerName || targetOrder.customer) : `Customer (${custPhone})`);
+
+    setCustomer({
+      id: String(id),
+      sno: foundCust?.sno || 1,
+      name: baseName || 'Valued Customer',
+      phone: foundCust?.phone || (targetOrder?.phone || targetOrder?.whatsapp || custPhone || 'N/A'),
+      email: foundCust?.email || (targetOrder?.email || 'N/A'),
+      location: foundCust?.location || (targetOrder?.address || targetOrder?.location || 'Sivakasi, Tamil Nadu'),
+      status: foundCust?.status || (totalSpentSum > 15000 ? 'VIP' : 'Regular'),
+      totalOrders: totalOrdersCount || Number(foundCust?.totalOrders || 0),
+      totalSpent: totalSpentSum || Number(foundCust?.totalSpent || 0),
+      avgOrderValue: totalOrdersCount > 0 ? Math.round(totalSpentSum / totalOrdersCount) : 0,
+      registeredDate: foundCust?.createdAt ? new Date(foundCust.createdAt).toLocaleDateString('en-IN') : (computedOrders[0]?.date || 'Recent'),
+      lastActive: computedOrders[0]?.date || 'Recent',
+      orders: computedOrders
+    });
+    setIsLoading(false);
   }, [id, firestoreCustomers, allOrders]);
 
   const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [successToast, setSuccessToast] = useState('');
 
   const triggerSuccess = (msg) => {
-    setSuccessToast(msg);
-    setTimeout(() => setSuccessToast(''), 3000);
+    showToast(msg, 'success');
   };
 
   const handleDownloadInvoice = (inv) => {
@@ -443,16 +245,6 @@ const AdminCustomerDetails = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-12">
-      {/* Toast Notification Banner */}
-      {successToast && (
-        <div className="fixed top-6 right-6 z-[1000005] bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-800 text-white font-black text-xs sm:text-sm px-5 py-3.5 rounded-2xl shadow-2xl border-2 border-amber-300 flex items-center gap-3 animate-in slide-in-from-top-5 duration-300">
-          <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-            <CheckCircle2 size={18} className="text-[#FFD700]" />
-          </div>
-          <span>{successToast}</span>
-        </div>
-      )}
-
       {/* Back Button */}
       <div className="flex items-center justify-between">
         <button

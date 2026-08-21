@@ -1,6 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import { useEffect, useRef } from 'react';
-import confetti from 'canvas-confetti';
+import { useEffect } from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import { Phone, MessageCircle } from 'lucide-react';
@@ -8,48 +7,7 @@ import { Phone, MessageCircle } from 'lucide-react';
 const Layout = () => {
   const location = useLocation();
   const isProductsPage = location.pathname === '/products';
-  const visitedPagesRef = useRef(new Set());
 
-  // Paper boom celebration effect ONLY on first visit to each page
-  useEffect(() => {
-    // If user already visited this page in current session, skip animation
-    if (visitedPagesRef.current.has(location.pathname)) {
-      return;
-    }
-
-    // Record that this page has been visited
-    visitedPagesRef.current.add(location.pathname);
-
-    const duration = 2.5 * 1000;
-    const end = Date.now() + duration;
-    const colors = ['#FFD700', '#D32F2F', '#4CAF50', '#FF9800', '#ffffff'];
-
-    const triggerPaperBoom = () => {
-      let interval = setInterval(() => {
-        if (Date.now() > end) {
-          return clearInterval(interval);
-        }
-        
-        confetti({
-          particleCount: 80,
-          startVelocity: 28,
-          spread: 360,
-          origin: {
-            x: Math.random(),
-            y: Math.random() * 0.4
-          },
-          colors: colors,
-          zIndex: 100
-        });
-      }, 300);
-    };
-
-    const timer = setTimeout(() => {
-      triggerPaperBoom();
-    }, 200);
-
-    return () => clearTimeout(timer);
-  }, [location.pathname]);
 
   return (
     <div className="flex flex-col min-h-screen bg-cream-light font-sans text-brown">

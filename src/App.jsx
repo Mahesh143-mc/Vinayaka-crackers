@@ -9,6 +9,8 @@ import Gallery from './pages/Gallery';
 import Contact from './pages/Contact';
 import Checkout from './pages/Checkout';
 import { CartProvider } from './context/CartContext';
+import { ToastProvider } from './context/ToastContext';
+import { StoreSettingsProvider } from './context/StoreSettingsContext';
 import AdminLayout from './admin/components/AdminLayout';
 import AdminDashboard from './admin/pages/Dashboard';
 import AdminProducts from './admin/pages/Products';
@@ -24,6 +26,7 @@ import AdminOrderDetails from './admin/pages/OrderDetails';
 import AdminReports from './admin/pages/Reports';
 import AdminExpenses from './admin/pages/Expenses';
 import AdminWebsiteCMS from './admin/pages/WebsiteCMS';
+import AdminHistory from './admin/pages/History';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -37,41 +40,46 @@ function ScrollToTop() {
 
 function App() {
   return (
-    <CartProvider>
-      <Router>
-        <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Home />} />
-            <Route path="about" element={<About />} />
-            <Route path="products" element={<Products />} />
-            <Route path="categories" element={<Categories />} />
-            <Route path="gallery" element={<Gallery />} />
-            <Route path="contact" element={<Contact />} />
-            <Route path="checkout" element={<Checkout />} />
-          </Route>
-          
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="products" element={<AdminProducts />} />
-            <Route path="products/add" element={<AdminAddProduct />} />
-            <Route path="products/edit/:id" element={<AdminAddProduct />} />
-            <Route path="categories" element={<AdminCategories />} />
-            <Route path="inventory" element={<AdminInventory />} />
-            <Route path="orders" element={<AdminOrders />} />
-            <Route path="orders/:id" element={<AdminOrderDetails />} />
-            <Route path="billing" element={<AdminBilling />} />
-            <Route path="reports" element={<AdminReports />} />
-            <Route path="expenses" element={<AdminExpenses />} />
-            <Route path="website" element={<AdminWebsiteCMS />} />
-            <Route path="customers" element={<AdminCustomers />} />
-            <Route path="customers/:id" element={<AdminCustomerDetails />} />
-            <Route path="settings" element={<AdminSettings />} />
-          </Route>
-        </Routes>
-      </Router>
-    </CartProvider>
+    <ToastProvider>
+      <StoreSettingsProvider>
+        <CartProvider>
+          <Router>
+            <ScrollToTop />
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Home />} />
+              <Route path="about" element={<About />} />
+              <Route path="products" element={<Products />} />
+              <Route path="categories" element={<Categories />} />
+              <Route path="gallery" element={<Gallery />} />
+              <Route path="contact" element={<Contact />} />
+              <Route path="checkout" element={<Checkout />} />
+            </Route>
+            
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="products" element={<AdminProducts />} />
+              <Route path="products/add" element={<AdminAddProduct />} />
+              <Route path="products/edit/:id" element={<AdminAddProduct />} />
+              <Route path="categories" element={<AdminCategories />} />
+              <Route path="inventory" element={<AdminInventory />} />
+              <Route path="orders" element={<AdminOrders />} />
+              <Route path="history" element={<AdminHistory />} />
+              <Route path="orders/:id" element={<AdminOrderDetails />} />
+              <Route path="billing" element={<AdminBilling />} />
+              <Route path="reports" element={<AdminReports />} />
+              <Route path="expenses" element={<AdminExpenses />} />
+              <Route path="website" element={<AdminWebsiteCMS />} />
+              <Route path="customers" element={<AdminCustomers />} />
+              <Route path="customers/:id" element={<AdminCustomerDetails />} />
+              <Route path="settings" element={<AdminSettings />} />
+            </Route>
+          </Routes>
+        </Router>
+      </CartProvider>
+    </StoreSettingsProvider>
+    </ToastProvider>
   );
 }
 

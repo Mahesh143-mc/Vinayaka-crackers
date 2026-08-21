@@ -3,7 +3,7 @@ import { ShoppingCart, Filter, Search, X, ArrowUp, SlidersHorizontal, Eye, Packa
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
-import confetti from 'canvas-confetti';
+
 import { subscribeProducts, subscribeCategories } from '../services/firebaseService';
 
 const Products = () => {
@@ -47,38 +47,14 @@ const Products = () => {
     };
   }, []);
 
-  const shootConfetti = () => {
-    const colors = ['#FFD700', '#D32F2F', '#4CAF50', '#FF9800', '#ffffff'];
-    confetti({
-      particleCount: 60,
-      angle: 60,
-      spread: 70,
-      origin: { x: 0, y: 1 },
-      colors: colors,
-      zIndex: 150,
-      disableForReducedMotion: true
-    });
-    confetti({
-      particleCount: 60,
-      angle: 120,
-      spread: 70,
-      origin: { x: 1, y: 1 },
-      colors: colors,
-      zIndex: 150,
-      disableForReducedMotion: true
-    });
-  };
-
   const handleAddToCart = (e, product) => {
     e?.preventDefault();
     addToCart(product);
-    shootConfetti();
   };
 
   const handleDecrementAction = (e, productId) => {
     e?.preventDefault();
     decrementQuantity(productId);
-    shootConfetti();
   };
 
   // Derive categories list dynamically
@@ -227,57 +203,71 @@ const Products = () => {
                           transition={{ duration: 0.6, delay: index * 0.1 }}
                           className={`relative ${zIndexClass} transition-all duration-500`}
                         >
-                          {/* Sleek Light Festive E-Commerce Card Container */}
-                          <div className="bg-[#FAF7F0] hover:bg-white border-2 border-amber-900/15 hover:border-[#8B1E1E] shadow-sm hover:shadow-xl rounded-3xl overflow-hidden flex flex-col justify-between transition-all duration-300 transform hover:-translate-y-1 group h-full">
-                            {/* Fixed Size Image Container (Clean White Frame) */}
+                          {/* Sleek Light Festive E-Commerce Card */}
+                          <div className="bg-[#FAF7F0] hover:bg-white border border-amber-900/15 hover:border-[#8B1E1E] shadow-sm hover:shadow-md rounded-2xl overflow-hidden flex flex-col justify-between transition-all duration-300 group h-full">
+                            {/* Image Container - Full Cover Without White Space */}
                             <div 
-                              className="h-48 sm:h-52 w-full relative overflow-hidden bg-white p-3 cursor-pointer flex items-center justify-center border-b border-amber-900/10 shrink-0"
+                              className="h-40 sm:h-44 w-full relative overflow-hidden bg-white cursor-pointer border-b border-amber-900/10 shrink-0"
                               onClick={() => setSelectedProduct(product)}
                             >
                               <img
                                 src={product.img}
                                 alt={product.name}
-                                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 drop-shadow-sm max-h-44"
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                               />
                               
-                              <span className="absolute top-2.5 right-2.5 px-2.5 py-1 bg-[#8B1E1E] text-white text-[10px] font-black rounded-full shadow-sm border border-amber-300/30 tracking-wider">
+                              <span className="absolute top-2 right-2 px-2 py-0.5 bg-[#8B1E1E] text-white text-[9px] font-black rounded-full shadow-sm border border-amber-300/30 tracking-wider">
                                 🌿 Green Crackers
                               </span>
                             </div>
 
-                            {/* Soft Light Card Content & Details */}
-                            <div className="flex-1 p-4 flex flex-col justify-between bg-[#FAF7F0] group-hover:bg-white transition-colors duration-300">
-                              <div className="text-center mb-3">
+                            {/* Card Content & Details */}
+                            <div className="flex-1 p-3 flex flex-col justify-between bg-[#FAF7F0] group-hover:bg-white transition-colors duration-300">
+                              <div className="text-left mb-2 flex flex-col gap-1">
                                 <h3 
-                                  className="text-sm sm:text-base font-serif font-black text-[#4A0E0E] leading-tight line-clamp-2 cursor-pointer hover:text-[#B71C1C] transition-colors min-h-[2.5rem] flex items-center justify-center"
+                                  className="text-sm sm:text-base font-serif font-black text-[#4A0E0E] leading-snug line-clamp-1 cursor-pointer hover:text-[#B71C1C] transition-colors"
                                   onClick={() => setSelectedProduct(product)}
                                 >
                                   {product.name}
                                 </h3>
-                                <div className="text-[#C00000] font-black text-xl sm:text-2xl mt-1 flex items-center justify-center gap-1">
-                                  <span>{typeof product.price === 'number' ? `₹${product.price.toLocaleString('en-IN')}` : product.price}</span>
+                                
+                                <div className="flex items-center justify-between gap-1 flex-wrap mt-0.5">
+                                  <div className="flex items-baseline gap-1.5">
+                                    <span className="text-lg sm:text-xl font-black text-[#C00000] tracking-tight leading-none">
+                                      {typeof product.price === 'number' ? `₹${product.price.toLocaleString('en-IN')}` : product.price}
+                                    </span>
+                                    {product.rawPrice > 0 && (
+                                      <span className="text-xs font-medium text-gray-400 line-through leading-none">
+                                        ₹{Math.round(product.rawPrice * 1.5).toLocaleString('en-IN')}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <span className="inline-flex items-center gap-0.5 bg-green-100/90 text-emerald-700 text-[10px] font-bold px-1.5 py-0.5 rounded-md">
+                                    ✓ In Stock
+                                  </span>
                                 </div>
                               </div>
 
-                              {/* Quantity & Add to Cart Controls */}
-                              <div className="flex items-center justify-center mt-auto w-full pt-1">
+                              {/* Quantity & Add to Cart Controls - Restored Original Height */}
+                              <div className="mt-auto w-full pt-1.5">
                                 {(() => {
                                   const cartItem = cartItems.find(item => item.id === product.id);
                                   if (cartItem) {
                                     return (
-                                      <div className="flex items-center justify-between bg-[#FAF7F0] rounded-full border-2 border-[#8B1E1E] p-1 w-full max-w-[145px] shadow-sm">
-                                        <button onClick={(e) => handleDecrementAction(e, product.id)} className="w-8 h-8 flex items-center justify-center text-[#8B1E1E] hover:bg-red-100 rounded-full transition-colors font-black text-lg">-</button>
-                                        <span className="flex-1 text-center font-black text-[#4A0E0E] text-sm">{cartItem.quantity}</span>
-                                        <button onClick={(e) => handleAddToCart(e, product)} className="w-8 h-8 flex items-center justify-center text-[#8B1E1E] hover:bg-red-100 rounded-full transition-colors font-black text-lg">+</button>
+                                      <div className="flex items-center justify-between bg-red-50 rounded-xl border border-red-200/60 p-1 w-full shadow-sm">
+                                        <button onClick={(e) => handleDecrementAction(e, product.id)} className="w-8 h-8 flex items-center justify-center bg-white border border-gray-200 text-gray-800 hover:bg-gray-50 rounded-lg transition-colors font-bold text-lg leading-none shadow-sm">-</button>
+                                        <span className="flex-1 text-center font-black text-[#C9182B] text-base">{cartItem.quantity}</span>
+                                        <button onClick={(e) => handleAddToCart(e, product)} className="w-8 h-8 flex items-center justify-center bg-[#C9182B] hover:bg-[#A31221] text-white rounded-lg transition-colors font-bold text-lg leading-none shadow-sm">+</button>
                                       </div>
                                     );
                                   } else {
                                     return (
                                       <button 
                                         onClick={(e) => handleAddToCart(e, product)} 
-                                        className="w-full bg-gradient-to-r from-[#B71C1C] via-[#9E1212] to-[#7A0D0D] hover:from-[#9E1212] hover:to-[#5E0909] text-white font-black py-2.5 px-4 rounded-full shadow-md transition-all flex items-center justify-center gap-2 text-xs sm:text-sm transform hover:scale-[1.02]"
+                                        className="w-full bg-[#C9182B] hover:bg-[#A31221] text-white font-bold py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
                                       >
-                                        <ShoppingCart className="w-4 h-4 text-[#FFD700]" /> Add to Cart
+                                        <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" /> Add to Cart
                                       </button>
                                     );
                                   }
@@ -363,7 +353,7 @@ const Products = () => {
                     onChange={(e) => setSelectedCategory(e.target.value)}
                     className="w-full appearance-none bg-[#f9f5eb] border border-gold/30 rounded-xl px-4 py-3 text-charcoal focus:outline-none focus:border-gold font-medium cursor-pointer"
                   >
-                    {categories.map(cat => (
+                    {categoriesList.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>

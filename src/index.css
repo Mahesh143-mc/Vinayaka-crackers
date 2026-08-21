@@ -62,26 +62,39 @@ html {
 
 /* Print Styles for Official Tax Invoice */
 @media print {
-  body {
+  @page {
+    size: A4 portrait;
+    margin: 5mm;
+  }
+
+  html, body {
     background-color: #ffffff !important;
     color: #000000 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
-  /* Hide screen-only UI elements during print */
+  /* Hide screen UI elements, navigation, sidebars, buttons, toasts, and overlays during print */
   aside, 
   header, 
   nav, 
   button, 
   .no-print,
-  .screen-only {
+  .screen-only,
+  div[class*="backdrop-blur"],
+  div[class*="animate-in"],
+  div[class*="fixed top-6"] {
     display: none !important;
   }
 
-  /* Ensure print area renders crisp and full width */
-  .print-area {
+  /* Ensure print-area is visible, crisp, and full-width */
+  .print-area,
+  .printable-invoice-document {
     display: block !important;
+    visibility: visible !important;
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
@@ -90,5 +103,13 @@ html {
     color: #000000 !important;
     padding: 0 !important;
     margin: 0 !important;
+    z-index: 99999999 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .print-area *,
+  .printable-invoice-document * {
+    visibility: visible !important;
   }
 }

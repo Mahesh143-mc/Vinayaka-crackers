@@ -2,14 +2,20 @@ import { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Edit2, Trash2, Tag, Search, FolderPlus, Check, CheckCircle2, ArrowRight, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { subscribeCategories, saveCategoryToFirestore, deleteCategoryFromFirestore } from '../../services/firebaseService';
+import { useToast } from '../../context/ToastContext';
+import { generateCategoryId } from '../../utils/idGenerator';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 const AdminCategories = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [categories, setCategories] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = subscribeCategories((firestoreCategories) => {
       setCategories(firestoreCategories || []);
+      setIsLoading(false);
     });
     return () => unsubscribe();
   }, []);
@@ -45,14 +51,19 @@ const AdminCategories = () => {
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [lastCreatedCat, setLastCreatedCat] = useState('');
+  const [deleteConfirmCat, setDeleteConfirmCat] = useState(null);
 
   const handleAddCategory = async (e) => {
     e.preventDefault();
-    if (!newCatName) return;
+    if (!newCatName.trim()) {
+      showToast('Please enter category name', 'error');
+      return;
+    }
+    const catId = generateCategoryId(categories);
     const catPayload = {
-      id: Date.now(),
-      name: newCatName,
-      description: newCatDesc || 'General fireworks category.',
+      id: catId,
+      name: newCatName.trim(),
+      description: newCatDesc.trim() || 'General fireworks category.',
       count: 0,
       icon: newCatIcon || '✨'
     };
@@ -61,14 +72,19 @@ const AdminCategories = () => {
     await saveCategoryToFirestore(catPayload);
 
     setLastCreatedCat(newCatName);
+    showToast(`Category "${catPayload.name}" (${catPayload.id}) created successfully!`, 'success');
     setShowConfirmModal(true);
     setNewCatName('');
     setNewCatDesc('');
   };
 
-  const handleDelete = async (id) => {
+  const confirmDeleteCategory = async () => {
+    if (!deleteConfirmCat) return;
+    const { id, name } = deleteConfirmCat;
     setCategories(categories.filter(c => c.id !== id));
     await deleteCategoryFromFirestore(id);
+    showToast(`Category "${name || id}" removed successfully!`, 'success');
+    setDeleteConfirmCat(null);
   };
 
   const handleStartEdit = (cat) => {
@@ -83,6 +99,7 @@ const AdminCategories = () => {
       const updated = { ...target, name: editName, description: editDesc };
       setCategories(categories.map(c => c.id === id ? updated : c));
       await saveCategoryToFirestore(updated);
+      showToast(`Category "${updated.name}" updated successfully!`, 'success');
     }
     setEditingId(null);
   };
@@ -209,70 +226,74 @@ const AdminCategories = () => {
             </div>
           </div>
 
-          {/* Categories Grid */}
-          <div key={currentPage} className="space-y-4 animate-in fade-in slide-in-from-bottom-3 duration-300">
-            {paginatedCategories.map((cat) => (
-              <div 
-                key={cat.id}
-                className="bg-[#FAF7F2] p-5 rounded-3xl shadow-sm border border-amber-900/20 hover:border-amber-500 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-              >
-                {editingId === cat.id ? (
-                  <div className="flex-1 space-y-3">
-                    <input 
-                      type="text" 
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      className="px-3 py-2 border-2 border-amber-900/30 rounded-xl text-sm font-black text-gray-900 bg-white"
-                    />
-                    <textarea 
-                      rows="2"
-                      value={editDesc}
-                      onChange={(e) => setEditDesc(e.target.value)}
-                      className="w-full p-2 border-2 border-amber-900/30 rounded-xl text-xs font-black text-gray-900 bg-white resize-none"
-                    ></textarea>
-                    <button 
-                      onClick={() => handleSaveEdit(cat.id)}
-                      className="px-4 py-1.5 bg-emerald-700 text-white rounded-xl text-xs font-black flex items-center gap-1"
-                    >
-                      <Check size={14} /> Save Category
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-amber-100 border border-amber-200 flex items-center justify-center text-2xl shrink-0">
-                      {cat.icon}
+          {/* Categories Grid / Loading State */}
+          {isLoading ? (
+            <LoadingSpinner message="Fetching categories from database..." />
+          ) : (
+            <div key={currentPage} className="space-y-4 animate-in fade-in slide-in-from-bottom-3 duration-300">
+              {paginatedCategories.map((cat) => (
+                <div 
+                  key={cat.id} 
+                  className="bg-[#FAF7F2] p-5 rounded-3xl shadow-sm border border-amber-900/20 hover:border-amber-500 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                >
+                  {editingId === cat.id ? (
+                    <div className="flex-1 space-y-3">
+                      <input 
+                        type="text" 
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="px-3 py-2 border-2 border-amber-900/30 rounded-xl text-sm font-black text-gray-900 bg-white"
+                      />
+                      <textarea 
+                        rows="2"
+                        value={editDesc}
+                        onChange={(e) => setEditDesc(e.target.value)}
+                        className="w-full p-2 border-2 border-amber-900/30 rounded-xl text-xs font-black text-gray-900 bg-white resize-none"
+                      ></textarea>
+                      <button 
+                        onClick={() => handleSaveEdit(cat.id)}
+                        className="px-4 py-1.5 bg-emerald-700 text-white rounded-xl text-xs font-black flex items-center gap-1 cursor-pointer"
+                      >
+                        <Check size={14} /> Save Category
+                      </button>
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-base font-black text-gray-900">{cat.name}</h3>
-                        <span className="text-[10px] font-black text-[#4A0E0E] bg-amber-200/80 px-2.5 py-0.5 rounded-full border border-amber-300">
-                          {cat.count} Products
-                        </span>
+                  ) : (
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-100 border border-amber-200 flex items-center justify-center text-2xl shrink-0">
+                        {cat.icon}
                       </div>
-                      <p className="text-xs font-bold text-gray-600 mt-1">{cat.description}</p>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-base font-black text-gray-900">{cat.name}</h3>
+                          <span className="text-[10px] font-black text-[#4A0E0E] bg-amber-200/80 px-2.5 py-0.5 rounded-full border border-amber-300">
+                            {cat.id}
+                          </span>
+                        </div>
+                        <p className="text-xs font-bold text-gray-600 mt-1">{cat.description}</p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {editingId !== cat.id && (
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button 
-                      onClick={() => handleStartEdit(cat)}
-                      className="px-3.5 py-2 bg-blue-100 hover:bg-blue-600 text-blue-900 hover:text-white border border-blue-200 rounded-xl text-xs font-black transition-all flex items-center gap-1"
-                    >
-                      <Edit2 size={14} /> Edit
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(cat.id)}
-                      className="px-3.5 py-2 bg-rose-100 hover:bg-rose-600 text-rose-900 hover:text-white border border-rose-200 rounded-xl text-xs font-black transition-all flex items-center gap-1"
-                    >
-                      <Trash2 size={14} /> Delete
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+                  {editingId !== cat.id && (
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button 
+                        onClick={() => handleStartEdit(cat)}
+                        className="px-3.5 py-2 bg-blue-100 hover:bg-blue-600 text-blue-900 hover:text-white border border-blue-200 rounded-xl text-xs font-black transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit2 size={14} /> Edit
+                      </button>
+                      <button 
+                        onClick={() => setDeleteConfirmCat(cat)}
+                        className="px-3.5 py-2 bg-rose-100 hover:bg-rose-600 text-rose-900 hover:text-white border border-rose-200 rounded-xl text-xs font-black transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <Trash2 size={14} /> Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* 15-Item Pagination Controls Bar */}
           <div className="p-4 bg-[#FAF7F2] rounded-3xl border border-amber-900/10 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
@@ -340,6 +361,39 @@ const AdminCategories = () => {
         </div>
       </div>
 
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmCat && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#FAF7F2] rounded-3xl max-w-md w-full p-8 shadow-2xl border border-rose-900/30 text-center relative space-y-4 animate-in fade-in zoom-in duration-200">
+            <div className="w-16 h-16 mx-auto rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shadow-md">
+              <Trash2 size={32} />
+            </div>
+
+            <div>
+              <h3 className="text-2xl font-serif font-black text-gray-900">Delete Category?</h3>
+              <p className="text-xs font-bold text-gray-600 mt-2">
+                Are you sure you want to delete <span className="text-rose-700 font-black">"{deleteConfirmCat.name}"</span> ({deleteConfirmCat.id})? This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="pt-4 border-t border-amber-900/15 grid grid-cols-2 gap-3">
+              <button 
+                onClick={() => setDeleteConfirmCat(null)}
+                className="py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-black text-xs rounded-2xl transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmDeleteCategory}
+                className="py-3 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs rounded-2xl shadow-lg transition-all flex items-center justify-center gap-1 cursor-pointer"
+              >
+                <Trash2 size={15} /> Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Save Category Success Confirmation Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -358,13 +412,13 @@ const AdminCategories = () => {
             <div className="pt-4 border-t border-amber-900/15 grid grid-cols-2 gap-3">
               <button 
                 onClick={() => setShowConfirmModal(false)}
-                className="py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-black text-xs rounded-2xl transition-all"
+                className="py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-black text-xs rounded-2xl transition-all cursor-pointer"
               >
                 Add Another
               </button>
               <button 
                 onClick={() => navigate('/admin/products')}
-                className="py-3 bg-gradient-to-r from-[#FFD700] to-amber-500 hover:from-amber-400 hover:to-amber-600 text-[#4A0E0E] font-black text-xs rounded-2xl shadow-lg transition-all flex items-center justify-center gap-1"
+                className="py-3 bg-gradient-to-r from-[#FFD700] to-amber-500 hover:from-amber-400 hover:to-amber-600 text-[#4A0E0E] font-black text-xs rounded-2xl shadow-lg transition-all flex items-center justify-center gap-1 cursor-pointer"
               >
                 Return to Products <ArrowRight size={16} />
               </button>

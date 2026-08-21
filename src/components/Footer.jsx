@@ -1,7 +1,17 @@
 import { Link } from 'react-router-dom';
-import { Share2, Camera, Video, MapPin, Phone, Mail, BookOpen, ShoppingBag, Grid, Image as ImageIcon, Headphones, Truck, ShieldCheck, HelpCircle } from 'lucide-react';
+import { Share2, Camera, Video, MapPin, Phone, Mail, BookOpen, ShoppingBag, Grid, Image as ImageIcon, Headphones, Truck, ShieldCheck, HelpCircle, FileText } from 'lucide-react';
+import { useStoreSettings } from '../context/StoreSettingsContext';
 
 const Footer = () => {
+  const { storeSettings } = useStoreSettings();
+
+  const companyName = storeSettings?.companyName || 'Karuppa Crackers';
+  const tagline = storeSettings?.tagline || 'Spreading joy and light since 1995. India’s most trusted fireworks brand.';
+  const phone = storeSettings?.phone || storeSettings?.supportPhone || '8825419454';
+  const email = storeSettings?.email || storeSettings?.supportEmail || 'chimeratechweb@gmail.com';
+  const address = storeSettings?.address || '124/B, Sivakasi Main Road, Sivakasi';
+  const gstNumber = storeSettings?.gstNumber || '33AAAAA0000A1Z5';
+
   return (
     <footer className="bg-saffron-dark text-cream-light relative mt-20 pt-16 pb-8">
       {/* Decorative Rangoli Pattern Top Border */}
@@ -37,17 +47,22 @@ const Footer = () => {
           <div className="col-span-1 md:col-span-1">
             <Link to="/" className="flex items-center gap-3 mb-4 block group">
               <img 
-                src="https://res.cloudinary.com/vf0fqhwo/image/upload/v1786363324/logo_q7lezq.jpg" 
-                alt="Karuppa Crackers" 
+                src={storeSettings?.logo || storeSettings?.companyLogo || "https://res.cloudinary.com/vf0fqhwo/image/upload/v1786363324/logo_q7lezq.jpg"} 
+                alt={companyName} 
                 className="h-12 w-auto object-contain rounded-xl shadow-md border border-amber-400/30" 
               />
-              <span className="text-3xl font-serif font-bold text-white">
-                Karuppa<span className="text-gold">.</span>
+              <span className="text-2xl sm:text-3xl font-serif font-bold text-white">
+                {companyName}<span className="text-gold">.</span>
               </span>
             </Link>
-            <p className="text-cream-light/80 mb-6 font-sans">
-              Spreading joy and light since 1995. India’s most trusted and vibrant fireworks brand for all your celebrations.
+            <p className="text-cream-light/80 mb-4 font-sans text-sm">
+              {tagline}
             </p>
+            {gstNumber && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 rounded-xl text-xs text-amber-200 border border-amber-400/20 mb-6 font-mono">
+                <FileText size={13} /> GST: {gstNumber}
+              </div>
+            )}
             <div className="flex space-x-4">
               <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-gold hover:text-saffron-dark transition-all duration-300 transform hover:-translate-y-1 shadow-lg">
                 <Share2 className="w-5 h-5" />
@@ -131,26 +146,32 @@ const Footer = () => {
                 <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mr-3 flex-shrink-0 group-hover:bg-gold transition-colors duration-300">
                   <MapPin className="w-4 h-4 text-gold group-hover:text-saffron-dark transition-colors duration-300" />
                 </div>
-                <span className="mt-1 group-hover:text-white transition-colors duration-300 text-sm">Sivakasi, Tamil Nadu</span>
+                <span className="mt-1 group-hover:text-white transition-colors duration-300 text-sm">
+                  {address}
+                </span>
               </li>
               <li className="flex items-center group">
                 <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mr-3 flex-shrink-0 group-hover:bg-gold transition-colors duration-300">
                   <Phone className="w-4 h-4 text-gold group-hover:text-saffron-dark transition-colors duration-300" />
                 </div>
-                <span className="group-hover:text-white transition-colors duration-300 text-sm">+91 88254 19454</span>
+                <a href={`tel:+91${phone}`} className="group-hover:text-white transition-colors duration-300 text-sm">
+                  +91 {phone}
+                </a>
               </li>
               <li className="flex items-center group">
                 <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mr-3 flex-shrink-0 group-hover:bg-gold transition-colors duration-300">
                   <Mail className="w-4 h-4 text-gold group-hover:text-saffron-dark transition-colors duration-300" />
                 </div>
-                <span className="group-hover:text-white transition-colors duration-300 text-sm">chimeratechweb@gmail.com</span>
+                <a href={`mailto:${email}`} className="group-hover:text-white transition-colors duration-300 text-sm">
+                  {email}
+                </a>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="mt-16 pt-8 border-t border-white/20 text-center text-sm text-cream-light/60">
-          <p>&copy; {new Date().getFullYear()} Karuppa Crackers. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} {companyName}. All rights reserved.</p>
         </div>
       </div>
     </footer>
@@ -158,3 +179,4 @@ const Footer = () => {
 };
 
 export default Footer;
+

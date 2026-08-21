@@ -1,11 +1,16 @@
-import { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, FolderPlus, Tag, ChevronDown, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Box } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Plus, Search, Edit2, Trash2, FolderPlus, Tag, ChevronDown, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Box, Eye, X, Filter, Check, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { subscribeProducts, saveProductToFirestore, deleteProductFromFirestore, subscribeCategories } from '../../services/firebaseService';
+import { useToast } from '../../context/ToastContext';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 const AdminProducts = () => {
+  const { showToast } = useToast();
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
+  const [viewingProduct, setViewingProduct] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Delete any leftover sample PRD-01 product from Firestore if it exists
@@ -14,6 +19,7 @@ const AdminProducts = () => {
     // Listen strictly to live Firestore products
     const unsubProducts = subscribeProducts((firestoreProducts) => {
       setProducts(firestoreProducts || []);
+      setIsLoading(false);
     });
 
     // Listen strictly to live Firestore categories
@@ -33,13 +39,30 @@ const AdminProducts = () => {
       const updated = { ...target, showInFrontend: !target.showInFrontend };
       setProducts(products.map(p => p.id === id ? updated : p));
       await saveProductToFirestore(updated);
+      showToast(updated.showInFrontend ? `"${target.name}" is now visible on the website!` : `"${target.name}" hidden from the website.`, 'info');
     }
   };
 
   const [confirmConfig, setConfirmConfig] = useState(null);
-  const [successToast, setSuccessToast] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowCategoryDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, []);
 
   // 15 items per page pagination state
   const itemsPerPage = 15;
@@ -80,11 +103,18 @@ const AdminProducts = () => {
       message: `Are you sure you want to delete "${name}" (${id}) from your store catalog? This action cannot be undone.`,
       confirmText: 'Yes, Delete Product',
       onConfirm: async () => {
-        setProducts(products.filter(p => p.id !== id));
-        await deleteProductFromFirestore(id);
-        setConfirmConfig(null);
-        setSuccessToast(`Product "${name}" deleted successfully!`);
-        setTimeout(() => setSuccessToast(''), 3000);
+        setIsDeleting(true);
+        try {
+          await deleteProductFromFirestore(id);
+          setProducts(prev => prev.filter(p => p.id !== id));
+          showToast(`Product "${name}" deleted successfully!`, 'success');
+        } catch (err) {
+          console.error("Error deleting product:", err);
+          showToast('Failed to delete product from database', 'error');
+        } finally {
+          setIsDeleting(false);
+          setConfirmConfig(null);
+        }
       }
     });
   };
@@ -138,13 +168,6 @@ const AdminProducts = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-10 relative">
-      {/* Toast Notification */}
-      {successToast && (
-        <div className="fixed top-24 right-8 z-50 bg-rose-700 text-white px-5 py-3 rounded-2xl shadow-2xl border border-rose-500 font-black text-xs flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
-          <CheckCircle2 size={18} /> {successToast}
-        </div>
-      )}
-
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#4A0E0E] via-[#701515] to-[#4A0E0E] p-7 rounded-3xl shadow-lg text-white">
         <div>
@@ -220,54 +243,103 @@ const AdminProducts = () => {
             className="w-full pl-12 pr-4 py-3 bg-white border-2 border-amber-900/20 rounded-2xl focus:outline-none focus:border-[#4A0E0E] text-sm font-black text-gray-900 shadow-sm placeholder:text-gray-400 placeholder:font-normal"
           />
         </div>
-        <div className="relative w-full md:w-auto">
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full md:w-auto pl-5 pr-11 py-3 bg-white border-2 border-amber-900/20 rounded-2xl font-black text-gray-900 text-sm focus:outline-none focus:border-[#4A0E0E] shadow-sm appearance-none cursor-pointer hover:border-[#4A0E0E] transition-all"
+        <div ref={dropdownRef} className="relative w-full md:w-auto">
+          <button
+            type="button"
+            onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+            className="w-full md:w-auto pl-5 pr-10 py-3 bg-white border-2 border-amber-900/20 hover:border-[#4A0E0E] rounded-2xl font-black text-gray-900 text-sm shadow-sm transition-all flex items-center justify-between gap-3 cursor-pointer"
           >
-            <option value="All">All Categories ({products.length})</option>
-            {categories.map(cat => (
-              <option key={cat.id} value={cat.name}>{cat.name}</option>
-            ))}
-          </select>
-          <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#4A0E0E] pointer-events-none stroke-[2.5]" />
+            <span className="flex items-center gap-2">
+              <Filter size={16} className="text-[#4A0E0E]" />
+              {selectedCategory === 'All' ? `All Categories (${products.length})` : selectedCategory}
+            </span>
+            <ChevronDown size={18} className={`text-[#4A0E0E] transition-transform stroke-[2.5] ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+          </button>
+
+          {showCategoryDropdown && (
+            <div className="absolute right-0 top-full mt-2 w-64 bg-white border-2 border-amber-900/20 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 space-y-1">
+              <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between text-[#4A0E0E] font-black text-xs uppercase tracking-wider">
+                <span>Select Category</span>
+                <Filter size={14} className="text-[#4A0E0E]" />
+              </div>
+              <div className="max-h-60 overflow-y-auto space-y-1 pt-1">
+                <button
+                  type="button"
+                  onClick={() => { setSelectedCategory('All'); setShowCategoryDropdown(false); }}
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-between ${
+                    selectedCategory === 'All'
+                      ? 'bg-[#4A0E0E] text-[#FFD700] shadow-md'
+                      : 'text-gray-800 hover:bg-amber-100/60'
+                  }`}
+                >
+                  <span>All Categories ({products.length})</span>
+                  {selectedCategory === 'All' && <Check size={16} strokeWidth={3} />}
+                </button>
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => { setSelectedCategory(cat.name); setShowCategoryDropdown(false); }}
+                    className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-between ${
+                      selectedCategory === cat.name
+                        ? 'bg-[#4A0E0E] text-[#FFD700] shadow-md'
+                        : 'text-gray-800 hover:bg-amber-100/60'
+                    }`}
+                  >
+                    <span>{cat.name}</span>
+                    {selectedCategory === cat.name && <Check size={16} strokeWidth={3} />}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Table */}
-      <div key={currentPage} className="bg-[#FAF7F2] rounded-3xl shadow-sm border border-amber-900/10 overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-300">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+      {/* Table / Loading State */}
+      {isLoading ? (
+        <LoadingSpinner message="Fetching live catalog from database..." />
+      ) : (
+        <div key={currentPage} className="bg-[#FAF7F2] rounded-3xl shadow-sm border border-amber-900/10 overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-300">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gradient-to-r from-[#4A0E0E] to-[#2B0808] border-b border-red-950 text-white">
                 {renderSortHeader('Product Info', 'name')}
                 {renderSortHeader('Category', 'category')}
-                {renderSortHeader('Retail Price', 'price')}
-                {renderSortHeader('Cost Price', 'costPrice')}
-                {renderSortHeader('Est. Profit', 'profit')}
+                {renderSortHeader('Price', 'price')}
                 {renderSortHeader('Stock', 'stock')}
                 {renderSortHeader('Status', 'status')}
-                {renderSortHeader('Show in Frontend', 'showInFrontend', true)}
                 <th className="px-6 py-6 text-xs font-black text-[#FFD700] uppercase tracking-widest text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-amber-900/10">
               {paginatedProducts.map((product, idx) => {
-                const cost = product.costPrice || product.cost || Math.round(product.price * 0.6);
-                const profitAmt = product.price - cost;
-                const profitPct = cost > 0 ? ((profitAmt / cost) * 100).toFixed(0) : 0;
-
+                const statusLabel = product.status || (product.stock > 0 ? 'Active' : 'Out of Stock');
                 return (
                 <tr key={product.id} className={idx % 2 === 0 ? 'bg-[#FAF7F2]' : 'bg-[#F2ECE1]'}>
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-amber-100 to-orange-200 border border-amber-300 flex items-center justify-center text-lg shrink-0">
-                        🎆
+                      <div className="w-11 h-11 rounded-xl bg-white border border-amber-300 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                        {product.img ? (
+                          <img src={product.img} alt={product.name} className="w-full h-full object-contain" />
+                        ) : (
+                          <span className="text-lg">🎆</span>
+                        )}
                       </div>
                       <div>
                         <p className="text-sm font-black text-gray-900">{product.name}</p>
-                        <p className="text-xs font-bold text-amber-800">{product.id}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <p className="text-xs font-bold text-amber-800">{product.id}</p>
+                          {(product.shotsCount || product.specs || product.packageSpec || product.specification || product.pieces) && (
+                            <>
+                              <span className="text-amber-900/40 text-[10px] font-bold">•</span>
+                              <span className="inline-block text-[11px] font-bold text-amber-900 bg-amber-200/60 border border-amber-300/80 px-2 py-0.5 rounded-md">
+                                {product.shotsCount || product.specs || product.packageSpec || product.specification || product.pieces}
+                              </span>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -276,60 +348,39 @@ const AdminProducts = () => {
                       {product.category}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm font-black text-gray-900">₹{product.price.toLocaleString()}</td>
-                  <td className="px-6 py-4 text-sm font-black text-amber-900">₹{cost.toLocaleString()}</td>
-                  <td className="px-6 py-4">
-                    <span className="inline-block px-2.5 py-1 bg-emerald-100 text-emerald-950 font-black text-xs rounded-xl border border-emerald-300">
-                      +₹{profitAmt.toLocaleString()} ({profitPct}%)
-                    </span>
-                  </td>
+                  <td className="px-6 py-4 text-sm font-black text-gray-900">₹{Number(product.price || 0).toLocaleString('en-IN')}</td>
                   <td className="px-6 py-4">
                     <span className={`text-sm font-black ${product.stock < 10 ? 'text-red-700' : 'text-gray-900'}`}>
                       {product.stock} units
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-black border ${product.status === 'Active' ? 'bg-emerald-100 text-emerald-900 border-emerald-300' :
-                        product.status === 'Low Stock' ? 'bg-amber-100 text-amber-900 border-amber-300' :
-                          'bg-rose-100 text-rose-900 border-rose-300'
-                      }`}>
-                      {product.status}
+                    <span className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-black border ${
+                      statusLabel === 'Active' ? 'bg-emerald-100 text-emerald-900 border-emerald-300' :
+                      statusLabel === 'Low Stock' ? 'bg-amber-100 text-amber-900 border-amber-300' :
+                      'bg-rose-100 text-rose-900 border-rose-300'
+                    }`}>
+                      {statusLabel}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    {/* Modern ON/OFF Sliding Toggle Switch */}
-                    <button
-                      type="button"
-                      onClick={() => toggleFrontendVisibility(product.id)}
-                      className={`relative inline-flex items-center h-8 w-20 rounded-full p-1 transition-colors duration-300 ease-in-out cursor-pointer select-none border shadow-inner ${product.showInFrontend
-                          ? 'bg-emerald-600 border-emerald-700'
-                          : 'bg-gray-300 border-gray-400'
-                        }`}
-                      title="Click to toggle frontend visibility"
-                    >
-                      <span className={`text-[10px] font-black uppercase tracking-wider absolute transition-all duration-300 ${product.showInFrontend ? 'left-2.5 text-white' : 'right-2.5 text-gray-700'
-                        }`}>
-                        {product.showInFrontend ? 'ON' : 'OFF'}
-                      </span>
-                      <span
-                        className={`w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-300 ease-in-out flex items-center justify-center ${product.showInFrontend ? 'translate-x-[44px]' : 'translate-x-0'
-                          }`}
-                      >
-                        <span className={`w-2 h-2 rounded-full ${product.showInFrontend ? 'bg-emerald-600' : 'bg-gray-400'}`}></span>
-                      </span>
-                    </button>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => setViewingProduct(product)}
+                        className="px-3 py-1.5 bg-amber-100 hover:bg-amber-600 text-amber-950 hover:text-white border border-amber-300 rounded-xl transition-all font-bold text-xs flex items-center gap-1 shadow-sm"
+                        title="View Full Product Details"
+                      >
+                        <Eye size={14} /> View
+                      </button>
                       <Link
                         to={`/admin/products/edit/${product.id}`}
-                        className="px-3 py-1.5 bg-blue-100 hover:bg-blue-600 text-blue-900 hover:text-white border border-blue-200 rounded-xl transition-all font-bold text-xs flex items-center gap-1"
+                        className="px-3 py-1.5 bg-blue-100 hover:bg-blue-600 text-blue-900 hover:text-white border border-blue-200 rounded-xl transition-all font-bold text-xs flex items-center gap-1 shadow-sm"
                       >
                         <Edit2 size={13} /> Edit
                       </Link>
                       <button
                         onClick={() => handleDeleteProduct(product.id, product.name)}
-                        className="px-3 py-1.5 bg-rose-100 hover:bg-rose-600 text-rose-900 hover:text-white border border-rose-200 rounded-xl transition-all font-bold text-xs flex items-center gap-1"
+                        className="px-3 py-1.5 bg-rose-100 hover:bg-rose-600 text-rose-900 hover:text-white border border-rose-200 rounded-xl transition-all font-bold text-xs flex items-center gap-1 shadow-sm"
                       >
                         <Trash2 size={13} /> Delete
                       </button>
@@ -405,6 +456,7 @@ const AdminProducts = () => {
           </div>
         </div>
       </div>
+      )}
 
       {/* Confirmation Action Modal */}
       {confirmConfig && (
@@ -429,11 +481,94 @@ const AdminProducts = () => {
                 Cancel
               </button>
               <button
+                type="button"
+                disabled={isDeleting}
                 onClick={confirmConfig.onConfirm}
-                className="py-3 bg-rose-700 hover:bg-rose-800 text-white font-black text-xs rounded-2xl shadow-md transition-all"
+                className="py-3 bg-rose-700 hover:bg-rose-800 disabled:opacity-60 text-white font-black text-xs rounded-2xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                {confirmConfig.confirmText || 'Yes, Confirm'}
+                {isDeleting ? (
+                  <>
+                    <Loader2 size={15} className="animate-spin text-white" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <span>{confirmConfig.confirmText || 'Yes, Confirm'}</span>
+                )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Product Details Modal */}
+      {viewingProduct && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#FAF7F2] rounded-3xl max-w-lg w-full p-7 shadow-2xl border border-amber-900/30 relative space-y-6 animate-in fade-in zoom-in duration-200">
+            <button 
+              onClick={() => setViewingProduct(null)}
+              className="absolute top-5 right-5 p-2 bg-gray-200 hover:bg-gray-300 rounded-full text-gray-700 transition-colors"
+              title="Close"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="flex items-center gap-4 border-b border-amber-900/15 pb-5">
+              <div className="w-20 h-20 rounded-2xl bg-white border border-amber-300 flex items-center justify-center overflow-hidden shrink-0 shadow-sm p-1">
+                {viewingProduct.img ? (
+                  <img src={viewingProduct.img} alt={viewingProduct.name} className="w-full h-full object-contain" />
+                ) : (
+                  <span className="text-3xl">🎆</span>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="inline-block px-3 py-1 bg-amber-200 text-amber-950 text-xs font-black rounded-xl mb-1.5">
+                  {viewingProduct.category || 'General'}
+                </span>
+                <h3 className="text-2xl font-serif font-black text-gray-900 leading-tight truncate">{viewingProduct.name}</h3>
+                <p className="text-xs font-bold text-amber-800 mt-0.5">Product ID: {viewingProduct.id}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white p-4 rounded-2xl border border-amber-900/10 shadow-sm">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Price</p>
+                <p className="text-2xl font-black text-[#C00000] mt-1">₹{Number(viewingProduct.price || 0).toLocaleString('en-IN')}</p>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border border-amber-900/10 shadow-sm">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Stock Available</p>
+                <p className="text-2xl font-black text-gray-900 mt-1">{viewingProduct.stock || 0} Units</p>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-amber-900/10 space-y-3 shadow-sm">
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-bold text-gray-600">Store Visibility:</span>
+                <span className={`font-black px-3 py-1 rounded-full text-xs ${viewingProduct.showInFrontend !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                  {viewingProduct.showInFrontend !== false ? 'Active on Frontend (ON)' : 'Hidden from Frontend (OFF)'}
+                </span>
+              </div>
+              {viewingProduct.wholesalePrice && (
+                <div className="flex justify-between items-center text-sm border-t border-gray-100 pt-2.5">
+                  <span className="font-bold text-gray-600">Wholesale Special Price:</span>
+                  <span className="font-black text-amber-900">₹{Number(viewingProduct.wholesalePrice).toLocaleString('en-IN')}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-2 flex justify-end gap-3">
+              <button
+                onClick={() => setViewingProduct(null)}
+                className="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-black text-xs rounded-2xl transition-all"
+              >
+                Close
+              </button>
+              <Link
+                to={`/admin/products/edit/${viewingProduct.id}`}
+                className="px-5 py-2.5 bg-[#4A0E0E] hover:bg-[#701515] text-white font-black text-xs rounded-2xl shadow-md transition-all flex items-center gap-1.5"
+              >
+                <Edit2 size={14} /> Edit Product
+              </Link>
             </div>
           </div>
         </div>

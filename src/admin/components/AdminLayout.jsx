@@ -17,19 +17,42 @@ import {
   Bell,
   TrendingUp,
   DollarSign,
-  Globe
+  Globe,
+  Layers,
+  Maximize2,
+  Minimize2,
+  History
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { subscribeOrders } from '../../services/firebaseService';
+import { useStoreSettings } from '../../context/StoreSettingsContext';
 
 const AdminLayout = () => {
+  const { storeSettings } = useStoreSettings();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isDesktopSidebarExpanded, setIsDesktopSidebarExpanded] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isOrdersSubmenuOpen, setIsOrdersSubmenuOpen] = useState(true);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
+  const [isFullscreenPos, setIsFullscreenPos] = useState(false);
   const location = useLocation();
   const mainRef = useRef(null);
+
+  const isBillingPage = location.pathname.startsWith('/admin/billing');
+
+  const toggleFullscreen = () => {
+    if (!isFullscreenPos) {
+      setIsFullscreenPos(true);
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => { });
+      }
+    } else {
+      setIsFullscreenPos(false);
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => { });
+      }
+    }
+  };
 
   // Subscribe to live orders to update badge & notifications in real-time
   useEffect(() => {
@@ -42,8 +65,9 @@ const AdminLayout = () => {
     return () => unsub();
   }, []);
 
-  // Auto-close orders submenu when navigating away from orders section
+  // Auto-close mobile sidebar & orders submenu when navigating to any admin page
   useEffect(() => {
+    setIsMobileSidebarOpen(false);
     if (!location.pathname.startsWith('/admin/orders')) {
       setIsOrdersSubmenuOpen(false);
     }
@@ -83,23 +107,16 @@ const AdminLayout = () => {
 
   const navItems = [
     { name: 'Dashboard', path: '/admin', icon: <LayoutDashboard size={22} /> },
+    { name: 'Orders', path: '/admin/orders', icon: <ShoppingCart size={22} /> },
+    { name: 'History', path: '/admin/history', icon: <History size={22} /> },
+    { name: 'Billing / POS', path: '/admin/billing', icon: <FileText size={22} /> },
     { name: 'Products', path: '/admin/products', icon: <Box size={22} /> },
     { name: 'Inventory', path: '/admin/inventory', icon: <Package size={22} /> },
-    { name: 'Orders', path: '/admin/orders', icon: <ShoppingCart size={22} /> },
-    { name: 'Billing / POS', path: '/admin/billing', icon: <FileText size={22} /> },
-    { name: 'Reports & Analytics', path: '/admin/reports', icon: <TrendingUp size={22} /> },
-    { name: 'Expenses Tracker', path: '/admin/expenses', icon: <DollarSign size={22} /> },
-    { name: 'Website Management', path: '/admin/website', icon: <Globe size={22} /> },
     { name: 'Customers', path: '/admin/customers', icon: <Users size={22} /> },
+    { name: 'Expenses Tracker', path: '/admin/expenses', icon: <DollarSign size={22} /> },
+    { name: 'Reports & Analytics', path: '/admin/reports', icon: <TrendingUp size={22} /> },
+    { name: 'Website Management', path: '/admin/website', icon: <Globe size={22} /> },
     { name: 'Settings', path: '/admin/settings', icon: <Settings size={22} /> },
-  ];
-
-  const orderSubItems = [
-    { name: 'All Orders', path: '/admin/orders?status=All', status: 'All' },
-    { name: 'Complete Orders', path: '/admin/orders?status=Delivered', status: 'Delivered' },
-    { name: 'Pending Orders', path: '/admin/orders?status=Pending', status: 'Pending' },
-    { name: 'Processing Orders', path: '/admin/orders?status=Processing', status: 'Processing' },
-    { name: 'Offline Orders', path: '/admin/orders?status=Offline', status: 'Offline' },
   ];
 
   return (
@@ -114,12 +131,12 @@ const AdminLayout = () => {
         <div className="flex items-center justify-between h-20 px-6 border-b border-red-900/30 shrink-0">
           <Link to="/admin" className={`flex items-center gap-3 overflow-hidden ${!isDesktopSidebarExpanded && 'lg:hidden'}`}>
             <img 
-              src="https://res.cloudinary.com/vf0fqhwo/image/upload/v1786363324/logo_q7lezq.jpg" 
-              alt="Karuppa Crackers Logo" 
-              className="w-9 h-9 rounded-xl object-contain border border-amber-400/40 shadow-sm shrink-0" 
+              src={storeSettings?.logo || storeSettings?.companyLogo || "https://res.cloudinary.com/vf0fqhwo/image/upload/v1786363324/logo_q7lezq.jpg"} 
+              alt={storeSettings?.companyName || "Karuppa Crackers"} 
+              className="w-9 h-9 rounded-xl object-contain border border-amber-400/40 shadow-sm shrink-0 bg-white" 
             />
             <span className="font-serif font-extrabold text-white text-xl tracking-tight whitespace-nowrap">
-              Karuppa Admin
+              {storeSettings?.companyName || 'Karuppa Crackers'}
             </span>
           </Link>
           
@@ -145,71 +162,11 @@ const AdminLayout = () => {
           {navItems.map((item) => {
             const isActive = location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(item.path));
             
-            if (item.name === 'Orders') {
-              return (
-                <div key={item.name} className="space-y-1">
-                  <Link
-                    to={item.path}
-                    onClick={() => setIsOrdersSubmenuOpen(!isOrdersSubmenuOpen)}
-                    className={`flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-300 group relative cursor-pointer select-none ${
-                      isActive 
-                        ? 'bg-[#FFD700]/15 text-[#FFD700] font-black backdrop-blur-sm border border-[#FFD700]/30 shadow-md' 
-                        : 'text-red-100/80 hover:bg-white/10 hover:text-white font-bold'
-                    }`}
-                    title={!isDesktopSidebarExpanded ? item.name : ""}
-                  >
-                    <div className="flex items-center gap-4 flex-1">
-                      <div className={`${isActive ? 'text-[#FFD700]' : 'text-red-200 group-hover:text-white'} transition-colors shrink-0`}>
-                        {item.icon}
-                      </div>
-                      <span className={`font-bold whitespace-nowrap transition-opacity duration-300 ${!isDesktopSidebarExpanded ? 'lg:opacity-0 lg:w-0 lg:overflow-hidden' : 'opacity-100'}`}>
-                        {item.name}
-                      </span>
-                    </div>
-
-                    {/* Arrow Indicator */}
-                    {isDesktopSidebarExpanded && (
-                      <div className="p-1 text-amber-300 group-hover:text-white transition-colors shrink-0">
-                        {isOrdersSubmenuOpen ? <ChevronUp size={18} strokeWidth={2.5} /> : <ChevronDown size={18} strokeWidth={2.5} />}
-                      </div>
-                    )}
-                  </Link>
-
-                  {/* Render 4 Submenus when Orders is open */}
-                  {isOrdersSubmenuOpen && isDesktopSidebarExpanded && (
-                    <div className="ml-7 pl-3 border-l-2 border-amber-400/30 my-1 space-y-1 animate-in fade-in slide-in-from-top-2 duration-200">
-                      {orderSubItems.map((sub) => {
-                        const currentSearchParams = new URLSearchParams(location.search);
-                        const activeStatusParam = currentSearchParams.get('status') || 'All';
-                        const isSubActive = location.pathname.startsWith('/admin/orders') && 
-                          (activeStatusParam.toLowerCase() === sub.status.toLowerCase() || 
-                           (sub.status === 'Delivered' && (activeStatusParam.toLowerCase() === 'complete' || activeStatusParam.toLowerCase() === 'completed')));
-
-                        return (
-                          <Link
-                            key={sub.name}
-                            to={sub.path}
-                            onClick={() => setIsOrdersSubmenuOpen(false)}
-                            className={`block px-3.5 py-2.5 rounded-xl text-sm transition-all ${
-                              isSubActive
-                                ? 'bg-[#FFD700]/20 text-[#FFD700] font-black border border-[#FFD700]/40 shadow-sm backdrop-blur-md'
-                                : 'text-amber-200/90 hover:bg-white/10 hover:text-white font-bold'
-                            }`}
-                          >
-                            {sub.name}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            }
-
             return (
               <Link
                 key={item.name}
                 to={item.path}
+                onClick={() => setIsMobileSidebarOpen(false)}
                 className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative ${
                   isActive 
                     ? 'bg-[#FFD700]/15 text-[#FFD700] font-black backdrop-blur-sm border border-[#FFD700]/30 shadow-md' 
@@ -261,19 +218,32 @@ const AdminLayout = () => {
             </h2>
           </div>
 
-          <div className="flex items-center gap-6">
-            <Link to="/admin/orders?status=Pending" className="relative p-2 text-red-200 hover:text-white transition-colors bg-red-950/40 rounded-xl flex items-center justify-center" title={`${pendingOrdersCount} Pending Orders`}>
-              <Bell size={20} />
-              {pendingOrdersCount > 0 ? (
-                <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] px-1 bg-[#FFD700] text-[#4A0E0E] text-[10px] font-black rounded-full flex items-center justify-center shadow-md animate-bounce border border-amber-300">
-                  {pendingOrdersCount}
-                </span>
+          <div className="flex items-center gap-3 sm:gap-4">
+            {/* Fullscreen Toggle Navbar Button (Available on ALL Admin pages) */}
+            <button
+              type="button"
+              onClick={toggleFullscreen}
+              className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-1.5 shadow-sm border-2 cursor-pointer ${
+                isFullscreenPos
+                  ? 'bg-[#FFD700] text-[#4A0E0E] border-amber-300 shadow-md'
+                  : 'bg-white/10 hover:bg-white/20 border-white/20 text-white hover:border-amber-300'
+              }`}
+              title={isFullscreenPos ? "Exit Full Screen Mode" : "Full Screen Mode"}
+            >
+              {isFullscreenPos ? (
+                <>
+                  <Minimize2 size={16} className="text-[#4A0E0E] stroke-[2.5]" />
+                  <span className="hidden sm:inline">Exit Full Screen</span>
+                </>
               ) : (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-400 rounded-full"></span>
+                <>
+                  <Maximize2 size={16} className="text-[#FFD700] stroke-[2.5]" />
+                  <span>Full Screen</span>
+                </>
               )}
-            </Link>
-            
-            <div className="flex items-center gap-3 pl-4 border-l border-red-900/40">
+            </button>
+
+            <div className="flex items-center gap-3 sm:gap-4">
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-bold text-white leading-tight">Mahesh Admin</p>
                 <p className="text-[11px] font-medium text-red-200">admin@karuppacrackers.com</p>
@@ -287,7 +257,7 @@ const AdminLayout = () => {
 
         {/* Dynamic Page Body Canvas */}
         <main ref={mainRef} className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-[#F4F1EA]">
-          <Outlet context={{ isDesktopSidebarExpanded }} />
+          <Outlet context={{ isDesktopSidebarExpanded, isFullscreenPos, toggleFullscreen }} />
         </main>
       </div>
       

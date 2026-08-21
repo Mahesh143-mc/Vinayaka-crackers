@@ -120,6 +120,7 @@ export const subscribeOrders = (callback) => {
   });
 };
 
+
 export const saveOrderToFirestore = async (order) => {
   const orderId = order.id || `ORD-${Math.floor(Math.random() * 9000 + 1000)}`;
   const docRef = doc(db, 'orders', String(orderId));
@@ -129,6 +130,19 @@ export const saveOrderToFirestore = async (order) => {
     updatedAt: serverTimestamp(),
     createdAt: order.createdAt || serverTimestamp()
   }, { merge: true });
+
+  if (order.phone && order.phone !== 'Walk-in Customer') {
+    try {
+      await setDoc(doc(db, 'customers', String(order.phone)), {
+        name: order.customer || 'Walk-in Customer',
+        phone: order.phone,
+        updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp()
+      }, { merge: true });
+    } catch (e) {
+      console.warn("Could not save customer record:", e);
+    }
+  }
 };
 
 export const updateOrderStatusInFirestore = async (orderId, newStatus) => {
@@ -172,17 +186,57 @@ export const deleteExpenseFromFirestore = async (expenseId) => {
   await deleteDoc(doc(db, 'expenses', String(expenseId)));
 };
 
+export const subscribeExpenseCategories = (callback) => {
+  try {
+    const q = query(collection(db, 'expense_categories'), orderBy('name', 'asc'));
+    return onSnapshot(q, (snapshot) => {
+      const cats = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+      callback(cats);
+    }, () => {
+      return onSnapshot(collection(db, 'expense_categories'), (snapshot) => {
+        const cats = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+        callback(cats);
+      });
+    });
+  } catch (err) {
+    return onSnapshot(collection(db, 'expense_categories'), (snapshot) => {
+      const cats = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+      callback(cats);
+    });
+  }
+};
+
+export const saveExpenseCategoryToFirestore = async (catName) => {
+  const cleanId = String(catName).toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const docRef = doc(db, 'expense_categories', cleanId);
+  await setDoc(docRef, {
+    id: cleanId,
+    name: catName.trim(),
+    createdAt: serverTimestamp()
+  }, { merge: true });
+};
+
+export const deleteExpenseCategoryFromFirestore = async (catId) => {
+  await deleteDoc(doc(db, 'expense_categories', String(catId)));
+};
+
 // =========================================================================
 // 5. CUSTOMERS FIRESTORE SERVICE
 // =========================================================================
 export const subscribeCustomers = (callback) => {
-  const q = query(collection(db, 'customers'), orderBy('createdAt', 'desc'));
-  return onSnapshot(q, (snapshot) => {
-    const customers = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
-    callback(customers);
-  }, (error) => {
-    console.error("Firestore Customers subscription error:", error);
-  });
+  try {
+    return onSnapshot(collection(db, 'customers'), (snapshot) => {
+      const customers = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+      callback(customers);
+    }, (error) => {
+      console.warn("Firestore Customers subscription notice:", error);
+      callback([]);
+    });
+  } catch (err) {
+    console.warn("Firestore Customers error:", err);
+    callback([]);
+    return () => {};
+  }
 };
 
 export const saveCustomerToFirestore = async (customer) => {
@@ -210,6 +264,26 @@ export const subscribeWebsiteCMS = (callback) => {
 export const saveWebsiteCMSToFirestore = async (cmsData) => {
   await setDoc(doc(db, 'settings', 'websiteCMS'), {
     ...cmsData,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+};
+
+export const subscribeStoreSettings = (callback) => {
+  return onSnapshot(doc(db, 'settings', 'storeConfig'), (docSnap) => {
+    if (docSnap.exists()) {
+      callback(docSnap.data());
+    } else {
+      callback({ gstPercentage: 18, festiveDiscount: 80 });
+    }
+  }, (error) => {
+    console.error("Firestore Store Settings subscription error:", error);
+    callback({ gstPercentage: 18, festiveDiscount: 80 });
+  });
+};
+
+export const saveStoreSettingsToFirestore = async (settingsData) => {
+  await setDoc(doc(db, 'settings', 'storeConfig'), {
+    ...settingsData,
     updatedAt: serverTimestamp()
   }, { merge: true });
 };

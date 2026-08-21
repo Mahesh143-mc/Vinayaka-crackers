@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Phone, Printer, Send, Truck, CheckCircle2, Clock, MapPin, User, Calendar, PackageCheck, Check, AlertCircle, X, Download } from 'lucide-react';
-import { Link, useParams } from 'react-router-dom';
+import { ArrowLeft, Phone, Printer, Send, Truck, CheckCircle2, Clock, MapPin, User, Calendar, PackageCheck, Check, AlertCircle, X, Download, Edit3 } from 'lucide-react';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { subscribeOrders, updateOrderStatusInFirestore } from '../../services/firebaseService';
+import { useToast } from '../../context/ToastContext';
 
 const AdminOrderDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { showToast } = useToast();
   const orderId = id || '#ORD-092';
 
   const [order, setOrder] = useState({
@@ -56,8 +59,6 @@ const AdminOrderDetails = () => {
 
   // Action Confirmation Modal State
   const [confirmConfig, setConfirmConfig] = useState(null);
-  // Success Toast Message State
-  const [successToast, setSuccessToast] = useState('');
   // Tax Invoice Modal State
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
@@ -65,16 +66,15 @@ const AdminOrderDetails = () => {
     setOrder(prev => ({ ...prev, status: newStatus }));
     try {
       await updateOrderStatusInFirestore(order.id, newStatus);
-      triggerSuccess(`Order ${order.id} status updated to "${newStatus}" in Backend Database!`);
+      showToast(`Order ${order.id} status updated to "${newStatus}" in Backend Database!`, 'success');
     } catch (err) {
       console.error("Error updating order status in Firestore:", err);
-      triggerSuccess(`Order ${order.id} status updated to "${newStatus}"!`);
+      showToast(`Order ${order.id} status updated to "${newStatus}"!`, 'success');
     }
   };
 
   const triggerSuccess = (msg) => {
-    setSuccessToast(msg);
-    setTimeout(() => setSuccessToast(''), 3000);
+    showToast(msg, 'success');
   };
 
   const promptAction = (title, message, confirmText, actionFn) => {
@@ -234,13 +234,6 @@ const AdminOrderDetails = () => {
     <>
       {/* SCREEN ONLY CONTENT */}
       <div className="screen-only max-w-6xl mx-auto space-y-8 pb-12 relative">
-        {/* Success Notification Toast */}
-        {successToast && (
-          <div className="fixed top-24 right-8 z-50 bg-emerald-700 text-white px-5 py-3 rounded-2xl shadow-2xl border border-emerald-500 font-black text-xs flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
-            <CheckCircle2 size={18} /> {successToast}
-          </div>
-        )}
-
       {/* Top Navigation Bar */}
       <div className="flex items-center justify-between">
         <Link 
@@ -322,9 +315,20 @@ const AdminOrderDetails = () => {
             </button>
           )}
 
+          {order.status !== 'Delivered' && order.status !== 'Cancelled' && (
+            <button 
+              type="button"
+              onClick={() => navigate('/admin/billing', { state: { editOrder: order } })}
+              className="px-4 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-[#4A0E0E] rounded-2xl font-black text-xs shadow-md transition-all flex items-center gap-1.5 transform hover:scale-105 cursor-pointer"
+              title="Edit items, adjust quantities, or add products in POS"
+            >
+              <Edit3 size={15} /> Edit Order in POS
+            </button>
+          )}
+
           <button 
             onClick={() => setShowInvoiceModal(true)}
-            className="px-4 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-[#4A0E0E] rounded-2xl font-black text-xs shadow-md transition-all flex items-center gap-1.5 transform hover:scale-105"
+            className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-2xl font-black text-xs shadow-md transition-all flex items-center gap-1.5 transform hover:scale-105"
           >
             <Printer size={15} /> Print Invoice
           </button>

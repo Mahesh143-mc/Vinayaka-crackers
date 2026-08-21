@@ -1,10 +1,14 @@
-import { useState, useEffect } from 'react';
-import { PackageOpen, AlertTriangle, ArrowRightLeft, Search, Save, Check, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, ChevronDown, Plus, X, CheckCircle2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { PackageOpen, AlertTriangle, ArrowRightLeft, Search, Save, Check, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, ChevronDown, Plus, X, CheckCircle2, Filter } from 'lucide-react';
 import { subscribeProducts, updateProductStockInFirestore, subscribeCategories } from '../../services/firebaseService';
+import { useToast } from '../../context/ToastContext';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 const AdminInventory = () => {
+  const { showToast } = useToast();
   const [inventoryData, setInventoryData] = useState([]);
   const [inventoryCategories, setInventoryCategories] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const unsubProducts = subscribeProducts((products) => {
@@ -18,6 +22,7 @@ const AdminInventory = () => {
           lastRestocked: p.lastRestocked || new Date().toISOString().split('T')[0]
         }));
         setInventoryData(mapped);
+        setIsLoading(false);
       }
     });
 
@@ -33,11 +38,26 @@ const AdminInventory = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowCategoryDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, []);
   
-  // Modal & Toast States
+  // Modal States
   const [stockModalItem, setStockModalItem] = useState(null);
   const [addedStockVal, setAddedStockVal] = useState('');
-  const [successToast, setSuccessToast] = useState('');
 
   const openStockModal = (item) => {
     setStockModalItem(item);
@@ -58,14 +78,12 @@ const AdminInventory = () => {
 
     try {
       await updateProductStockInFirestore(stockModalItem.id, validStock);
+      showToast(`Stock for "${stockModalItem.name}" updated to ${validStock} units!`, 'success');
+      setStockModalItem(null);
     } catch (err) {
       console.error("Error updating stock in Firestore:", err);
+      showToast('Failed to update stock in database', 'error');
     }
-    
-    const updatedName = stockModalItem.name;
-    setStockModalItem(null);
-    setSuccessToast(`Successfully added +${added} units! New total stock is ${validStock} units for "${updatedName}"!`);
-    setTimeout(() => setSuccessToast(''), 3500);
   };
 
   // 15 items per page pagination state
@@ -208,8 +226,11 @@ const AdminInventory = () => {
         </div>
       </div>
 
-      {/* Table with Tinted Background & Header */}
-      <div key={currentPage} className="bg-[#FAF7F2] rounded-3xl shadow-sm border border-amber-900/10 overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-300">
+      {/* Table / Loading State */}
+      {isLoading ? (
+        <LoadingSpinner message="Fetching inventory levels from database..." />
+      ) : (
+        <div key={currentPage} className="bg-[#FAF7F2] rounded-3xl shadow-sm border border-amber-900/10 overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-300">
         <div className="p-4 bg-[#EFEAE1] border-b border-amber-900/10 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-800" size={18} />
@@ -223,18 +244,56 @@ const AdminInventory = () => {
           </div>
 
           {/* Category Filter Dropdown */}
-          <div className="relative w-full sm:w-auto">
-            <select 
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full sm:w-auto pl-4 pr-10 py-2.5 bg-white border border-amber-900/10 rounded-2xl font-black text-gray-900 text-sm focus:outline-none focus:border-[#4A0E0E] cursor-pointer appearance-none shadow-sm"
+          <div ref={dropdownRef} className="relative w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+              className="w-full sm:w-auto pl-4 pr-10 py-2.5 bg-white border border-amber-900/10 hover:border-[#4A0E0E] rounded-2xl font-black text-gray-900 text-sm shadow-sm transition-all flex items-center justify-between gap-3 cursor-pointer"
             >
-              <option value="All">All Categories ({inventoryCategories.length})</option>
-              {inventoryCategories.map(cat => (
-                <option key={cat.id} value={cat.name}>{cat.name}</option>
-              ))}
-            </select>
-            <ChevronDown size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#4A0E0E] pointer-events-none stroke-[2.5]" />
+              <span className="flex items-center gap-2">
+                <Filter size={15} className="text-[#4A0E0E]" />
+                {selectedCategory === 'All' ? `All Categories (${inventoryCategories.length})` : selectedCategory}
+              </span>
+              <ChevronDown size={17} className={`text-[#4A0E0E] transition-transform stroke-[2.5] ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showCategoryDropdown && (
+              <div className="absolute right-0 top-full mt-2 w-64 bg-white border-2 border-amber-900/20 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 space-y-1">
+                <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between text-[#4A0E0E] font-black text-xs uppercase tracking-wider">
+                  <span>Select Category</span>
+                  <Filter size={14} className="text-[#4A0E0E]" />
+                </div>
+                <div className="max-h-60 overflow-y-auto space-y-1 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedCategory('All'); setShowCategoryDropdown(false); }}
+                    className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-between ${
+                      selectedCategory === 'All'
+                        ? 'bg-[#4A0E0E] text-[#FFD700] shadow-md'
+                        : 'text-gray-800 hover:bg-amber-100/60'
+                    }`}
+                  >
+                    <span>All Categories ({inventoryCategories.length})</span>
+                    {selectedCategory === 'All' && <Check size={16} strokeWidth={3} />}
+                  </button>
+                  {inventoryCategories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => { setSelectedCategory(cat.name); setShowCategoryDropdown(false); }}
+                      className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-between ${
+                        selectedCategory === cat.name
+                          ? 'bg-[#4A0E0E] text-[#FFD700] shadow-md'
+                          : 'text-gray-800 hover:bg-amber-100/60'
+                      }`}
+                    >
+                      <span>{cat.name}</span>
+                      {selectedCategory === cat.name && <Check size={16} strokeWidth={3} />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -359,12 +418,6 @@ const AdminInventory = () => {
           </div>
         </div>
       </div>
-
-      {/* Success Toast Notification */}
-      {successToast && (
-        <div className="fixed top-24 right-8 z-50 bg-[#4A0E0E] text-[#FFD700] px-5 py-3 rounded-2xl shadow-2xl border border-amber-400 font-black text-xs flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
-          <CheckCircle2 size={18} className="text-emerald-400" /> {successToast}
-        </div>
       )}
 
       {/* Stock Update Modal Dialog */}
@@ -416,8 +469,8 @@ const AdminInventory = () => {
                   type="number"
                   value={addedStockVal}
                   onChange={(e) => setAddedStockVal(e.target.value)}
-                  className="w-full px-4 py-3 bg-white border-2 border-amber-900/20 rounded-2xl font-black text-2xl text-[#4A0E0E] text-center focus:outline-none focus:border-[#4A0E0E] shadow-sm"
-                  placeholder="Enter incoming stock e.g. 50"
+                  className="w-full px-4 py-3 bg-white border-2 border-amber-900/20 rounded-2xl font-black text-xl text-[#4A0E0E] text-center focus:outline-none focus:border-[#4A0E0E] shadow-sm placeholder:text-xs sm:placeholder:text-sm placeholder:font-semibold placeholder:text-gray-400"
+                  placeholder="Enter stock quantity e.g. 50"
                   autoFocus
                 />
 

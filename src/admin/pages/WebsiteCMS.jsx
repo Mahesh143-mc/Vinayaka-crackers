@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Home, Info, ArrowLeft, ChevronRight, Image as ImageIcon, Megaphone, Store, ShieldAlert, Plus, Trash2, Edit3, Save, CheckCircle2, X, Sparkles, BookOpen, Layers, Award, Check, Globe } from 'lucide-react';
 import { subscribeWebsiteCMS, saveWebsiteCMSToFirestore } from '../../services/firebaseService';
+import { useToast } from '../../context/ToastContext';
 
 const AdminWebsiteCMS = () => {
+  const { showToast } = useToast();
   // Navigation Steps: 'main' | 'home_sections' | 'about_sections' | 'edit'
   const [currentStep, setCurrentStep] = useState('main'); // 'main', 'home_sections', 'about_sections', 'edit'
   const [activeSection, setActiveSection] = useState(null);
-  const [successToast, setSuccessToast] = useState('');
 
   const triggerSuccess = (msg) => {
-    setSuccessToast(msg);
-    setTimeout(() => setSuccessToast(''), 3500);
+    showToast(msg, 'success');
   };
 
   // =========================================================================
@@ -260,16 +260,6 @@ const AdminWebsiteCMS = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-12">
-      {/* Toast Notification Banner */}
-      {successToast && (
-        <div className="fixed top-6 right-6 z-[1000005] bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-800 text-white font-black text-xs sm:text-sm px-5 py-3.5 rounded-2xl shadow-2xl border-2 border-amber-300 flex items-center gap-3 animate-in slide-in-from-top-5 duration-300">
-          <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-            <CheckCircle2 size={18} className="text-[#FFD700]" />
-          </div>
-          <span>{successToast}</span>
-        </div>
-      )}
-
       {/* =================================================================== */}
       {/* LEVEL 1: MAIN PAGE (ONLY 2 CARDS: HOME PAGE & ABOUT PAGE) */}
       {/* =================================================================== */}

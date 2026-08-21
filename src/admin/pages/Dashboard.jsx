@@ -9,6 +9,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { subscribeOrders, subscribeProducts, subscribeCustomers } from '../../services/firebaseService';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 const StatCard = ({ title, value, icon: Icon, trend, color }) => (
   <div className="bg-[#FAF7F2] p-6 rounded-3xl shadow-sm border border-amber-900/10 hover:border-amber-500 transition-all group">
@@ -31,10 +32,12 @@ const AdminDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
   const [customersCount, setCustomersCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const unsubOrders = subscribeOrders((data) => {
       if (data) setOrders(data);
+      setIsLoading(false);
     });
 
     const unsubProducts = subscribeProducts((data) => {
@@ -57,6 +60,10 @@ const AdminDashboard = () => {
   const totalOrdersCount = orders.length;
   const lowStockList = products.filter(p => Number(p.stock || 0) <= 15).slice(0, 5);
   const recentOrdersList = orders.slice(0, 5);
+
+  if (isLoading) {
+    return <LoadingSpinner message="Connecting to live database & loading dashboard stats..." />;
+  }
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-10">

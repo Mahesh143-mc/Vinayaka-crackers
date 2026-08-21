@@ -1,13 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MessageCircle, Calendar, Users, Send, X, ShoppingBag, Phone, MapPin, Award, CheckCircle2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Plus, UserPlus } from 'lucide-react';
+import { Search, MessageCircle, Calendar, Users, Send, X, ShoppingBag, Phone, MapPin, Award, CheckCircle2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Plus, UserPlus, ChevronDown, Check, Filter, Loader2 } from 'lucide-react';
 import { subscribeCustomers, subscribeOrders, saveCustomerToFirestore } from '../../services/firebaseService';
+import { useToast } from '../../context/ToastContext';
+import { generateCustomerId } from '../../utils/idGenerator';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 const AdminCustomers = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [customers, setCustomers] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [successToast, setSuccessToast] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [newCustomer, setNewCustomer] = useState({
     name: '',
@@ -16,78 +21,163 @@ const AdminCustomers = () => {
     location: 'Sivakasi, Tamil Nadu',
     status: 'Regular'
   });
+  const [showTypeDropdown, setShowTypeDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
-  const triggerSuccess = (msg) => {
-    setSuccessToast(msg);
-    setTimeout(() => setSuccessToast(''), 3000);
-  };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowTypeDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, []);
 
   const [firestoreCusts, setFirestoreCusts] = useState([]);
   const [allOrders, setAllOrders] = useState([]);
 
   useEffect(() => {
     const unsubCust = subscribeCustomers((custs) => setFirestoreCusts(custs || []));
-    const unsubOrd = subscribeOrders((ords) => setAllOrders(ords || []));
+    const unsubOrd = subscribeOrders((ords) => {
+      setAllOrders(ords || []);
+      setIsLoading(false);
+    });
     return () => {
       unsubCust();
       unsubOrd();
     };
   }, []);
 
+  const parseSafeDate = (val) => {
+    if (!val) return 'Recently';
+    if (typeof val === 'object' && val.seconds) {
+      return new Date(val.seconds * 1000).toLocaleDateString('en-IN');
+    }
+    const d = new Date(val);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString('en-IN');
+    }
+    return String(val);
+  };
+
+  const getOrderAmount = (o) => {
+    if (typeof o.grandTotal === 'number') return o.grandTotal;
+    if (typeof o.totalAmount === 'number') return o.totalAmount;
+    if (typeof o.amount === 'number') return o.amount;
+    if (typeof o.total === 'number') return o.total;
+    const str = String(o.grandTotal || o.totalAmount || o.amount || o.total || 0);
+    return parseFloat(str.replace(/[^\d.]/g, '')) || 0;
+  };
+
   useEffect(() => {
     const customerMap = new Map();
 
-    firestoreCusts.forEach((c, idx) => {
-      const key = String(c.phone || c.id).replace(/[^\d]/g, '') || c.id;
-      customerMap.set(key, {
-        ...c,
-        id: String(c.id || key),
-        name: c.name || c.customerName || 'Valued Customer',
-        phone: c.phone || 'N/A',
-        email: c.email || 'N/A',
-        status: c.status || 'Regular',
-        totalOrders: 0,
-        totalSpent: 0,
-        lastActive: c.lastActive || (c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-IN') : 'Recently')
-      });
-    });
+    // 1. Process all real orders from Firestore (both POS and Online Website)
+    (allOrders || []).forEach((o) => {
+      const rawPhone = String(o.phone || o.whatsapp || o.customerPhone || '').trim();
+      const phoneDigits = rawPhone.replace(/[^\d]/g, '');
+      const rawName = String(o.customer || o.customerName || '').trim();
+      
+      // Unique key: phone digits (if valid) or lowercase name
+      const key = phoneDigits.length >= 6 ? phoneDigits : (rawName ? rawName.toLowerCase() : null);
+      if (!key) return;
 
-    allOrders.forEach((o) => {
-      const phoneClean = String(o.phone || '').replace(/[^\d]/g, '');
-      const key = phoneClean || o.id;
-      const orderAmount = typeof o.grandTotal === 'number' ? o.grandTotal : (typeof o.totalAmount === 'number' ? o.totalAmount : (parseFloat(String(o.amount || 0).replace(/[^\d.]/g, '')) || 0));
+      const orderAmt = getOrderAmount(o);
+      const isPos = Boolean(o.isOffline);
+      const orderDate = parseSafeDate(o.createdAt || o.date);
 
-      if (customerMap.has(key)) {
+      if (!customerMap.has(key)) {
+        let displayName = rawName || (phoneDigits ? `Customer (${rawPhone})` : 'Store Customer');
+        if (displayName === 'Walk-in Customer' && rawPhone && rawPhone !== 'N/A') {
+          displayName = `Walk-in (${rawPhone})`;
+        }
+
+        customerMap.set(key, {
+          id: String(o.id || `CUST-${key.slice(-4)}`),
+          name: displayName,
+          phone: rawPhone || 'N/A',
+          email: String(o.email || o.customerEmail || 'N/A'),
+          location: String(o.address || o.shippingAddress || o.location || (isPos ? 'Sivakasi Outlet' : 'Tamil Nadu')),
+          status: 'Regular',
+          totalOrders: 1,
+          totalSpent: orderAmt,
+          lastActive: orderDate,
+          channels: new Set([isPos ? 'POS Counter' : 'Website Order'])
+        });
+      } else {
         const existing = customerMap.get(key);
         existing.totalOrders += 1;
-        existing.totalSpent += orderAmount;
-      } else {
-        customerMap.set(key, {
-          id: key,
-          name: o.customerName || o.customer || 'Valued Customer',
-          phone: o.phone || 'N/A',
-          email: o.email || 'N/A',
-          status: orderAmount > 10000 ? 'VIP' : 'Regular',
-          totalOrders: 1,
-          totalSpent: orderAmount,
-          lastActive: o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-IN') : 'Recently'
-        });
+        existing.totalSpent += orderAmt;
+        if (isPos) existing.channels.add('POS Counter');
+        else existing.channels.add('Website Order');
+
+        if (rawName && (existing.name.startsWith('Customer (') || existing.name === 'Store Customer' || existing.name === 'Walk-in Customer')) {
+          existing.name = rawName;
+        }
+        if (rawPhone && existing.phone === 'N/A') {
+          existing.phone = rawPhone;
+        }
       }
     });
 
-    const combinedList = Array.from(customerMap.values()).map((c, idx) => ({
-      ...c,
-      sno: idx + 1
-    }));
+    // 2. Process all registered customers from Firestore 'customers' collection
+    (firestoreCusts || []).forEach((c) => {
+      const rawPhone = String(c.phone || '').trim();
+      const phoneDigits = rawPhone.replace(/[^\d]/g, '');
+      const rawName = String(c.name || c.customerName || '').trim();
+      const key = phoneDigits.length >= 6 ? phoneDigits : (rawName ? rawName.toLowerCase() : String(c.id || '').trim());
+      if (!key) return;
 
-    setCustomers(combinedList);
+      const regDate = parseSafeDate(c.createdAt || c.lastActive);
+
+      if (!customerMap.has(key)) {
+        customerMap.set(key, {
+          ...c,
+          id: String(c.id || `CUST-${key.slice(-4)}`),
+          name: rawName || 'Registered Customer',
+          phone: rawPhone || 'N/A',
+          email: c.email || 'N/A',
+          location: c.location || c.address || 'Sivakasi, Tamil Nadu',
+          status: c.status || 'Regular',
+          totalOrders: Number(c.totalOrders || 0),
+          totalSpent: Number(c.totalSpent || 0),
+          lastActive: regDate,
+          channels: new Set(['Registered Member'])
+        });
+      } else {
+        const existing = customerMap.get(key);
+        existing.id = String(c.id || existing.id);
+        if (rawName && rawName !== 'Walk-in Customer') existing.name = rawName;
+        if (c.email && c.email !== 'N/A') existing.email = c.email;
+        if (c.location) existing.location = c.location;
+        if (c.status) existing.status = c.status;
+        existing.channels.add('Registered Member');
+      }
+    });
+
+    // Convert to sorted list by totalSpent (highest spending customers first)
+    const cleanList = Array.from(customerMap.values())
+      .map((cust, idx) => ({
+        ...cust,
+        sno: idx + 1,
+        channelLabel: Array.from(cust.channels || []).join(' & ') || 'Direct'
+      }))
+      .sort((a, b) => (Number(b.totalSpent) || 0) - (Number(a.totalSpent) || 0));
+
+    setCustomers(cleanList);
   }, [firestoreCusts, allOrders]);
 
-  const handleCreateCustomer = async (e) => {
+  const handleAddCustomer = async (e) => {
     e.preventDefault();
     if (!newCustomer.name || !newCustomer.phone) return;
 
-    const customerId = `CUST-${Math.floor(Math.random() * 900 + 100)}`;
+    setIsSaving(true);
+    const customerId = generateCustomerId(customers);
     const payload = {
       id: customerId,
       sno: customers.length + 1,
@@ -97,21 +187,23 @@ const AdminCustomers = () => {
       location: newCustomer.location || 'Sivakasi, Tamil Nadu',
       totalOrders: 0,
       totalSpent: 0,
-      lastActive: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      lastActive: new Date().toLocaleDateString('en-IN'),
       status: newCustomer.status || 'New',
       recentPurchases: []
     };
 
-    setCustomers([payload, ...customers]);
     try {
       await saveCustomerToFirestore(payload);
+      setCustomers(prev => [payload, ...prev]);
+      showToast(`🎉 Customer "${payload.name}" (${payload.id}) created and saved!`, 'success');
     } catch (err) {
       console.error("Error saving customer to Firestore:", err);
+      showToast('Failed to save customer', 'error');
+    } finally {
+      setIsSaving(false);
+      setShowAddModal(false);
+      setNewCustomer({ name: '', phone: '', email: '', location: 'Sivakasi, Tamil Nadu', status: 'Regular' });
     }
-
-    setShowAddModal(false);
-    setNewCustomer({ name: '', phone: '', email: '', location: 'Sivakasi, Tamil Nadu', status: 'Regular' });
-    triggerSuccess(`🎉 Customer "${payload.name}" created and saved to Firestore!`);
   };
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -151,16 +243,6 @@ const AdminCustomers = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-10">
-      {/* Toast Notification */}
-      {successToast && (
-        <div className="fixed top-6 right-6 z-[1000005] bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-800 text-white font-black text-xs sm:text-sm px-5 py-3.5 rounded-2xl shadow-2xl border-2 border-amber-300 flex items-center gap-3 animate-in slide-in-from-top-5 duration-300">
-          <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-            <CheckCircle2 size={18} className="text-[#FFD700]" />
-          </div>
-          <span>{successToast}</span>
-        </div>
-      )}
-
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#4A0E0E] via-[#701515] to-[#4A0E0E] p-7 rounded-3xl shadow-lg text-white">
         <div>
@@ -172,7 +254,7 @@ const AdminCustomers = () => {
         <div className="flex items-center gap-3 flex-wrap">
           <button
             onClick={() => setShowAddModal(true)}
-            className="bg-gradient-to-r from-[#FFD700] to-amber-500 hover:from-amber-400 hover:to-amber-600 text-[#4A0E0E] px-5 py-2.5 rounded-2xl font-black text-xs shadow-md flex items-center gap-2 transform hover:scale-105 transition-all"
+            className="bg-gradient-to-r from-[#FFD700] to-amber-500 hover:from-amber-400 hover:to-amber-600 text-[#4A0E0E] px-5 py-2.5 rounded-2xl font-black text-xs shadow-md flex items-center gap-2 transform hover:scale-105 transition-all cursor-pointer"
           >
             <UserPlus size={18} strokeWidth={2.5} /> Add New Customer
           </button>
@@ -211,9 +293,12 @@ const AdminCustomers = () => {
         </div>
       </div>
 
-      {/* Customer Cards Grid with Smooth Hover BG Color Transition & S.No Tags */}
-      <div key={currentPage} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-3 duration-300">
-        {paginatedCustomers.map((customer) => (
+      {/* Customer Cards Grid / Loading State */}
+      {isLoading ? (
+        <LoadingSpinner message="Fetching customer records from database..." />
+      ) : (
+        <div key={currentPage} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-3 duration-300">
+          {paginatedCustomers.map((customer) => (
           <div 
             key={customer.id} 
             onClick={() => navigate(`/admin/customers/${customer.id}`)}
@@ -280,6 +365,7 @@ const AdminCustomers = () => {
           </div>
         ))}
       </div>
+      )}
 
       {/* 15-Item Pagination Controls Bar */}
       <div className="p-4 bg-[#FAF7F2] rounded-3xl border border-amber-900/10 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
@@ -501,18 +587,39 @@ const AdminCustomers = () => {
                   />
                 </div>
 
-                <div>
+                <div ref={dropdownRef} className="relative">
                   <label className="block text-[#4A0E0E] uppercase tracking-wider mb-1.5">Customer Type</label>
-                  <select 
-                    value={newCustomer.status}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, status: e.target.value })}
-                    className="w-full p-3 bg-white border-2 border-amber-900/20 rounded-2xl text-xs font-black text-gray-900 focus:outline-none cursor-pointer"
+                  <button
+                    type="button"
+                    onClick={() => setShowTypeDropdown(!showTypeDropdown)}
+                    className="w-full p-3 bg-white border-2 border-amber-900/20 hover:border-[#4A0E0E] rounded-2xl font-black text-gray-900 text-xs shadow-sm transition-all flex items-center justify-between cursor-pointer"
                   >
-                    <option value="New">New</option>
-                    <option value="Regular">Regular</option>
-                    <option value="VIP">VIP</option>
-                    <option value="Wholesale">Wholesale</option>
-                  </select>
+                    <span>{newCustomer.status || 'Regular'}</span>
+                    <ChevronDown size={16} className={`text-[#4A0E0E] transition-transform stroke-[2.5] ${showTypeDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {showTypeDropdown && (
+                    <div className="absolute left-0 right-0 top-full mt-2 bg-white border-2 border-amber-900/20 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 space-y-1">
+                      {['New', 'Regular', 'VIP', 'Wholesale'].map((type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => {
+                            setNewCustomer({ ...newCustomer, status: type });
+                            setShowTypeDropdown(false);
+                          }}
+                          className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-between ${
+                            newCustomer.status === type
+                              ? 'bg-[#4A0E0E] text-[#FFD700] shadow-md'
+                              : 'text-gray-800 hover:bg-amber-100/60'
+                          }`}
+                        >
+                          <span>{type}</span>
+                          {newCustomer.status === type && <Check size={15} strokeWidth={3} />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -549,9 +656,18 @@ const AdminCustomers = () => {
               </button>
               <button 
                 type="submit"
-                className="py-3 bg-[#4A0E0E] hover:bg-red-950 text-white rounded-2xl text-xs font-black shadow-md flex items-center justify-center gap-2"
+                disabled={isSaving}
+                className="py-3 bg-[#4A0E0E] hover:bg-red-950 disabled:opacity-60 text-white rounded-2xl text-xs font-black shadow-md flex items-center justify-center gap-2 cursor-pointer"
               >
-                <UserPlus size={16} /> Save Customer
+                {isSaving ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin text-[#FFD700]" /> Saving Customer...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus size={16} /> Save Customer
+                  </>
+                )}
               </button>
             </div>
           </form>

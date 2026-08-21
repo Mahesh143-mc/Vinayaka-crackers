@@ -1,7 +1,17 @@
 import { motion } from 'framer-motion';
-import { Phone, PhoneCall, MessageCircle, Mail, MapPin, Clock, Send, Sparkles } from 'lucide-react';
+import { Phone, MessageCircle, Mail, MapPin, Send, Sparkles, Building2, FileText } from 'lucide-react';
+import { useStoreSettings } from '../context/StoreSettingsContext';
 
 const Contact = () => {
+  const { storeSettings } = useStoreSettings();
+
+  const companyName = storeSettings?.companyName || 'Karuppa Crackers';
+  const phone = storeSettings?.phone || storeSettings?.supportPhone || '8825419454';
+  const whatsapp = storeSettings?.whatsapp || storeSettings?.phone || '8825419454';
+  const email = storeSettings?.email || storeSettings?.supportEmail || 'chimeratechweb@gmail.com';
+  const address = storeSettings?.address || '124/B, Sivakasi Main Road, Sivakasi';
+  const gstNumber = storeSettings?.gstNumber || '33AAAAA0000A1Z5';
+
   return (
     <div className="bg-cream-light min-h-screen pt-32 pb-24 relative overflow-hidden">
       
@@ -18,14 +28,14 @@ const Contact = () => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gold/30 text-gold text-sm font-bold tracking-widest uppercase mb-6 shadow-sm"
           >
             <Sparkles className="w-4 h-4" />
-            <span>Get in Touch</span>
+            <span>Get in Touch with {companyName}</span>
             <Sparkles className="w-4 h-4" />
           </motion.div>
           <h1 className="text-5xl md:text-7xl font-serif font-black text-[#8B1E1E] drop-shadow-sm leading-tight">
             We’d Love to <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold to-yellow-600">Hear</span> From You!
           </h1>
           <p className="mt-6 text-xl text-brown font-medium max-w-2xl mx-auto">
-            Whether you have a question about our collections, need help with an order, or want to inquire about bulk purchases, we are here for you.
+            Whether you have a question about our firecracker collections, need help with an order, or want wholesale enquiries, we are here for you.
           </p>
         </div>
 
@@ -43,7 +53,7 @@ const Contact = () => {
               
               <div className="relative z-10 mb-8">
                 <h3 className="text-3xl font-serif font-bold text-charcoal mb-2">Send a Message</h3>
-                <p className="text-brown">Fill out the form below and we'll get back to you shortly.</p>
+                <p className="text-brown">Fill out the form below and our Sivakasi team will get back to you shortly.</p>
               </div>
 
               <form className="relative z-10 flex flex-col gap-8">
@@ -87,46 +97,80 @@ const Contact = () => {
             </motion.div>
           </div>
 
-          {/* Right: Contact Details & Map */}
+          {/* Right: Contact Details & Quick Access */}
           <div className="w-full lg:w-1/2 flex flex-col gap-6">
             
             {/* Quick Contact Buttons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <a href="tel:+918825419454" className="bg-white border border-gray-100 hover:border-blue-200 p-6 rounded-[2rem] flex flex-col items-center justify-center gap-4 shadow-sm hover:shadow-xl transition-all group">
+              <a href={`tel:+91${phone}`} className="bg-white border border-gray-100 hover:border-blue-200 p-6 rounded-[2rem] flex flex-col items-center justify-center gap-4 shadow-sm hover:shadow-xl transition-all group">
                 <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Phone className="w-6 h-6" />
                 </div>
                 <div className="text-center">
                   <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Direct Call</span>
-                  <span className="text-base font-extrabold text-gray-800 group-hover:text-blue-600 transition-colors">+91 88254 19454</span>
+                  <span className="text-base font-extrabold text-gray-800 group-hover:text-blue-600 transition-colors">+91 {phone}</span>
                 </div>
               </a>
 
-              <a href="https://wa.me/918825419454" className="bg-white border border-gray-100 hover:border-green-200 p-6 rounded-[2rem] flex flex-col items-center justify-center gap-4 shadow-sm hover:shadow-xl transition-all group">
-                <div className="w-16 h-16 bg-green-50 text-[#25D366] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform relative">
-                  <div className="absolute inset-0 rounded-full border-2 border-[#25D366] animate-ping opacity-20"></div>
-                  <MessageCircle className="w-8 h-8" />
+              <a href={`https://wa.me/91${whatsapp}`} target="_blank" rel="noopener noreferrer" className="bg-white border border-gray-100 hover:border-green-200 p-6 rounded-[2rem] flex flex-col items-center justify-center gap-4 shadow-sm hover:shadow-xl transition-all group">
+                <div className="w-12 h-12 bg-green-50 text-[#25D366] rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform relative">
+                  <MessageCircle className="w-6 h-6" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">Chat on WhatsApp</p>
-                  <p className="text-xl font-black text-charcoal">+91 99438 52902</p>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Chat on WhatsApp</p>
+                  <p className="text-base font-extrabold text-gray-800 group-hover:text-green-600 transition-colors">+91 {whatsapp}</p>
                 </div>
               </a>
             </div>
 
+            {/* Address & Business Info Card */}
+            <div className="bg-white border border-gray-100 p-8 rounded-[2rem] shadow-sm space-y-4">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-900 flex items-center justify-center shrink-0">
+                  <MapPin className="w-5 h-5 text-[#4A0E0E]" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black uppercase text-amber-900 tracking-wider">Factory & Showroom Address</h4>
+                  <p className="text-gray-800 font-bold text-sm mt-1">{address}</p>
+                </div>
+              </div>
 
+              <div className="flex items-start gap-4 pt-4 border-t border-gray-100">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-900 flex items-center justify-center shrink-0">
+                  <Mail className="w-5 h-5 text-[#4A0E0E]" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black uppercase text-amber-900 tracking-wider">Official Email</h4>
+                  <a href={`mailto:${email}`} className="text-gray-800 font-bold text-sm hover:text-[#4A0E0E] mt-1 block">
+                    {email}
+                  </a>
+                </div>
+              </div>
+
+              {gstNumber && (
+                <div className="flex items-start gap-4 pt-4 border-t border-gray-100">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-900 flex items-center justify-center shrink-0">
+                    <FileText className="w-5 h-5 text-[#4A0E0E]" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black uppercase text-amber-900 tracking-wider">GSTIN Number</h4>
+                    <p className="text-gray-800 font-mono font-black text-sm mt-1">{gstNumber}</p>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Map Frame */}
-            <div className="relative h-64 md:h-full min-h-[250px] rounded-[2rem] overflow-hidden shadow-warm border-8 border-white group">
+            <div className="relative h-48 rounded-[2rem] overflow-hidden shadow-sm border-4 border-white group">
               <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=1200" alt="Map Location" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
               
-              <div className="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur px-6 py-4 rounded-2xl shadow-lg flex items-center gap-4">
-                <div className="w-10 h-10 bg-red/10 rounded-full flex items-center justify-center shrink-0">
-                  <MapPin className="text-red w-5 h-5" />
+              <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur px-4 py-2.5 rounded-2xl shadow-lg flex items-center gap-3">
+                <div className="w-8 h-8 bg-red/10 rounded-full flex items-center justify-center shrink-0">
+                  <MapPin className="text-[#4A0E0E] w-4 h-4" />
                 </div>
-                <p className="font-bold text-charcoal text-sm md:text-base leading-snug">
-                  Sivakasi, Tamil Nadu
+                <p className="font-bold text-charcoal text-xs leading-snug">
+                  {address}
                 </p>
               </div>
             </div>
@@ -139,3 +183,4 @@ const Contact = () => {
 };
 
 export default Contact;
+

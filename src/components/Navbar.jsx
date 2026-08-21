@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FileText, Menu, X, ShoppingCart } from 'lucide-react';
+import { FileText, Menu, X, ShoppingCart, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCart } from '../context/CartContext';
+import { useStoreSettings } from '../context/StoreSettingsContext';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { cartTotals } = useCart();
+  const { storeSettings } = useStoreSettings();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -46,12 +48,12 @@ const Navbar = () => {
           <div className="flex-shrink-0 flex items-center">
             <Link to="/" className="flex items-center gap-2.5 group">
               <img 
-                src="https://res.cloudinary.com/vf0fqhwo/image/upload/v1786363324/logo_q7lezq.jpg" 
-                alt="Karuppa Crackers" 
+                src={storeSettings?.logo || storeSettings?.companyLogo || "https://res.cloudinary.com/vf0fqhwo/image/upload/v1786363324/logo_q7lezq.jpg"} 
+                alt={storeSettings?.companyName || "Karuppa Crackers"} 
                 className="h-11 sm:h-12 w-auto object-contain rounded-xl shadow-sm border border-amber-300/40 group-hover:scale-105 transition-transform" 
               />
               <span className="hidden md:inline text-2xl font-serif font-extrabold text-[#c00000] tracking-tight">
-                Karuppa Crackers
+                {storeSettings?.companyName || 'Karuppa Crackers'}
               </span>
             </Link>
           </div>
