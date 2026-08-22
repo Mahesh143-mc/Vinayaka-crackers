@@ -3,8 +3,9 @@ import { ShoppingCart, Filter, Search, X, ArrowUp, SlidersHorizontal, Eye, Packa
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
-
 import { subscribeProducts, subscribeCategories } from '../services/firebaseService';
+import SEO from '../components/common/SEO';
+import { generateProductCatalogSchema, generateBreadcrumbSchema } from '../utils/seoData';
 
 const Products = () => {
   const [searchFocused, setSearchFocused] = useState(false);

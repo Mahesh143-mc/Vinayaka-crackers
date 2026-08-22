@@ -1,9 +1,21 @@
 import { motion } from 'framer-motion';
 import { ShieldCheck, Sparkles, Heart, Globe, Package, Store } from 'lucide-react';
+import SEO from '../components/common/SEO';
+import { generateBreadcrumbSchema } from '../utils/seoData';
 
 const About = () => {
+  const breadcrumbsSchema = generateBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "About Karuppa Crackers Sivakasi", path: "/about" }
+  ]);
+
   return (
     <div className="overflow-hidden">
+      <SEO 
+        title="About Us • Sivakasi Fireworks Manufacturer Heritage & Safety Standards"
+        description="Learn about Karuppa Crackers Sivakasi heritage. Committed to safe green crackers, authentic premium fireworks manufacturing, and customer satisfaction since 1995."
+        schema={breadcrumbsSchema}
+      />
       {/* 1. Hero Section */}
       <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">

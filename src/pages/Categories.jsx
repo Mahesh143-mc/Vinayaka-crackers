@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { subscribeCategories } from '../services/firebaseService';
+import SEO from '../components/common/SEO';
+import { generateBreadcrumbSchema } from '../utils/seoData';
 
 const Categories = () => {
   const [dbCategories, setDbCategories] = useState([]);
@@ -22,8 +24,18 @@ const Categories = () => {
 
   const tiles = dbCategories;
 
+  const breadcrumbsSchema = generateBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Fireworks Collections & Categories", path: "/categories" }
+  ]);
+
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#8B1E1E] flex flex-col items-center pt-32 pb-24">
+      <SEO 
+        title="Fireworks Collections & Categories | Sparklers, Sky Shots, Gift Boxes"
+        description="Browse all Sivakasi fireworks categories including Sparklers, Ground Chakkars, Flower Pots, Multi-color Aerial Night Shots, Sound Crackers, and Family Diwali Gift Boxes."
+        schema={breadcrumbsSchema}
+      />
       
       {/* Premium Background Textures */}
       <div className="absolute inset-0 z-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>

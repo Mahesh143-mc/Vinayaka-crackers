@@ -1,0 +1,17 @@
+# robots.txt for Karuppa Crackers (karuppapattasu.in)
+User-agent: *
+Allow: /
+Allow: /products
+Allow: /categories
+Allow: /about
+Allow: /gallery
+Allow: /contact
+Allow: /checkout
+
+# Disallow private and administrative control paths
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /admin/login
+
+# Sitemap location
+Sitemap: https://karuppapattasu.in/sitemap.xml

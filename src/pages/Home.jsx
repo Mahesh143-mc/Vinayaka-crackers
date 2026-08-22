@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Star, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { subscribeProducts } from '../services/firebaseService';
+import SEO from '../components/common/SEO';
 
 const Home = () => {
   const [activeFaq, setActiveFaq] = useState(null);
@@ -89,6 +90,10 @@ const Home = () => {
 
   return (
     <div className="overflow-hidden">
+      <SEO 
+        title="Direct from Sivakasi • Premium Diwali Fireworks 2026"
+        description="Buy authentic Sivakasi fireworks online directly from Karuppa Crackers. Enjoy up to 80% festive discount on Diwali gift boxes, sparklers, sky shots, flower pots, and sound crackers with safe direct delivery across Tamil Nadu and India."
+      />
       <section className="relative flex items-center justify-center overflow-hidden bg-white pt-24 pb-12 md:pt-32 md:pb-20 md:min-h-[85vh]">
         {/* User Provided Texture Background */}
         <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/vf0fqhwo/image/upload/v1785301158/texture_njj3db.webp')] bg-repeat bg-center opacity-100"></div>

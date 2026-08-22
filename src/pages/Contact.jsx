@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
 import { Phone, MessageCircle, Mail, MapPin, Send, Sparkles, Building2, FileText } from 'lucide-react';
 import { useStoreSettings } from '../context/StoreSettingsContext';
+import SEO from '../components/common/SEO';
+import { generateBreadcrumbSchema } from '../utils/seoData';
 
 const Contact = () => {
   const { storeSettings } = useStoreSettings();
@@ -12,8 +14,18 @@ const Contact = () => {
   const address = storeSettings?.address || '124/B, Sivakasi Main Road, Sivakasi';
   const gstNumber = storeSettings?.gstNumber || '33AAAAA0000A1Z5';
 
+  const breadcrumbsSchema = generateBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Contact & Sivakasi Showroom Location", path: "/contact" }
+  ]);
+
   return (
     <div className="bg-cream-light min-h-screen pt-32 pb-24 relative overflow-hidden">
+      <SEO 
+        title={`Contact Us • ${companyName} Sivakasi Outlet & Hotline`}
+        description={`Contact ${companyName} for direct Diwali fireworks orders, wholesale enquiries, and customer support. Visit our Sivakasi showroom or call ${phone}.`}
+        schema={breadcrumbsSchema}
+      />
       
       {/* Decorative Background */}
       <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-bl from-gold/10 to-transparent rounded-full blur-[100px] pointer-events-none"></div>

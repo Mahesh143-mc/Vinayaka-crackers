@@ -8,6 +8,8 @@ import confetti from 'canvas-confetti';
 import { generateOrderId, generateCustomerId } from '../utils/idGenerator';
 import { printInvoicePdf, downloadInvoiceFile } from '../utils/generateInvoicePdf';
 import { saveOrderToFirestore, saveCustomerToFirestore } from '../services/firebaseService';
+import SEO from '../components/common/SEO';
+import { generateBreadcrumbSchema } from '../utils/seoData';
 
 const Checkout = () => {
   const { cartItems, cartTotals, addToCart, decrementQuantity, removeFromCart, clearCart } = useCart();
@@ -33,6 +35,11 @@ const Checkout = () => {
 
   const subtotal = cartTotals.totalAmount;
   const grandTotal = subtotal - discountAmount;
+
+  const breadcrumbsSchema = generateBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Checkout & Order Estimate", path: "/checkout" }
+  ]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -233,6 +240,11 @@ const Checkout = () => {
   if (cartItems.length === 0) {
     return (
       <div className="min-h-screen pt-24 pb-12 bg-[#FFF8E7] flex flex-col items-center justify-center text-center px-4 relative overflow-hidden">
+        <SEO 
+          title="Online Order & Cart Estimate"
+          description="Review your fireworks order items, calculate discounts, and submit direct Sivakasi dispatch booking."
+          schema={breadcrumbsSchema}
+        />
         <h2 className="text-3xl font-serif font-black text-[#B71C1C] mb-4">Your Festive Basket is Empty</h2>
         <button 
           onClick={() => navigate('/products')}
@@ -247,6 +259,11 @@ const Checkout = () => {
   // MAIN CHECKOUT VIEW
   return (
     <div className="min-h-screen pt-24 pb-12 bg-[#FFF8E7] relative overflow-hidden">
+      <SEO 
+        title="Checkout & Complete Fireworks Booking"
+        description="Review your Diwali crackers cart, enter shipping details, and complete direct Sivakasi factory order booking."
+        schema={breadcrumbsSchema}
+      />
       {/* Sparkle background element (visual only) */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.05)_0%,transparent_60%)] pointer-events-none"></div>
 

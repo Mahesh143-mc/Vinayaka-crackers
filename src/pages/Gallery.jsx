@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Maximize2, X, Sparkles, Image as ImageIcon } from 'lucide-react';
 import { subscribeGallery } from '../services/firebaseService';
+import SEO from '../components/common/SEO';
+import { generateBreadcrumbSchema } from '../utils/seoData';
 
 const DEFAULT_GALLERY_IMAGES = [
   { id: 'DEF-1', type: 'Festivals', category: 'Festivals', title: 'Grand Diwali Celebrations', src: "https://res.cloudinary.com/vf0fqhwo/image/upload/v1785323861/Sample_Crackers_rfzenl.jpg", span: "md:col-span-2 md:row-span-2" },
